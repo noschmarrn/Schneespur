@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/pwa-icon-512x512.png" alt="Schneespur" width="120">
+  <img src="schneespur/public/pwa-icon-512x512.png" alt="Schneespur" width="120">
 </p>
 
 <h1 align="center">Schneespur</h1>
@@ -20,23 +20,23 @@
 
 ## Was ist Schneespur?
 
-Schneespur dokumentiert Raeum- und Streueinsaetze fuer kleine Winterdienst-Betriebe — vollstaendig, automatisch und rechtssicher. Die Software laeuft auf jedem guenstigen Shared-Webhosting (Strato, IONOS, All-Inkl, ...) und braucht weder SSH noch Docker.
+Schneespur dokumentiert Räum- und Streueinsätze für kleine Winterdienst-Betriebe — vollständig, automatisch und rechtssicher. Die Software läuft auf jedem günstigen Shared-Webhosting (Strato, IONOS, All-Inkl, ...) und braucht weder SSH noch Docker.
 
-**Kernversprechen:** Wenn ein Passant auf einer gestreuten Flaeche ausrutscht und der Betreiber nachweisen muss, dass er seiner Verkehrssicherungspflicht nachgekommen ist, liefert Schneespur den Beleg — mit GPS-Track, Wetterlage, Fotos und Zeitstempeln.
+**Kernversprechen:** Wenn ein Passant auf einer gestreuten Fläche ausrutscht und der Betreiber nachweisen muss, dass er seiner Verkehrssicherungspflicht nachgekommen ist, liefert Schneespur den Beleg — mit GPS-Track, Wetterlage, Fotos und Zeitstempeln.
 
 ### Funktionen
 
-- **GPS-Tracking** via [OwnTracks](https://owntracks.org)-App (iOS/Android) — kein eigener Tracking-Client noetig
+- **GPS-Tracking** via [OwnTracks](https://owntracks.org)-App (iOS/Android) — kein eigener Tracking-Client nötig
 - **Automatische Wetterdokumentation** — Temperatur, Niederschlag, Wind, Schneelage zum Einsatzzeitpunkt (Open-Meteo, BrightSky, Met.no)
 - **Foto-Dokumentation** — Bilder direkt aus der Fahrer-App hochladen
 - **PDF-Einsatznachweise** — einzeln oder als Sammelreport pro Kunde und Zeitraum
-- **Kundenportal** — Kunden koennen ihre Einsaetze selbst einsehen
+- **Kundenportal** — Kunden können ihre Einsätze selbst einsehen
 - **Fahrer-App (PWA)** — funktioniert offline, synchronisiert automatisch bei Verbindung
-- **Kunden- und Objektverwaltung** — mehrere Objekte pro Kunde, Zuordnung zu Einsaetzen
+- **Kunden- und Objektverwaltung** — mehrere Objekte pro Kunde, Zuordnung zu Einsätzen
 - **Fahrzeugverwaltung** — Fuhrpark mit Kennzeichen und Fahrzeugtyp
 - **DSGVO-konform** — Fahrer-Anonymisierung, Datenexport, konfigurierbare Aufbewahrungsfristen
 - **Automatische Updates** — kryptographisch signiert (Ed25519), ein Klick im Admin-Panel
-- **Modulsystem** — Erweiterbar ueber Module aus dem Schneespur-Modulkatalog
+- **Modulsystem** — erweiterbar über Module aus dem Schneespur-Modulkatalog
 
 ### Systemanforderungen
 
@@ -53,7 +53,7 @@ Schneespur dokumentiert Raeum- und Streueinsaetze fuer kleine Winterdienst-Betri
 1. [Download](https://jenni.noschmarrn.dev) der aktuellen Version (ZIP)
 2. ZIP entpacken und per FTP auf den Webserver laden
 3. Document Root auf den `public/`-Ordner setzen
-4. Im Browser die Domain aufrufen — der Installations-Assistent fuehrt durch die Einrichtung
+4. Im Browser die Domain aufrufen — der Installations-Assistent führt durch die Einrichtung
 
 Detaillierte Anleitung: **[INSTALL.de.md](INSTALL.de.md)**
 
