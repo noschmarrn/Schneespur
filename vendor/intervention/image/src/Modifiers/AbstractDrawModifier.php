@@ -1,0 +1,51 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Intervention\Image\Modifiers;
+
+use Intervention\Image\Color;
+use Intervention\Image\Drivers\SpecializableModifier;
+use Intervention\Image\Exceptions\ColorDecoderException;
+use Intervention\Image\Exceptions\InvalidArgumentException;
+use Intervention\Image\Exceptions\StateException;
+use Intervention\Image\Interfaces\ColorInterface;
+use Intervention\Image\Interfaces\DrawableInterface;
+
+abstract class AbstractDrawModifier extends SpecializableModifier
+{
+    /**
+     * Return the drawable object which will be rendered by the modifier.
+     */
+    abstract protected function drawable(): DrawableInterface;
+
+    /**
+     * Return the background color of the object rendered by the modifier.
+     *
+     * @throws StateException
+     * @throws ColorDecoderException
+     */
+    protected function backgroundColor(): ColorInterface
+    {
+        try {
+            return $this->driver()->decodeColor($this->drawable()->backgroundColor());
+        } catch (InvalidArgumentException) {
+            return Color::transparent();
+        }
+    }
+
+    /**
+     * Return the border color of the object rendered by the modifier.
+     *
+     * @throws StateException
+     * @throws ColorDecoderException
+     */
+    protected function borderColor(): ColorInterface
+    {
+        try {
+            return $this->driver()->decodeColor($this->drawable()->borderColor());
+        } catch (InvalidArgumentException) {
+            return Color::transparent();
+        }
+    }
+}

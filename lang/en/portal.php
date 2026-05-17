@@ -1,0 +1,118 @@
+<?php
+
+return [
+    'title' => 'Customer Portal',
+
+    // Login
+    'login_title' => 'Customer Portal',
+    'login_subtitle' => 'Sign in to view your service reports.',
+    'email' => 'Email Address',
+    'password' => 'Password',
+    'remember_me' => 'Remember me',
+    'login_button' => 'Sign In',
+    'invalid_credentials' => 'The provided credentials are incorrect.',
+    'account_disabled' => 'Your portal access is disabled. Please contact your service provider.',
+
+    // Navigation
+    'nav_home' => 'Home',
+    'logout' => 'Sign Out',
+
+    // Home
+    'welcome' => 'Welcome, :name',
+    'home_description' => 'Here you can find an overview of your winter service operations.',
+
+    // Dashboard
+    'dashboard_title' => 'Dashboard',
+    'kpi_total_jobs' => 'Jobs (Season)',
+    'kpi_total_hours' => 'Hours (Season)',
+    'kpi_last_activity' => 'Last Activity',
+    'kpi_no_activity' => 'No jobs yet',
+    'objects_title' => 'Your Properties',
+    'no_objects' => 'No properties assigned.',
+    'last_job_label' => 'Last Job',
+    'season_label' => 'Season :season',
+
+    // Jobs
+    'nav_jobs' => 'Jobs',
+    'jobs_title' => 'Jobs',
+    'jobs_empty' => 'No jobs found.',
+    'jobs_filter_object' => 'Property',
+    'jobs_filter_date_from' => 'From',
+    'jobs_filter_date_to' => 'To',
+    'jobs_filter_type' => 'Type',
+    'jobs_filter_all' => 'All',
+    'jobs_filter_btn' => 'Filter',
+    'jobs_filter_reset' => 'Reset',
+    'jobs_col_date' => 'Date',
+    'jobs_col_object' => 'Property',
+    'jobs_col_type' => 'Type',
+    'jobs_col_duration' => 'Duration',
+    'jobs_col_driver' => 'Driver',
+    'job_detail_title' => 'Job Detail',
+    'job_detail_object' => 'Property',
+    'job_detail_type' => 'Type',
+    'job_detail_started' => 'Started',
+    'job_detail_ended' => 'Ended',
+    'job_detail_duration' => 'Duration',
+    'job_detail_driver' => 'Driver',
+    'job_detail_notes' => 'Notes',
+    'job_detail_notes_empty' => 'No notes.',
+    'job_detail_weather' => 'Weather Data',
+    'job_detail_photos' => 'Photos',
+    'job_detail_photos_empty' => 'No photos available.',
+    'job_detail_gps' => 'GPS Track',
+    'job_detail_gps_empty' => 'No GPS track available.',
+    'job_detail_weather_empty' => 'No weather data available.',
+    'job_detail_photo_alt' => 'Job photo',
+    'job_back_to_list' => 'Back to List',
+    'job_detail_pdf_download' => 'Download PDF',
+
+    // Reports
+    'nav_reports' => 'Reports',
+    'reports_title' => 'Bulk Reports',
+    'reports_description' => 'Generate a PDF report for a date range and optionally a specific property.',
+    'reports_date_from' => 'From',
+    'reports_date_to' => 'To',
+    'reports_object_filter' => 'Property',
+    'reports_all_objects' => 'All Properties',
+    'reports_generate' => 'Generate PDF',
+    'reports_no_jobs' => 'No completed jobs found in the selected date range.',
+    'reports_error' => 'An error occurred while generating the report.',
+    'reports_job_not_completed' => 'PDF download is only available for completed jobs.',
+
+    // Notifications
+    'nav_notifications' => 'Notifications',
+    'notifications_title' => 'Notifications',
+    'notifications_empty' => 'No notifications found.',
+    'notifications_col_date' => 'Date',
+    'notifications_col_type' => 'Type',
+    'notifications_col_status' => 'Status',
+    'notifications_col_recipient' => 'Recipient',
+    'notifications_type_job_completed' => 'Job Completed',
+    'notifications_type_customer_report' => 'Customer Report',
+    'notifications_type_portal_credentials' => 'Portal Credentials',
+    'notifications_status_sent' => 'Sent',
+    'notifications_status_failed' => 'Failed',
+
+    // Profile
+    'nav_profile' => 'Profile',
+    'profile_title' => 'Profile',
+    'profile_subtitle' => 'Manage your email address, language, and password.',
+    'profile_email' => 'Email Address',
+    'profile_locale' => 'Language',
+    'profile_locale_de' => 'German',
+    'profile_locale_en' => 'English',
+    'profile_section_password' => 'Change Password',
+    'profile_section_password_description' => 'Leave the fields empty if you do not want to change your password.',
+    'profile_current_password' => 'Current Password',
+    'profile_new_password' => 'New Password',
+    'profile_confirm_password' => 'Confirm New Password',
+    'profile_save' => 'Save',
+    'profile_saved' => 'Your changes have been saved.',
+    'email_changed_admin_subject' => 'Customer changed email address',
+    'email_changed_admin_line1' => ':name has changed their email address.',
+    'email_changed_admin_line2' => 'Old address: :old — New address: :new',
+
+    // Footer
+    'footer_portal' => 'Customer Portal',
+];

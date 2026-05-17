@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'page_list'                  => 'Fahrzeuge verwalten',
+    'page_create'                => 'Fahrzeug anlegen',
+    'page_edit'                  => 'Fahrzeug bearbeiten',
+    'btn_create'                 => 'Fahrzeug anlegen',
+    'col_name'                   => 'Name',
+    'col_license'                => 'Kennzeichen',
+    'col_owntracks_device_id'    => 'OwnTracks-Device-ID',
+    'col_actions'                => 'Aktionen',
+    'empty_heading'              => 'Noch keine Fahrzeuge angelegt.',
+    'empty_body'                 => 'Jedes Fahrzeug benötigt eine eigene OwnTracks-Device-ID zur GPS-Zuordnung.',
+    'empty_cta'                  => 'Erstes Fahrzeug anlegen',
+    'field_name'                 => 'Name',
+    'field_license_plate'        => 'Kennzeichen',
+    'field_owntracks_device_id'  => 'OwnTracks-Device-ID',
+    'field_notes'                => 'Notizen',
+    'flash_created'              => 'Fahrzeug ":name" wurde angelegt.',
+    'flash_updated'              => 'Fahrzeug ":name" wurde aktualisiert.',
+    'flash_deleted'              => 'Fahrzeug ":name" wurde gelöscht.',
+    'modal_delete_title'         => 'Fahrzeug löschen',
+    'modal_delete_body1'         => 'Fahrzeug <strong>:name</strong> wirklich löschen?',
+    'modal_delete_body2'         => 'Diese Aktion kann nicht rückgängig gemacht werden.',
+    'modal_delete_submit'        => 'Endgültig löschen',
+];

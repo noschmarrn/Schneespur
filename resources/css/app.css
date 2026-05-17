@@ -1,0 +1,10 @@
+@import 'leaflet/dist/leaflet.css';
+@import "tailwindcss";
+
+.safe-top {
+    padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+}

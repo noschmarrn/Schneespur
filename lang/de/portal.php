@@ -1,0 +1,118 @@
+<?php
+
+return [
+    'title' => 'Kundenportal',
+
+    // Login
+    'login_title' => 'Kundenportal',
+    'login_subtitle' => 'Melden Sie sich an, um Ihre Einsätze einzusehen.',
+    'email' => 'E-Mail-Adresse',
+    'password' => 'Passwort',
+    'remember_me' => 'Angemeldet bleiben',
+    'login_button' => 'Anmelden',
+    'invalid_credentials' => 'Die eingegebenen Zugangsdaten sind nicht korrekt.',
+    'account_disabled' => 'Ihr Portalzugang ist deaktiviert. Bitte wenden Sie sich an Ihren Winterdienst-Betreiber.',
+
+    // Navigation
+    'nav_home' => 'Startseite',
+    'logout' => 'Abmelden',
+
+    // Home
+    'welcome' => 'Willkommen, :name',
+    'home_description' => 'Hier finden Sie eine Übersicht Ihrer Winterdienst-Einsätze.',
+
+    // Dashboard
+    'dashboard_title' => 'Dashboard',
+    'kpi_total_jobs' => 'Einsätze (Saison)',
+    'kpi_total_hours' => 'Stunden (Saison)',
+    'kpi_last_activity' => 'Letzter Einsatz',
+    'kpi_no_activity' => 'Noch keine Einsätze',
+    'objects_title' => 'Ihre Objekte',
+    'no_objects' => 'Keine Objekte zugeordnet.',
+    'last_job_label' => 'Letzter Einsatz',
+    'season_label' => 'Saison :season',
+
+    // Jobs
+    'nav_jobs' => 'Einsätze',
+    'jobs_title' => 'Einsätze',
+    'jobs_empty' => 'Keine Einsätze gefunden.',
+    'jobs_filter_object' => 'Objekt',
+    'jobs_filter_date_from' => 'Von',
+    'jobs_filter_date_to' => 'Bis',
+    'jobs_filter_type' => 'Art',
+    'jobs_filter_all' => 'Alle',
+    'jobs_filter_btn' => 'Filtern',
+    'jobs_filter_reset' => 'Zurücksetzen',
+    'jobs_col_date' => 'Datum',
+    'jobs_col_object' => 'Objekt',
+    'jobs_col_type' => 'Art',
+    'jobs_col_duration' => 'Dauer',
+    'jobs_col_driver' => 'Fahrer',
+    'job_detail_title' => 'Einsatzdetail',
+    'job_detail_object' => 'Objekt',
+    'job_detail_type' => 'Art',
+    'job_detail_started' => 'Beginn',
+    'job_detail_ended' => 'Ende',
+    'job_detail_duration' => 'Dauer',
+    'job_detail_driver' => 'Fahrer',
+    'job_detail_notes' => 'Notizen',
+    'job_detail_notes_empty' => 'Keine Notizen.',
+    'job_detail_weather' => 'Wetterdaten',
+    'job_detail_photos' => 'Fotos',
+    'job_detail_photos_empty' => 'Keine Fotos vorhanden.',
+    'job_detail_gps' => 'GPS-Track',
+    'job_detail_gps_empty' => 'Kein GPS-Track vorhanden.',
+    'job_detail_weather_empty' => 'Keine Wetterdaten vorhanden.',
+    'job_detail_photo_alt' => 'Einsatzfoto',
+    'job_back_to_list' => 'Zurück zur Liste',
+    'job_detail_pdf_download' => 'PDF herunterladen',
+
+    // Reports
+    'nav_reports' => 'Berichte',
+    'reports_title' => 'Sammelberichte',
+    'reports_description' => 'Erstellen Sie einen PDF-Sammelbericht für einen Zeitraum und optional ein bestimmtes Objekt.',
+    'reports_date_from' => 'Von',
+    'reports_date_to' => 'Bis',
+    'reports_object_filter' => 'Objekt',
+    'reports_all_objects' => 'Alle Objekte',
+    'reports_generate' => 'PDF erstellen',
+    'reports_no_jobs' => 'Im gewählten Zeitraum wurden keine abgeschlossenen Einsätze gefunden.',
+    'reports_error' => 'Beim Erstellen des Berichts ist ein Fehler aufgetreten.',
+    'reports_job_not_completed' => 'PDF-Download ist nur für abgeschlossene Einsätze möglich.',
+
+    // Notifications
+    'nav_notifications' => 'Benachrichtigungen',
+    'notifications_title' => 'Benachrichtigungen',
+    'notifications_empty' => 'Keine Benachrichtigungen vorhanden.',
+    'notifications_col_date' => 'Datum',
+    'notifications_col_type' => 'Typ',
+    'notifications_col_status' => 'Status',
+    'notifications_col_recipient' => 'Empfänger',
+    'notifications_type_job_completed' => 'Einsatz abgeschlossen',
+    'notifications_type_customer_report' => 'Kundenbericht',
+    'notifications_type_portal_credentials' => 'Portalzugangsdaten',
+    'notifications_status_sent' => 'Gesendet',
+    'notifications_status_failed' => 'Fehlgeschlagen',
+
+    // Profile
+    'nav_profile' => 'Profil',
+    'profile_title' => 'Profil',
+    'profile_subtitle' => 'Verwalten Sie Ihre E-Mail-Adresse, Sprache und Ihr Passwort.',
+    'profile_email' => 'E-Mail-Adresse',
+    'profile_locale' => 'Sprache',
+    'profile_locale_de' => 'Deutsch',
+    'profile_locale_en' => 'Englisch',
+    'profile_section_password' => 'Passwort ändern',
+    'profile_section_password_description' => 'Lassen Sie die Felder leer, wenn Sie Ihr Passwort nicht ändern möchten.',
+    'profile_current_password' => 'Aktuelles Passwort',
+    'profile_new_password' => 'Neues Passwort',
+    'profile_confirm_password' => 'Neues Passwort bestätigen',
+    'profile_save' => 'Speichern',
+    'profile_saved' => 'Ihre Änderungen wurden gespeichert.',
+    'email_changed_admin_subject' => 'Kunde hat E-Mail-Adresse geändert',
+    'email_changed_admin_line1' => ':name hat die E-Mail-Adresse geändert.',
+    'email_changed_admin_line2' => 'Alte Adresse: :old — Neue Adresse: :new',
+
+    // Footer
+    'footer_portal' => 'Kundenportal',
+];
