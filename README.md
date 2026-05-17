@@ -10,10 +10,15 @@
 </p>
 
 <p align="center">
+  <a href="https://schneespur.de">schneespur.de</a> &middot;
+  <a href="https://wintertrace.com">wintertrace.com</a>
+</p>
+
+<p align="center">
   <a href="#english">English</a> &middot;
   <a href="INSTALL.de.md">Installation (DE)</a> &middot;
   <a href="INSTALL.en.md">Installation (EN)</a> &middot;
-  <a href="https://jenni.noschmarrn.dev">Download</a>
+  <a href="https://schneespur.de/download/">Download</a>
 </p>
 
 ---
@@ -50,7 +55,7 @@ Schneespur dokumentiert Räum- und Streueinsätze für kleine Winterdienst-Betri
 
 ### Schnellstart
 
-1. [Download](https://jenni.noschmarrn.dev) der aktuellen Version (ZIP)
+1. [Download](https://schneespur.de/download/) der aktuellen Version (ZIP)
 2. ZIP entpacken und per FTP auf den Webserver laden
 3. Document Root auf den `public/`-Ordner setzen
 4. Im Browser die Domain aufrufen — der Installations-Assistent führt durch die Einrichtung
@@ -110,7 +115,7 @@ Schneespur (German) / Wintertrace (international) is an open-source, self-hosted
 
 ### Quick Start
 
-1. [Download](https://jenni.noschmarrn.dev) the latest release (ZIP)
+1. [Download](https://wintertrace.com/download/) the latest release (ZIP)
 2. Extract and upload via FTP to your web server
 3. Set the document root to the `public/` directory
 4. Open the domain in your browser — the installation wizard guides you through setup
