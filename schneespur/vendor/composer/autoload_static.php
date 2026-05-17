@@ -688,6 +688,7 @@ class ComposerStaticInitfc2407b1a509d7fcbbc5146f46a2c921
         'App\\Http\\Middleware\\EnsureDsgvoInformed' => __DIR__ . '/../..' . '/app/Http/Middleware/EnsureDsgvoInformed.php',
         'App\\Http\\Middleware\\InstallerGuard' => __DIR__ . '/../..' . '/app/Http/Middleware/InstallerGuard.php',
         'App\\Http\\Middleware\\RedirectToInstaller' => __DIR__ . '/../..' . '/app/Http/Middleware/RedirectToInstaller.php',
+        'App\\Http\\Middleware\\SetInstallerLocale' => __DIR__ . '/../..' . '/app/Http/Middleware/SetInstallerLocale.php',
         'App\\Http\\Requests\\Admin\\AnonymizeDriverRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/AnonymizeDriverRequest.php',
         'App\\Http\\Requests\\Admin\\StoreCustomerObjectRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/StoreCustomerObjectRequest.php',
         'App\\Http\\Requests\\Admin\\StoreCustomerRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Admin/StoreCustomerRequest.php',

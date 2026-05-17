@@ -7,6 +7,7 @@ use App\Http\Middleware\EnsureDriver;
 use App\Http\Middleware\EnsureDsgvoInformed;
 use App\Http\Middleware\InstallerGuard;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\SetInstallerLocale;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Console\Scheduling\Schedule;
@@ -57,6 +58,7 @@ return Application::configure(basePath: dirname(__DIR__))
             AddQueuedCookiesToResponse::class,
             StartSession::class,
             ShareErrorsFromSession::class,
+            SetInstallerLocale::class,
             ValidateCsrfToken::class,
         ]);
     })

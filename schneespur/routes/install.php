@@ -5,6 +5,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('installer')->prefix('install')->name('install.')->group(function () {
 
+    Route::get('/locale/{locale}', [InstallerController::class, 'switchLocale'])
+        ->name('locale.switch')
+        ->where('locale', 'de|en')
+        ->middleware('throttle:20,1');
+
     Route::get('/', [InstallerController::class, 'showWelcome'])->name('welcome');
     Route::post('/welcome', [InstallerController::class, 'processWelcome'])->name('welcome.process')->middleware('throttle:10,1');
 

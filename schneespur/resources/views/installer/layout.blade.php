@@ -25,8 +25,17 @@
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-12 bg-gray-100 installer-fallback">
-            <div class="mb-6">
+            <div class="w-full sm:max-w-2xl px-6 flex items-center justify-between mb-6">
                 <h1 class="text-2xl font-bold text-gray-800">❄ {{ brand() }}</h1>
+                @php($currentLocale = $installerLocale ?? app()->getLocale())
+                <div class="inline-flex rounded-md shadow-sm overflow-hidden border border-gray-300" role="group" aria-label="Language">
+                    <a href="{{ route('install.locale.switch', ['locale' => 'de']) }}"
+                       class="px-3 py-1 text-xs font-semibold {{ $currentLocale === 'de' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50' }}"
+                       aria-current="{{ $currentLocale === 'de' ? 'true' : 'false' }}">DE</a>
+                    <a href="{{ route('install.locale.switch', ['locale' => 'en']) }}"
+                       class="px-3 py-1 text-xs font-semibold border-l border-gray-300 {{ $currentLocale === 'en' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50' }}"
+                       aria-current="{{ $currentLocale === 'en' ? 'true' : 'false' }}">EN</a>
+                </div>
             </div>
 
             @include('installer._stepper', ['currentStep' => $currentStep ?? 1])

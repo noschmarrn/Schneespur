@@ -27,6 +27,17 @@ class InstallerController extends Controller
         private InstallLockManager $lockManager,
     ) {}
 
+    // --- Locale switcher (works on any installer step) ---
+
+    public function switchLocale(Request $request, string $locale): RedirectResponse
+    {
+        if (in_array($locale, ['de', 'en'], true)) {
+            $request->session()->put('installer_locale', $locale);
+        }
+
+        return redirect($request->headers->get('referer') ?: route('install.welcome'));
+    }
+
     // --- Step 1: Welcome ---
 
     public function showWelcome(Request $request): View

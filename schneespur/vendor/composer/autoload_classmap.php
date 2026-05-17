@@ -85,6 +85,7 @@ return array(
     'App\\Http\\Middleware\\EnsureDsgvoInformed' => $baseDir . '/app/Http/Middleware/EnsureDsgvoInformed.php',
     'App\\Http\\Middleware\\InstallerGuard' => $baseDir . '/app/Http/Middleware/InstallerGuard.php',
     'App\\Http\\Middleware\\RedirectToInstaller' => $baseDir . '/app/Http/Middleware/RedirectToInstaller.php',
+    'App\\Http\\Middleware\\SetInstallerLocale' => $baseDir . '/app/Http/Middleware/SetInstallerLocale.php',
     'App\\Http\\Requests\\Admin\\AnonymizeDriverRequest' => $baseDir . '/app/Http/Requests/Admin/AnonymizeDriverRequest.php',
     'App\\Http\\Requests\\Admin\\StoreCustomerObjectRequest' => $baseDir . '/app/Http/Requests/Admin/StoreCustomerObjectRequest.php',
     'App\\Http\\Requests\\Admin\\StoreCustomerRequest' => $baseDir . '/app/Http/Requests/Admin/StoreCustomerRequest.php',

@@ -13,7 +13,7 @@
 
     <form method="POST" action="{{ route('install.config.store') }}" x-data="{
         timezone: '{{ old('timezone', $timezone) }}',
-        locale: '{{ old('locale', 'de') }}',
+        locale: '{{ old('locale', app()->getLocale()) }}',
         get brandName() {
             return this.locale === 'de' ? 'Schneespur' : 'Wintertrace';
         },
@@ -27,17 +27,6 @@
                     }
                 }
             } catch (e) {}
-            @if(! old('locale'))
-            try {
-                const browserLang = (navigator.language || '').substring(0, 2).toLowerCase();
-                const supported = ['de', 'en'];
-                if (supported.includes(browserLang)) {
-                    this.locale = browserLang;
-                } else {
-                    this.locale = 'en';
-                }
-            } catch (e) {}
-            @endif
         }
     }">
         @csrf
