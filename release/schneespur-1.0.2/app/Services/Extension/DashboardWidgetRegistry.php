@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Services\Extension;
+
+use Illuminate\Support\Facades\Log;
+
+class DashboardWidgetRegistry extends ExtensionRegistry
+{
+    public function registerWidget(string $slug, array $config): void
+    {
+        $config = array_merge([
+            'slug' => $slug,
+            'label' => $slug,
+            'view' => null,
+            'dataCallback' => null,
+            'order' => 100,
+            'permission' => null,
+            'condition' => null,
+            'size' => 'full',
+        ], $config, ['slug' => $slug]);
+
+        $this->register($slug, $config);
+    }
+
+    /**
+     * @return array<int, array{slug: string, label: string, view: string|null, data: mixed, order: int, permission: string|null, size: string, error: bool}>
+     */
+    public function getWidgets(?string $userPermission = null): array
+    {
+        $widgets = [];
+
+        foreach ($this->items as $config) {
+            if ($config['permission'] !== null && $userPermission !== null && $config['permission'] !== $userPermission) {
+                continue;
+            }
+
+            if ($config['condition'] !== null) {
+                try {
+                    if (! ($config['condition'])()) {
+                        continue;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning("DashboardWidgetRegistry: condition callback failed for '{$config['slug']}': {$e->getMessage()}");
+                    continue;
+                }
+            }
+
+            $data = null;
+            $error = false;
+
+            if ($config['dataCallback'] !== null) {
+                try {
+                    $data = ($config['dataCallback'])();
+                } catch (\Throwable $e) {
+                    Log::warning("DashboardWidgetRegistry: data callback exception for '{$config['slug']}': {$e->getMessage()}");
+                    $error = true;
+                }
+            }
+
+            $widgets[] = [
+                'slug' => $config['slug'],
+                'label' => $config['label'],
+                'view' => $config['view'],
+                'data' => $data,
+                'order' => $config['order'],
+                'permission' => $config['permission'],
+                'size' => $config['size'],
+                'error' => $error,
+            ];
+        }
+
+        usort($widgets, fn (array $a, array $b) => $a['order'] <=> $b['order']);
+
+        return $widgets;
+    }
+}

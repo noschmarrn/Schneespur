@@ -1,0 +1,26 @@
+<?php
+
+return [
+    'page_list'                  => 'Manage Vehicles',
+    'page_create'                => 'Create Vehicle',
+    'page_edit'                  => 'Edit Vehicle',
+    'btn_create'                 => 'Create Vehicle',
+    'col_name'                   => 'Name',
+    'col_license'                => 'License Plate',
+    'col_owntracks_device_id'    => 'OwnTracks Device ID',
+    'col_actions'                => 'Actions',
+    'empty_heading'              => 'No vehicles created yet.',
+    'empty_body'                 => 'Each vehicle needs its own OwnTracks Device ID for GPS assignment.',
+    'empty_cta'                  => 'Create first vehicle',
+    'field_name'                 => 'Name',
+    'field_license_plate'        => 'License Plate',
+    'field_owntracks_device_id'  => 'OwnTracks Device ID',
+    'field_notes'                => 'Notes',
+    'flash_created'              => 'Vehicle ":name" has been created.',
+    'flash_updated'              => 'Vehicle ":name" has been updated.',
+    'flash_deleted'              => 'Vehicle ":name" has been deleted.',
+    'modal_delete_title'         => 'Delete Vehicle',
+    'modal_delete_body1'         => 'Really delete vehicle <strong>:name</strong>?',
+    'modal_delete_body2'         => 'This action cannot be undone.',
+    'modal_delete_submit'        => 'Delete permanently',
+];
