@@ -1,0 +1,40 @@
+# Dependencies
+/schneespur/vendor/
+/node_modules/
+
+# Environment
+.env
+.env.backup
+.env.production
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel
+/schneespur/storage/logs/*.log
+/schneespur/storage/framework/cache/*
+/schneespur/storage/framework/sessions/*
+/schneespur/storage/framework/views/*
+/schneespur/storage/testing/
+
+# Build artifacts
+/schneespur/public/build/
+/schneespur/public/hot
+
+# Testing
+.phpunit.result.cache
+.phpunit.cache/
+
+# Release builds
+/release/
+
+# Misc
+*.bak
+*.orig

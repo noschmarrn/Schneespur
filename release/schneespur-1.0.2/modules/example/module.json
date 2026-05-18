@@ -1,9 +1,0 @@
-{
-    "name": "Example Module",
-    "version": "1.0.0",
-    "namespace": "Schneespur\\Module\\Example",
-    "service_provider": "Schneespur\\Module\\Example\\ExampleServiceProvider",
-    "description": "Reference module demonstrating all extension points (nav, widget, event, settings, route).",
-    "min_schneespur_version": "1.0.0",
-    "requires_permissions": []
-}
