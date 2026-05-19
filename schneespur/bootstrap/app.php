@@ -73,15 +73,17 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->reportable(function (\Throwable $e) {
+            $reported = false;
             try {
                 $manager = app(DiagnosticManager::class);
                 if ($manager->hasEnabledReporters()) {
                     $manager->reportException($e);
+                    $reported = true;
                 }
             } catch (\Throwable) {
                 // Never let diagnostic reporting break the application
             }
 
-            return false;
+            return $reported ? false : null;
         });
     })->create();

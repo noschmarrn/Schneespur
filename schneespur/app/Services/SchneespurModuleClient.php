@@ -28,19 +28,24 @@ class SchneespurModuleClient
     /**
      * Fetch the module catalog from the server.
      *
-     * Returns parsed catalog array on 200, null on 304 (not modified).
-     * Throws on HTTP error.
+     * Returns normalized catalog array. On 304 returns the cached normalized
+     * catalog from state (or re-fetches without If-None-Match if no cache).
+     * Returns null only when there is no cache and the server-side state
+     * cannot be reconstructed. Throws on HTTP error.
      */
     public function fetchCatalog(): ?array
     {
-        $state = $this->loadState();
-        $etag  = $state['catalog_etag'] ?? null;
+        $state    = $this->loadState();
+        $etag     = $state['catalog_etag'] ?? null;
+        $cached   = $state['catalog_cache'] ?? null;
 
         $url = $this->serverUrl . str_replace('{slug}', $this->collectionSlug, $this->catalogEndpoint);
 
         $request = Http::acceptJson()->timeout($this->timeout);
 
-        if ($etag) {
+        // Only send If-None-Match when we actually have a cached body to fall
+        // back on — otherwise a 304 leaves us with nothing to display.
+        if ($etag && $cached !== null) {
             $request = $request->withHeaders(['If-None-Match' => $etag]);
         }
 
@@ -51,7 +56,7 @@ class SchneespurModuleClient
             $state['synced_at'] = now()->toIso8601String();
             $this->writeState($state);
 
-            return null;
+            return $cached;
         }
 
         if ($response->status() === 404) {
@@ -69,20 +74,56 @@ class SchneespurModuleClient
             throw new RuntimeException("Katalog-Fetch fehlgeschlagen: HTTP {$response->status()}");
         }
 
-        $catalog = $response->json();
-        if (! is_array($catalog) || ! array_key_exists('modules', $catalog)) {
+        $raw = $response->json();
+        if (! is_array($raw) || ! array_key_exists('modules', $raw)) {
             throw new RuntimeException('Katalog-Response hat unerwartete Form');
         }
 
+        $catalog = [
+            'collection' => $raw['collection'] ?? null,
+            'modules'    => array_map(fn ($m) => $this->normalizeModule($m), $raw['modules']),
+        ];
+
         $newEtag = $response->header('ETag');
-        $state['catalog_etag'] = $newEtag ?: ($state['catalog_etag'] ?? null);
-        $state['synced_at']    = now()->toIso8601String();
+        $state['catalog_etag']  = $newEtag ?: ($state['catalog_etag'] ?? null);
+        $state['catalog_cache'] = $catalog;
+        $state['synced_at']     = now()->toIso8601String();
         $this->writeState($state);
 
         $moduleCount = count($catalog['modules']);
         Log::info('schneespur-modules: catalog fetched', ['module_count' => $moduleCount]);
 
         return $catalog;
+    }
+
+    /**
+     * Map a server-side module entry to the internal shape expected by the
+     * admin controller and views. The server may evolve its field names
+     * independently — this is the single place where that drift is bridged.
+     */
+    private function normalizeModule(array $raw): array
+    {
+        $appLocale = app()->getLocale();
+        $primary   = $raw['primary_locale'] ?? $appLocale;
+
+        $category = $raw['category'] ?? null;
+        if (is_array($category)) {
+            $category = self::i18nPick($category, $primary);
+        }
+
+        return [
+            'slug'                 => $raw['slug'] ?? null,
+            'name'                 => $raw['name'] ?? [],
+            'description'          => $raw['description'] ?? [],
+            'version'              => $raw['current_version'] ?? $raw['version'] ?? null,
+            'category'             => $category,
+            'image'                => $raw['image_url'] ?? $raw['image'] ?? null,
+            'download_url'         => $raw['download_url'] ?? null,
+            'sha256'               => $raw['sha256'] ?? null,
+            'size_bytes'           => $raw['size_bytes'] ?? null,
+            'requires_permissions' => $raw['requires_permissions'] ?? [],
+            'primary_locale'       => $primary,
+        ];
     }
 
     /**
@@ -175,10 +216,11 @@ class SchneespurModuleClient
     {
         if (! is_file($this->stateFilePath)) {
             return [
-                'catalog_etag' => null,
-                'synced_at'    => null,
-                'installed'    => [],
-                'orphans'      => [],
+                'catalog_etag'  => null,
+                'catalog_cache' => null,
+                'synced_at'     => null,
+                'installed'     => [],
+                'orphans'       => [],
             ];
         }
 
@@ -193,10 +235,11 @@ class SchneespurModuleClient
         }
 
         return [
-            'catalog_etag' => $parsed['catalog_etag'] ?? null,
-            'synced_at'    => $parsed['synced_at'] ?? null,
-            'installed'    => $parsed['installed'] ?? [],
-            'orphans'      => $parsed['orphans'] ?? [],
+            'catalog_etag'  => $parsed['catalog_etag'] ?? null,
+            'catalog_cache' => $parsed['catalog_cache'] ?? null,
+            'synced_at'     => $parsed['synced_at'] ?? null,
+            'installed'     => $parsed['installed'] ?? [],
+            'orphans'       => $parsed['orphans'] ?? [],
         ];
     }
 

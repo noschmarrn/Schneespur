@@ -15,7 +15,7 @@ return [
 
     'name' => env('APP_NAME', 'Schneespur'),
 
-    'version' => '1.0.0',
+    'version' => trim((string) @file_get_contents(dirname(__DIR__).'/VERSION')) ?: '1.0.0',
 
     /*
     |--------------------------------------------------------------------------

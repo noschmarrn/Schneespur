@@ -19,6 +19,14 @@ class StoreCustomerObjectRequest extends FormRequest
                 'price_amount' => str_replace(',', '.', $this->price_amount),
             ]);
         }
+
+        // notify_recipients is a mode enum consumed as customer|object|both
+        // (see SendJobCompletedNotification / SendCustomerReportEmail).
+        // Fall back to the DB default when the field is missing or empty
+        // so the NOT NULL column never receives a null value.
+        if (! $this->filled('notify_recipients')) {
+            $this->merge(['notify_recipients' => 'customer']);
+        }
     }
 
     /**
@@ -44,7 +52,7 @@ class StoreCustomerObjectRequest extends FormRequest
             'lon' => ['nullable', 'numeric', 'between:-180,180'],
             'auto_notify_email' => ['boolean'],
             'notification_email' => ['nullable', 'required_if:auto_notify_email,1', 'email', 'max:200'],
-            'notify_recipients' => ['nullable', 'string', 'max:1000'],
+            'notify_recipients' => ['required', 'in:customer,object,both'],
         ];
     }
 

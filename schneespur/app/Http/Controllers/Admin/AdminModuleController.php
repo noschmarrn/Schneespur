@@ -23,12 +23,7 @@ class AdminModuleController extends Controller
 
         try {
             $catalog = $client->fetchCatalog();
-            if ($catalog !== null) {
-                $catalogModules = $catalog['modules'] ?? [];
-            } else {
-                $state = $client->loadState();
-                $catalogModules = $state['installed'] ?? [];
-            }
+            $catalogModules = $catalog['modules'] ?? [];
         } catch (\Throwable $e) {
             Log::warning('schneespur-modules: catalog fetch failed in admin UI', [
                 'error' => $e->getMessage(),

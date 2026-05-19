@@ -124,12 +124,92 @@ class SchneespurModuleInstaller
         }
 
         File::ensureDirectoryExists($targetDir, 0755);
-        $zip->extractTo($targetDir);
+
+        $prefix = $this->detectCommonPrefix($zip);
+
+        if ($prefix === null) {
+            $zip->extractTo($targetDir);
+        } else {
+            Log::info('schneespur-modules: stripping common prefix', [
+                'slug'   => $slug,
+                'prefix' => $prefix,
+            ]);
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                if ($entry === false || $entry === '' || $entry === $prefix) {
+                    continue;
+                }
+                if (str_starts_with($entry, '__MACOSX/')) {
+                    continue;
+                }
+
+                $relative = substr($entry, strlen($prefix));
+                if ($relative === '') {
+                    continue;
+                }
+
+                $dest = $targetDir . '/' . $relative;
+
+                if (str_ends_with($entry, '/')) {
+                    File::ensureDirectoryExists($dest, 0755);
+                    continue;
+                }
+
+                File::ensureDirectoryExists(dirname($dest), 0755);
+
+                $contents = $zip->getFromIndex($i);
+                if ($contents === false || file_put_contents($dest, $contents) === false) {
+                    Log::error('schneespur-modules: extract failed', [
+                        'slug'  => $slug,
+                        'entry' => $entry,
+                    ]);
+                    $zip->close();
+                    return false;
+                }
+            }
+        }
+
         $zip->close();
 
         Log::info('schneespur-modules: unpack complete', ['slug' => $slug]);
 
         return true;
+    }
+
+    /**
+     * Detect whether all (non-metadata) ZIP entries share one common
+     * top-level folder. Returns the prefix (incl. trailing slash) when so,
+     * null when the ZIP is flat or has mixed top-level entries.
+     */
+    private function detectCommonPrefix(ZipArchive $zip): ?string
+    {
+        $prefix = null;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entry = $zip->getNameIndex($i);
+            if ($entry === false || $entry === '') {
+                continue;
+            }
+            if (str_starts_with($entry, '__MACOSX/')) {
+                continue;
+            }
+
+            $slash = strpos($entry, '/');
+            if ($slash === false) {
+                return null;
+            }
+
+            $top = substr($entry, 0, $slash + 1);
+
+            if ($prefix === null) {
+                $prefix = $top;
+            } elseif ($prefix !== $top) {
+                return null;
+            }
+        }
+
+        return $prefix;
     }
 
     private function validateZipEntries(ZipArchive $zip, string $slug): bool

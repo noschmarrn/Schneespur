@@ -206,7 +206,12 @@
 
             <div x-show="autoNotify" x-transition>
                 <x-input-label for="notify_recipients" :value="__('customer_object.field_notify_recipients')" />
-                <x-text-input id="notify_recipients" name="notify_recipients" type="text" class="mt-1 block w-full" :value="old('notify_recipients', $object->notify_recipients ?? '')" />
+                @php($notifyRecipients = old('notify_recipients', $object->notify_recipients ?? 'customer'))
+                <select id="notify_recipients" name="notify_recipients" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                    <option value="customer" @selected($notifyRecipients === 'customer')>{{ __('customer_object.notify_recipients_customer') }}</option>
+                    <option value="object" @selected($notifyRecipients === 'object')>{{ __('customer_object.notify_recipients_object') }}</option>
+                    <option value="both" @selected($notifyRecipients === 'both')>{{ __('customer_object.notify_recipients_both') }}</option>
+                </select>
                 <x-input-error :messages="$errors->get('notify_recipients')" class="mt-2" />
             </div>
         </div>
