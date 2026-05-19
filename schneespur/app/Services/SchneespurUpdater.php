@@ -170,17 +170,23 @@ class SchneespurUpdater
             throw new RuntimeException('Signatur ungültig — MITM oder beschädigt');
         }
 
+        // Same-version short-circuit first: if the server still serves the
+        // currently installed release (same counter, same version), this is
+        // not a rollback — just "you're up to date". The counter check below
+        // would otherwise misfire after every successful install, because
+        // the next manifest fetch carries the exact same counter that was
+        // committed during install.
+        if ($manifest['version'] === ($state['current_version'] ?? '')) {
+            $this->writeLastCheck($state, false);
+
+            return null;
+        }
+
         $newCounter = (int) $manifest['counter'];
         if ($newCounter <= (int) ($state['last_counter'] ?? 0)) {
             throw new RuntimeException(
                 "Rollback-Versuch: counter={$newCounter} <= zuletzt={$state['last_counter']}"
             );
-        }
-
-        if ($manifest['version'] === ($state['current_version'] ?? '')) {
-            $this->writeLastCheck($state, false);
-
-            return null;
         }
 
         $this->writeLastCheck($state, true, $manifest);
@@ -279,12 +285,89 @@ class SchneespurUpdater
 
         $this->validateZipEntries($zip);
 
-        $zip->extractTo($this->stagingDir);
+        $prefix = $this->detectCommonPrefix($zip);
+
+        if ($prefix === null) {
+            $zip->extractTo($this->stagingDir);
+        } else {
+            $this->logPhase('extract', 'stripping_prefix', ['prefix' => $prefix]);
+
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entry = $zip->getNameIndex($i);
+                if ($entry === false || $entry === '' || $entry === $prefix) {
+                    continue;
+                }
+                if (str_starts_with($entry, '__MACOSX/')) {
+                    continue;
+                }
+
+                $relative = substr($entry, strlen($prefix));
+                if ($relative === '') {
+                    continue;
+                }
+
+                $dest = $this->stagingDir . '/' . $relative;
+
+                if (str_ends_with($entry, '/')) {
+                    $this->ensureDirectory($dest);
+                    continue;
+                }
+
+                $this->ensureDirectory(dirname($dest));
+
+                $contents = $zip->getFromIndex($i);
+                if ($contents === false || file_put_contents($dest, $contents) === false) {
+                    $zip->close();
+                    throw new RuntimeException("ZIP-Extraktion fehlgeschlagen: {$entry}");
+                }
+            }
+        }
+
         $zip->close();
 
         $this->logPhase('extract', 'complete', ['files' => $this->countFiles($this->stagingDir)]);
 
         return $this->stagingDir;
+    }
+
+    /**
+     * Detect whether all (non-metadata) ZIP entries share one common
+     * top-level folder. Returns the prefix (incl. trailing slash) when so,
+     * null when the ZIP is flat or has mixed top-level entries.
+     *
+     * Mirrors the logic in SchneespurModuleInstaller so update ZIPs that
+     * wrap their content in a versioned folder (the build.sh convention)
+     * are unwrapped during extraction instead of leaving a stray
+     * schneespur-X.Y.Z/ subdirectory in the live install.
+     */
+    private function detectCommonPrefix(ZipArchive $zip): ?string
+    {
+        $prefix = null;
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $entry = $zip->getNameIndex($i);
+            if ($entry === false || $entry === '') {
+                continue;
+            }
+            if (str_starts_with($entry, '__MACOSX/')) {
+                continue;
+            }
+
+            $slash = strpos($entry, '/');
+            if ($slash === false) {
+                return null;
+            }
+
+            $top = substr($entry, 0, $slash + 1);
+
+            if ($prefix === null) {
+                $prefix = $top;
+            } elseif ($prefix !== $top) {
+                return null;
+            }
+        }
+
+        return $prefix;
     }
 
     private function validateZipEntries(ZipArchive $zip): void
