@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\JobCompleted;
 use App\Mail\JobCompletedMail;
+use App\Services\Extension\FilterRegistry;
 use App\Services\NotificationLogService;
 use App\Services\PdfReportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,6 +16,7 @@ class SendJobCompletedNotification implements ShouldQueue
     public function __construct(
         private NotificationLogService $notificationLogService,
         private PdfReportService $pdfReportService,
+        private FilterRegistry $filterRegistry,
     ) {}
 
     public function handle(JobCompleted $event): void
@@ -35,6 +37,7 @@ class SendJobCompletedNotification implements ShouldQueue
         }
 
         $recipients = $this->resolveRecipients($object, $customer);
+        $recipients = $this->filterRegistry->apply('schneespur.job.notification.recipients', $recipients, $job);
 
         if (empty($recipients)) {
             $this->notificationLogService->logSkipped($job, $notificationType, 'skipped_no_email');

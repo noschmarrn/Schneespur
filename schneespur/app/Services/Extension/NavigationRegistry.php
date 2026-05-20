@@ -8,6 +8,10 @@ class NavigationRegistry extends ExtensionRegistry
 {
     protected array $groups = [];
 
+    public function __construct(
+        private readonly FilterRegistry $filterRegistry,
+    ) {}
+
     public function addGroup(string $key, string $label, int $order = 100): void
     {
         $this->groups[$key] = ['key' => $key, 'label' => $label, 'order' => $order];
@@ -73,6 +77,6 @@ class NavigationRegistry extends ExtensionRegistry
             usort($groupItems, fn (array $a, array $b) => $a['order'] <=> $b['order']);
         }
 
-        return $grouped;
+        return $this->filterRegistry->apply('schneespur.navigation.items', $grouped);
     }
 }
