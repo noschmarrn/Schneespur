@@ -15,6 +15,7 @@ use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Diagnostic\DiagnosticPayloadSanitizer;
 use App\Services\Diagnostic\DiagnosticReporterRegistry;
 use App\Services\Extension\DashboardWidgetRegistry;
+use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\ForecastService;
 use App\Services\ModuleManager;
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(AlertService::class);
         $this->app->singleton(DashboardWidgetRegistry::class);
+        $this->app->singleton(FilterRegistry::class);
         $this->app->singleton(NavigationRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));

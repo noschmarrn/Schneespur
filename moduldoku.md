@@ -167,7 +167,9 @@ class MeinModulServiceProvider extends ServiceProvider
             slug: 'mein-modul',
             label: 'Mein Modul',
             route: 'admin.mein-modul.settings',
-            icon: 'heroicon-o-puzzle-piece',
+            // Wichtig: ROHE SVG-Path-Geometrie (`d=...`), KEIN Heroicon-Name.
+            // Mehrere Pfade mit `||` trennen. Siehe Abschnitt "Navigation" unten.
+            icon: 'M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12...',
             order: 200,
         );
     }
@@ -195,7 +197,9 @@ class MeinModulServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
-        Route::middleware(['web', 'auth'])
+        // Für Admin-Routen: `'admin'`-Alias (EnsureAdmin) ist Pflicht.
+        // Sonst kann jeder eingeloggte Nutzer (auch Fahrer/Kunden) die Seite öffnen.
+        Route::middleware(['web', 'auth', 'admin'])
             ->prefix('admin/mein-modul')
             ->name('admin.mein-modul.')
             ->group(function () {
@@ -223,7 +227,9 @@ $nav->addItem(
     slug: 'mein-modul',           // Eindeutiger Bezeichner
     label: 'Mein Modul',          // Anzeige-Label
     route: 'admin.mein-modul.settings',  // Laravel-Route-Name
-    icon: 'heroicon-o-cog-6-tooth',      // Heroicon-Bezeichner
+    icon: 'M2.25 12l8.954-8.955...',     // ROHE SVG-Path-Geometrie (`d=...`),
+                                         // KEIN Heroicon-Name. Mehrere Pfade mit `||` trennen.
+                                         // Beispiele: AppServiceProvider.php der Schneespur-Core-Items.
     order: 200,                   // Sortierung (höher = weiter unten)
     permission: null,             // Optional: Berechtigungsprüfung
     routeCheck: null,             // Optional: Route-Existenzprüfung
@@ -300,17 +306,30 @@ $widgets->registerWidget('mein-widget', [
 
 **Blade-View des Widgets:**
 
-Das View erhält die Daten aus `dataCallback` als `$data`-Variable:
+Das View erhält das gesamte Widget-Config-Array als `$widget`-Variable.
+Die Daten aus `dataCallback` liegen unter `$widget['data']`. **Achtung:**
+nicht `$data` — diese Variable existiert im Widget-Render-Kontext nicht.
 
 ```blade
 {{-- resources/views/widgets/status-card.blade.php --}}
 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
     <h3 class="text-sm font-medium text-gray-900">Mein Widget</h3>
-    @if(isset($data['anzahl']))
-        <p class="text-2xl font-bold">{{ $data['anzahl'] }}</p>
+    @if(isset($widget['data']['anzahl']))
+        <p class="text-2xl font-bold">{{ $widget['data']['anzahl'] }}</p>
     @endif
 </div>
 ```
+
+Bei häufigem Zugriff lohnt sich ein lokaler Alias:
+
+```blade
+@php $data = $widget['data'] ?? []; @endphp
+{{-- ab hier wie gewohnt $data['...'] verwenden --}}
+```
+
+Schneespurs eigene Dashboard-Widgets (`resources/views/admin/dashboard/widgets/*.blade.php`)
+greifen einheitlich über `$widget['data']` zu — guter Referenzort für
+Beispiele.
 
 ### 3. Wetter-Provider (WeatherProviderRegistry)
 
@@ -452,8 +471,9 @@ use Illuminate\Support\Facades\Route;
 
 protected function registerRoutes(): void
 {
-    // Admin-Bereich (authentifiziert)
-    Route::middleware(['web', 'auth'])
+    // Admin-Bereich: `'admin'`-Alias (EnsureAdmin) ist Pflicht, sonst können
+    // auch Fahrer und Kunden mit Portal-Login die Route aufrufen.
+    Route::middleware(['web', 'auth', 'admin'])
         ->prefix('admin/mein-modul')
         ->name('admin.mein-modul.')
         ->group(function () {
@@ -469,11 +489,16 @@ protected function registerRoutes(): void
 
 | Kontext | Middleware | Prefix |
 |---------|-----------|--------|
-| Admin-Seiten | `['web', 'auth']` | `admin/mein-modul` |
+| Admin-Seiten | `['web', 'auth', 'admin']` | `admin/mein-modul` |
 | API-Endpoints | `['api']` | `api/mein-modul` |
 | Öffentlich | `['web']` | Nach Bedarf |
 
-**Empfehlung:** Für Admin-Routen immer `auth`-Middleware verwenden. Route-Namen mit `admin.mein-modul.` prefixen, damit die Navigation korrekt markiert wird.
+**Empfehlung:** Für Admin-Routen **immer** `'admin'`-Alias zusätzlich zu `'auth'`
+verwenden. `'auth'` allein lässt jeden eingeloggten Nutzer durch — auch
+Fahrer und Kunden mit Portal-Login. Der Alias `'admin'` ist in
+`bootstrap/app.php` auf `App\Http\Middleware\EnsureAdmin::class` gemappt.
+Route-Namen mit `admin.mein-modul.` prefixen, damit die Navigation
+korrekt markiert wird.
 
 ### 6. Views laden
 
@@ -490,10 +515,25 @@ return view('mein-modul::settings', ['key' => 'value']);
 'view' => 'mein-modul::widgets.status-card',
 ```
 
-Der View-Namespace (`mein-modul`) isoliert die Templates vom Rest der Anwendung. In Blade-Templates können alle Schneespur-Layouts und Components verwendet werden:
+Der View-Namespace (`mein-modul`) isoliert die Templates vom Rest der Anwendung. In Blade-Templates können alle Schneespur-Layouts und Components verwendet werden.
+
+**Wichtig — richtiges Layout wählen:**
+
+| Layout | Wann | Liefert |
+|--------|------|---------|
+| `<x-admin-layout>` | Admin-Seiten (alles unter `/admin/...`) | Admin-Sidebar, Top-Bar, Schneespur-Chrome |
+| `<x-app-layout>` | Allgemeine eingeloggte Seiten (Breeze-Standard) | Nur Top-Bar, **ohne** Admin-Sidebar |
+| `<x-driver-layout>` | Fahrer-Bereich | Fahrer-Chrome |
+| `<x-portal-layout>` | Kunden-Portal | Kunden-Chrome |
+
+Für ein **Admin-Modul** ist `<x-admin-layout>` praktisch immer richtig.
+`<x-app-layout>` zu nehmen ist ein häufiger Stolperfall — die Seite
+rendert ohne Sidebar, sieht aus als wäre sie aus dem Admin-Bereich
+herausgefallen.
 
 ```blade
-<x-app-layout>
+{{-- Admin-Seite: <x-admin-layout> — Slot-Signaturen sind identisch zu app-layout --}}
+<x-admin-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             Mein Modul — Einstellungen
@@ -505,7 +545,7 @@ Der View-Namespace (`mein-modul`) isoliert die Templates vom Rest der Anwendung.
             {{-- Modul-Inhalte --}}
         </div>
     </div>
-</x-app-layout>
+</x-admin-layout>
 ```
 
 ---
