@@ -4,6 +4,7 @@ namespace Schneespur\Module\Example;
 
 use App\Events\JobCompleted;
 use App\Services\Extension\DashboardWidgetRegistry;
+use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,7 @@ class ExampleServiceProvider extends ServiceProvider
 
         $this->registerNavigation();
         $this->registerWidget();
+        $this->registerFilters();
         $this->registerEventListeners();
         $this->registerRoutes();
     }
@@ -50,6 +52,49 @@ class ExampleServiceProvider extends ServiceProvider
             'order' => 200,
             'size' => 'half',
         ]);
+    }
+
+    protected function registerFilters(): void
+    {
+        $filters = $this->app->make(FilterRegistry::class);
+
+        $filters->register('schneespur.navigation.items', function (array $grouped): array {
+            $grouped['modules'][] = [
+                'group' => 'modules',
+                'slug' => 'example-filter',
+                'label' => 'Example Filter',
+                'route' => 'admin.example.settings',
+                'icon' => 'heroicon-o-funnel',
+                'order' => 250,
+                'permission' => null,
+                'route_check' => null,
+                'active_pattern' => 'admin.example.settings',
+                'badge' => null,
+            ];
+
+            return $grouped;
+        }, 150);
+
+        $filters->register('schneespur.dashboard.kpis', function (array $widgets): array {
+            $widgets[] = [
+                'key' => 'example-filter-widget',
+                'label' => 'Filter Demo',
+                'view' => 'example-module::widgets.example-card',
+                'order' => 250,
+                'size' => 'half',
+            ];
+
+            return $widgets;
+        }, 150);
+
+        $filters->register('schneespur.job.notification.recipients', function (array $recipients, $job): array {
+            Log::info('ExampleModule: notification recipients filter', [
+                'job_id' => $job->id ?? null,
+                'recipient_count' => count($recipients),
+            ]);
+
+            return $recipients;
+        }, 150);
     }
 
     protected function registerEventListeners(): void
