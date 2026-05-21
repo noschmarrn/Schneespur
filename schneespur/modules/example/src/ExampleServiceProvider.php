@@ -2,7 +2,11 @@
 
 namespace Schneespur\Module\Example;
 
+use App\Events\Customer\CustomerUpdated;
 use App\Events\JobCompleted;
+use App\Events\Module\ModuleEnabled;
+use App\Events\Shift\WorkShiftStarted;
+use App\Events\User\UserLoggedIn;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
@@ -116,6 +120,33 @@ class ExampleServiceProvider extends ServiceProvider
             Log::info('ExampleModule: JobCompleted event received', [
                 'job_id' => $event->job->id,
                 'weather_available' => $event->weatherAvailable,
+            ]);
+        });
+
+        $this->app['events']->listen(WorkShiftStarted::class, function (WorkShiftStarted $event) {
+            Log::info('ExampleModule: WorkShiftStarted event received', [
+                'shift_id' => $event->workShift->id,
+                'user_id' => $event->user->id,
+            ]);
+        });
+
+        $this->app['events']->listen(CustomerUpdated::class, function (CustomerUpdated $event) {
+            Log::info('ExampleModule: CustomerUpdated event received', [
+                'customer_id' => $event->customer->id,
+                'customer_name' => $event->customer->name,
+            ]);
+        });
+
+        $this->app['events']->listen(UserLoggedIn::class, function (UserLoggedIn $event) {
+            Log::info('ExampleModule: UserLoggedIn event received', [
+                'user_id' => $event->user->id,
+                'user_email' => $event->user->email,
+            ]);
+        });
+
+        $this->app['events']->listen(ModuleEnabled::class, function (ModuleEnabled $event) {
+            Log::info('ExampleModule: ModuleEnabled event received', [
+                'module_slug' => $event->module->slug,
             ]);
         });
     }

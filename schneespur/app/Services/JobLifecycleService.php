@@ -6,6 +6,8 @@ use App\Enums\JobType;
 use App\Enums\WeatherMoment;
 use App\Events\JobCompleted;
 use App\Events\JobStarted;
+use App\Events\Shift\WorkShiftEnded;
+use App\Events\Shift\WorkShiftStarted;
 use App\Events\WeatherSnapshotCreated;
 use App\Exceptions\JobLifecycleException;
 use App\Jobs\FetchWeather;
@@ -25,10 +27,14 @@ class JobLifecycleService
             throw JobLifecycleException::shiftAlreadyActive();
         }
 
-        return WorkShift::create([
+        $shift = WorkShift::create([
             'user_id' => $user->id,
             'started_at' => now(),
         ]);
+
+        WorkShiftStarted::dispatch($shift, $user);
+
+        return $shift;
     }
 
     public function endShift(User $user): WorkShift
@@ -45,6 +51,8 @@ class JobLifecycleService
 
         $shift->ended_at = now();
         $shift->save();
+
+        WorkShiftEnded::dispatch($shift, $user);
 
         return $shift;
     }
@@ -138,6 +146,9 @@ class JobLifecycleService
             'started_at' => $startedAt,
             'ended_at' => $endedAt,
         ]);
+
+        WorkShiftStarted::dispatch($shift, $driver);
+        WorkShiftEnded::dispatch($shift, $driver);
 
         $job = Job::create([
             'work_shift_id' => $shift->id,

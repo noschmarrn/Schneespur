@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\UserRole;
+use App\Events\User\UserCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreDriverRequest;
 use App\Http\Requests\Admin\UpdateDriverRequest;
@@ -43,6 +44,8 @@ class DriverController extends Controller
         $driver = User::create($request->safe()->only(['name', 'email', 'password', 'phone', 'notes', 'default_vehicle_id']));
         $driver->role = UserRole::Driver;
         $driver->save();
+
+        UserCreated::dispatch($driver);
 
         $credentials = $credentialService->generateCredentials($driver, $request->user());
 

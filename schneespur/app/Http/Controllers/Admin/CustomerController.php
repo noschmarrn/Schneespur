@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\Customer\CustomerDeleted;
+use App\Events\Customer\CustomerUpdated;
 use App\Events\CustomerCreated as CustomerCreatedEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCustomerRequest;
@@ -58,6 +60,8 @@ class CustomerController extends Controller
     {
         $customer->update($request->validated());
 
+        CustomerUpdated::dispatch($customer);
+
         return redirect()
             ->route('admin.customers.index')
             ->with('success', __('customer.flash_updated', ['name' => $customer->name]));
@@ -83,6 +87,7 @@ class CustomerController extends Controller
     public function destroy(Customer $customer, NotificationLogService $notificationLogService): RedirectResponse
     {
         $name = $customer->name;
+        CustomerDeleted::dispatch($customer);
         $notificationLogService->anonymizeForCustomer($customer);
         $customer->delete();
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\Module\ModuleDisabled;
+use App\Events\Module\ModuleEnabled;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Services\ModuleManager;
@@ -131,7 +133,7 @@ class AdminModuleController extends Controller
                 ->with('error', __('modules.install_failed', ['slug' => $slug, 'error' => __('modules.directory_exists')]));
         }
 
-        Module::updateOrCreate(
+        $module = Module::updateOrCreate(
             ['slug' => $slug],
             [
                 'version' => $moduleData['version'] ?? '0.0.0',
@@ -140,6 +142,8 @@ class AdminModuleController extends Controller
                 'installed_at' => now(),
             ],
         );
+
+        ModuleEnabled::dispatch($module);
 
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.installed', ['slug' => $slug]));
@@ -209,6 +213,8 @@ class AdminModuleController extends Controller
 
         $module->update(['enabled' => true]);
 
+        ModuleEnabled::dispatch($module);
+
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.enabled', ['slug' => $slug]));
     }
@@ -223,6 +229,8 @@ class AdminModuleController extends Controller
         }
 
         $module->update(['enabled' => false]);
+
+        ModuleDisabled::dispatch($module);
 
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.disabled', ['slug' => $slug]));
@@ -248,6 +256,8 @@ class AdminModuleController extends Controller
         }
 
         $module->update(['enabled' => false]);
+
+        ModuleDisabled::dispatch($module);
 
         $installer->remove($slug);
 

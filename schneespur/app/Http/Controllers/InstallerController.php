@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Events\User\UserCreated;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\Installer\EnvFileWriter;
@@ -239,11 +240,14 @@ class InstallerController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => $validated['password'],
-        ])->forceFill(['role' => UserRole::Admin])->save();
+        ]);
+        $user->forceFill(['role' => UserRole::Admin])->save();
+
+        UserCreated::dispatch($user);
 
         $this->lockManager->lock();
 
