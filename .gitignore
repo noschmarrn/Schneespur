@@ -1,64 +1,44 @@
-# Dependencies
-/schneespur/vendor/
+# ── Dependencies ──
 /node_modules/
+/vendor/
+/schneespur/node_modules/
+/schneespur/vendor/
 
-# Environment
+# ── Local env (keep .env.example tracked) ──
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
 
-# IDE / Editor
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Laravel
+# ── Laravel runtime ──
 /schneespur/storage/logs/*.log
 /schneespur/storage/framework/cache/*
 /schneespur/storage/framework/sessions/*
 /schneespur/storage/framework/views/*
 /schneespur/storage/testing/
 
-# Build artifacts
+# ── Build artifacts ──
 /schneespur/public/build/
 /schneespur/public/hot
+/release/
 
-# Testing
+# ── Internal dev files (not part of distributable app) ──
+/build.sh
+/moduldoku.md
+/package-lock.json
+
+# ── Test caches ──
 .phpunit.result.cache
 .phpunit.cache/
 
-# Release builds
-/release/
+# ── IDE / OS ──
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
 
-# Misc
-*.bak
-*.orig
-
-# ── GSD baseline (auto-generated) ──
+# ── Local tooling ──
 .gsd
 .gsd-id
 .mcp.json
 .bg-shell/
-*~
-*.code-workspace
-.env.*
-!.env.example
-node_modules/
-.next/
-dist/
-build/
-__pycache__/
-*.pyc
-.venv/
-venv/
-target/
-vendor/
-*.log
-coverage/
-.cache/
-tmp/
