@@ -54,9 +54,10 @@ cp -r "$SOURCE_DIR/resources" "$BUILD_DIR/"
 cp -r "$SOURCE_DIR/routes" "$BUILD_DIR/"
 cp -r "$SOURCE_DIR/vendor" "$BUILD_DIR/"
 
-# Modules directory (example module for reference)
+# Modules directory — example module is dev-only and excluded from releases
 if [ -d "$SOURCE_DIR/modules" ]; then
     cp -r "$SOURCE_DIR/modules" "$BUILD_DIR/"
+    rm -rf "$BUILD_DIR/modules/example"
 fi
 
 # Documentation and legal → build root (flat, alongside code)

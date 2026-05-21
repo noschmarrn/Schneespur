@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\DsgvoOnboardingController;
 use App\Models\DsgvoConfirmation;
 use App\Models\Setting;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class DsgvoAdminController extends Controller
         $version = (int) Setting::get('dsgvo_template_version', 1);
 
         if ($markdown === null) {
-            $markdown = view('dsgvo.default-template')->render();
+            $markdown = view(DsgvoOnboardingController::resolveDefaultTemplateView())->render();
         }
 
         $previewHtml = Str::markdown($this->replacePlaceholders($markdown), ['html_input' => 'strip']);
@@ -82,25 +83,7 @@ class DsgvoAdminController extends Controller
 
     private function replacePlaceholders(string $text): string
     {
-        $companyName = Setting::get('company_name', '');
-        $street = Setting::get('company_street', '');
-        $zip = Setting::get('company_zip', '');
-        $city = Setting::get('company_city', '');
-        $email = Setting::get('company_email', '');
-        $dpo = Setting::get('dpo_contact', '');
-        $dpoEmail = Setting::get('dpo_email', '');
-
-        $address = trim("$street, $zip $city", ', ');
-
-        $replacements = [
-            '[Firmenname eintragen]' => $companyName ?: '[Firmenname eintragen]',
-            '[Adresse eintragen]' => $address ?: '[Adresse eintragen]',
-            '[E-Mail-Adresse eintragen]' => $email ?: '[E-Mail-Adresse eintragen]',
-            '[DPO-E-Mail-Adresse eintragen]' => $dpoEmail ?: '[DPO-E-Mail-Adresse eintragen]',
-            '[Datenschutzbeauftragter / Ansprechpartner eintragen]' => $dpo ?: '[Datenschutzbeauftragter / Ansprechpartner eintragen]',
-        ];
-
-        return str_replace(array_keys($replacements), array_values($replacements), $text);
+        return dsgvo_apply_company_placeholders($text);
     }
 
     public function showConfirmation(int $id): View

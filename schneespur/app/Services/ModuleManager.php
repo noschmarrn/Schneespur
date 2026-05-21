@@ -56,7 +56,7 @@ class ModuleManager
 
             $this->modules[$slug] = $manifest;
 
-            Log::info('ModuleManager: module discovered', [
+            Log::debug('ModuleManager: module discovered', [
                 'slug' => $slug,
                 'version' => $manifest['version'] ?? 'unknown',
             ]);
@@ -90,6 +90,13 @@ class ModuleManager
 
         foreach ($this->modules as $slug => $manifest) {
             if (! $this->isEnabled($slug)) {
+                continue;
+            }
+
+            // Reference example module — opt-in only via env var. Ensures the
+            // bundled dev demo never auto-loads on customer installs even if the
+            // old folder is still present after upgrading from older releases.
+            if ($slug === 'example' && ! env('EXAMPLE_MODULE_ENABLED', false)) {
                 continue;
             }
 
@@ -128,7 +135,7 @@ class ModuleManager
                 $provider->register();
                 $provider->boot();
 
-                Log::info('ModuleManager: module booted', [
+                Log::debug('ModuleManager: module booted', [
                     'slug' => $slug,
                     'version' => $manifest['version'] ?? 'unknown',
                 ]);
@@ -165,7 +172,7 @@ class ModuleManager
             $this->disabledModules[] = $slug;
         }
 
-        Log::info('ModuleManager: module disabled', ['slug' => $slug]);
+        Log::debug('ModuleManager: module disabled', ['slug' => $slug]);
 
         return true;
     }

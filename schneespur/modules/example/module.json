@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "namespace": "Schneespur\\Module\\Example",
     "service_provider": "Schneespur\\Module\\Example\\ExampleServiceProvider",
-    "description": "Reference module demonstrating all extension points (nav, widget, event, settings, route).",
+    "description": "Reference module demonstrating all extension points (nav, widget, event, settings, route). Dev-only — opt in via EXAMPLE_MODULE_ENABLED=true in .env.",
     "min_schneespur_version": "1.0.0",
-    "requires_permissions": []
+    "requires_permissions": [],
+    "default_enabled": false
 }

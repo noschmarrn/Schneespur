@@ -15,9 +15,9 @@
         @endphp
         <form method="POST" action="{{ route('driver.job.manual.store') }}" class="space-y-5"
               x-data="{
-                  selectedCustomerId: {{ old('customer_id', 'null') }},
-                  selectedObjectId: {{ old('customer_object_id', 'null') }},
-                  allObjects: @json($allObjects),
+                  selectedCustomerId: {{ old('customer_id') ? (int) old('customer_id') : 'null' }},
+                  selectedObjectId: {{ old('customer_object_id') ? (int) old('customer_object_id') : 'null' }},
+                  allObjects: {{ json_encode($allObjects) }},
                   get objects() { return this.allObjects.filter(o => o.customer_id === this.selectedCustomerId); },
                   onCustomerChange() {
                       const objs = this.objects;

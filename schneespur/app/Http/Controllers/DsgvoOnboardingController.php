@@ -66,32 +66,22 @@ class DsgvoOnboardingController extends Controller
         $version = (int) Setting::get('dsgvo_template_version', 1);
 
         if ($text === null) {
-            $text = view('dsgvo.default-template')->render();
+            $text = view(self::resolveDefaultTemplateView())->render();
         }
 
         return [$text, $version];
     }
 
+    public static function resolveDefaultTemplateView(): string
+    {
+        $locale = app()->getLocale();
+        $localized = "dsgvo.default-template-{$locale}";
+
+        return view()->exists($localized) ? $localized : 'dsgvo.default-template';
+    }
+
     private function replacePlaceholders(string $text): string
     {
-        $companyName = Setting::get('company_name', '');
-        $street = Setting::get('company_street', '');
-        $zip = Setting::get('company_zip', '');
-        $city = Setting::get('company_city', '');
-        $email = Setting::get('company_email', '');
-        $dpo = Setting::get('dpo_contact', '');
-        $dpoEmail = Setting::get('dpo_email', '');
-
-        $address = trim("$street, $zip $city", ', ');
-
-        $replacements = [
-            '[Firmenname eintragen]' => $companyName ?: '[Firmenname eintragen]',
-            '[Adresse eintragen]' => $address ?: '[Adresse eintragen]',
-            '[E-Mail-Adresse eintragen]' => $email ?: '[E-Mail-Adresse eintragen]',
-            '[DPO-E-Mail-Adresse eintragen]' => $dpoEmail ?: '[DPO-E-Mail-Adresse eintragen]',
-            '[Datenschutzbeauftragter / Ansprechpartner eintragen]' => $dpo ?: '[Datenschutzbeauftragter / Ansprechpartner eintragen]',
-        ];
-
-        return str_replace(array_keys($replacements), array_values($replacements), $text);
+        return dsgvo_apply_company_placeholders($text);
     }
 }

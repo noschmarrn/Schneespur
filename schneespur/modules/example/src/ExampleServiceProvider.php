@@ -19,6 +19,10 @@ class ExampleServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (! $this->shouldBoot()) {
+            return;
+        }
+
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'example-module');
 
         $this->registerNavigation();
@@ -26,6 +30,15 @@ class ExampleServiceProvider extends ServiceProvider
         $this->registerFilters();
         $this->registerEventListeners();
         $this->registerRoutes();
+    }
+
+    /**
+     * Reference module — only loads when explicitly enabled.
+     * Devs can enable for local exploration via .env: EXAMPLE_MODULE_ENABLED=true
+     */
+    protected function shouldBoot(): bool
+    {
+        return (bool) env('EXAMPLE_MODULE_ENABLED', false);
     }
 
     protected function registerNavigation(): void

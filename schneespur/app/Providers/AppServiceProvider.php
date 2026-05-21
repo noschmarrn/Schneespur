@@ -22,6 +22,7 @@ use App\Services\ModuleManager;
 use App\Services\RetentionService;
 use App\Services\SchneespurUpdater;
 use App\Services\SeasonService;
+use App\Services\Translation\BrandedTranslator;
 use App\Services\Weather\BrightSkyProvider;
 use App\Services\Weather\MetNorwayProvider;
 use App\Services\Weather\OpenMeteoApiProvider;
@@ -66,6 +67,17 @@ class AppServiceProvider extends ServiceProvider
         if (empty(config('app.key'))) {
             config(['app.key' => 'base64:'.base64_encode(random_bytes(32))]);
         }
+
+        $this->app->extend('translator', function ($translator, $app) {
+            if ($translator instanceof BrandedTranslator) {
+                return $translator;
+            }
+            $branded = new BrandedTranslator($translator->getLoader(), $translator->getLocale());
+            if ($fallback = $translator->getFallback()) {
+                $branded->setFallback($fallback);
+            }
+            return $branded;
+        });
     }
 
     /**

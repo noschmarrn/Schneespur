@@ -129,7 +129,7 @@ class InstallerController extends Controller
     {
         if ($this->preflightChecker->hasCriticalFailures()) {
             return redirect()->route('install.preflight')
-                ->withErrors(['preflight' => 'Kritische Voraussetzungen nicht erfüllt.']);
+                ->withErrors(['preflight' => __('install.preflight_has_failures')]);
         }
 
         return redirect()->route('install.database');
