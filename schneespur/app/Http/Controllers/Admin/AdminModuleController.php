@@ -6,11 +6,14 @@ use App\Events\Module\ModuleDisabled;
 use App\Events\Module\ModuleEnabled;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
+use App\Services\Module\DependencyValidator;
 use App\Services\ModuleManager;
 use App\Services\SchneespurModuleClient;
 use App\Services\SchneespurModuleInstaller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -143,6 +146,23 @@ class AdminModuleController extends Controller
             ],
         );
 
+        try {
+            $this->runModuleMigrations($slug);
+        } catch (\Throwable $e) {
+            Log::error("Module migration failed during install of '{$slug}': {$e->getMessage()}");
+
+            try {
+                $this->rollbackModuleMigrations($slug);
+            } catch (\Throwable) {
+            }
+
+            $installer->remove($slug);
+            $module->delete();
+
+            return redirect()->route('admin.settings.modules.index')
+                ->with('error', __('modules.migration_failed', ['slug' => $slug, 'error' => $e->getMessage()]));
+        }
+
         ModuleEnabled::dispatch($module);
 
         return redirect()->route('admin.settings.modules.index')
@@ -198,11 +218,17 @@ class AdminModuleController extends Controller
             'manifest_json' => $moduleData,
         ]);
 
+        try {
+            $this->runModuleMigrations($slug);
+        } catch (\Throwable $e) {
+            Log::warning("Module migration failed during update of '{$slug}': {$e->getMessage()}");
+        }
+
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.updated', ['slug' => $slug]));
     }
 
-    public function enable(string $slug): RedirectResponse
+    public function enable(string $slug, ModuleManager $manager): RedirectResponse
     {
         $module = Module::where('slug', $slug)->first();
 
@@ -211,7 +237,37 @@ class AdminModuleController extends Controller
                 ->with('error', __('modules.not_installed', ['slug' => $slug]));
         }
 
+        $manager->discover();
+        $manifest = $manager->getManifest($slug);
+
+        if ($manifest) {
+            $activeModules = $this->getDbActiveModuleManifests($manager);
+            $validator = new DependencyValidator();
+            $errors = $validator->validate($manifest, $activeModules);
+
+            if (! empty($errors)) {
+                return redirect()->route('admin.settings.modules.index')
+                    ->with('error', $this->formatDependencyErrors($errors, $slug, $manager));
+            }
+        }
+
         $module->update(['enabled' => true]);
+
+        try {
+            $this->runModuleMigrations($slug);
+        } catch (\Throwable $e) {
+            Log::error("Module migration failed for '{$slug}': {$e->getMessage()}");
+
+            try {
+                $this->rollbackModuleMigrations($slug);
+            } catch (\Throwable) {
+            }
+
+            $module->update(['enabled' => false]);
+
+            return redirect()->route('admin.settings.modules.index')
+                ->with('error', __('modules.migration_failed', ['slug' => $slug, 'error' => $e->getMessage()]));
+        }
 
         ModuleEnabled::dispatch($module);
 
@@ -219,13 +275,23 @@ class AdminModuleController extends Controller
             ->with('success', __('modules.enabled', ['slug' => $slug]));
     }
 
-    public function disable(string $slug): RedirectResponse
+    public function disable(string $slug, ModuleManager $manager): RedirectResponse
     {
         $module = Module::where('slug', $slug)->first();
 
         if (! $module) {
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.not_installed', ['slug' => $slug]));
+        }
+
+        $manager->discover();
+        $activeModules = $this->getDbActiveModuleManifests($manager);
+        $validator = new DependencyValidator();
+        $dependants = $validator->checkReverseDependencies($slug, $manager->getAll(), $activeModules);
+
+        if (! empty($dependants)) {
+            return redirect()->route('admin.settings.modules.index')
+                ->with('error', __('modules.has_dependants', ['slug' => $slug, 'dependants' => implode(', ', $dependants)]));
         }
 
         $module->update(['enabled' => false]);
@@ -234,6 +300,96 @@ class AdminModuleController extends Controller
 
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.disabled', ['slug' => $slug]));
+    }
+
+    private function getDbActiveModuleManifests(ModuleManager $manager): array
+    {
+        $enabledSlugs = Module::where('enabled', true)->pluck('slug')->toArray();
+        $active = [];
+
+        foreach ($enabledSlugs as $slug) {
+            $manifest = $manager->getManifest($slug);
+            if ($manifest) {
+                $active[$slug] = $manifest;
+            }
+        }
+
+        return $active;
+    }
+
+    private function formatDependencyErrors(array $errors, string $slug, ModuleManager $manager): string
+    {
+        $messages = [];
+
+        foreach ($errors as $error) {
+            $parts = explode(':', $error);
+            $type = $parts[0] ?? '';
+
+            match ($type) {
+                'requires_missing' => $messages[] = __('modules.dependency_missing', [
+                    'slug' => $slug,
+                    'dependency' => $parts[1] ?? '?',
+                    'constraint' => $parts[2] ?? '*',
+                ]),
+                'requires_version' => $messages[] = __('modules.dependency_version', [
+                    'slug' => $slug,
+                    'dependency' => $parts[1] ?? '?',
+                    'constraint' => $parts[2] ?? '*',
+                    'actual' => $parts[3] ?? '?',
+                ]),
+                'conflict' => $messages[] = __('modules.dependency_conflict', [
+                    'slug' => $slug,
+                    'conflict' => $parts[1] ?? '?',
+                ]),
+                default => $messages[] = $error,
+            };
+        }
+
+        return implode(' ', $messages);
+    }
+
+    private function moduleMigrationPath(string $slug): ?string
+    {
+        $path = base_path("modules/{$slug}/database/migrations");
+
+        if (! File::isDirectory($path)) {
+            return null;
+        }
+
+        if (empty(File::glob($path . '/*.php'))) {
+            return null;
+        }
+
+        return "modules/{$slug}/database/migrations";
+    }
+
+    private function runModuleMigrations(string $slug): void
+    {
+        $path = $this->moduleMigrationPath($slug);
+
+        if ($path === null) {
+            return;
+        }
+
+        Artisan::call('migrate', [
+            '--path' => $path,
+            '--force' => true,
+        ]);
+    }
+
+    private function rollbackModuleMigrations(string $slug): void
+    {
+        $path = $this->moduleMigrationPath($slug);
+
+        if ($path === null) {
+            return;
+        }
+
+        Artisan::call('migrate:rollback', [
+            '--path' => $path,
+            '--force' => true,
+            '--step' => 999,
+        ]);
     }
 
     private function resolveLocalPermissions(string $slug): array
@@ -258,6 +414,17 @@ class AdminModuleController extends Controller
         $module->update(['enabled' => false]);
 
         ModuleDisabled::dispatch($module);
+
+        try {
+            $this->rollbackModuleMigrations($slug);
+        } catch (\Throwable $e) {
+            Log::warning("Module migration rollback failed for '{$slug}': {$e->getMessage()}");
+        }
+
+        $deleted = app(ModuleManager::class)->cleanupSettings($slug);
+        if ($deleted > 0) {
+            Log::info("Cleaned up {$deleted} settings for module '{$slug}'.");
+        }
 
         $installer->remove($slug);
 

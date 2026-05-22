@@ -7,12 +7,16 @@ use App\Events\JobCompleted;
 use App\Events\Module\ModuleEnabled;
 use App\Events\Shift\WorkShiftStarted;
 use App\Events\User\UserLoggedIn;
+use App\Models\Setting;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
+use App\Services\ModuleManager;
+use App\Services\Notification\NotificationChannelRegistry;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Schneespur\Module\Example\Notification\DummyLogChannel;
 
 class ExampleServiceProvider extends ServiceProvider
 {
@@ -29,10 +33,12 @@ class ExampleServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'example-module');
 
+        $this->registerSettings();
         $this->registerNavigation();
         $this->registerWidget();
         $this->registerFilters();
         $this->registerEventListeners();
+        $this->registerNotificationChannels();
         $this->registerRoutes();
     }
 
@@ -43,6 +49,14 @@ class ExampleServiceProvider extends ServiceProvider
     protected function shouldBoot(): bool
     {
         return (bool) env('EXAMPLE_MODULE_ENABLED', false);
+    }
+
+    protected function registerSettings(): void
+    {
+        $this->app->make(ModuleManager::class)->registerSettings('example', [
+            'greeting' => 'Hello from Example Module',
+            'enabled_features' => 'all',
+        ]);
     }
 
     protected function registerNavigation(): void
@@ -149,6 +163,12 @@ class ExampleServiceProvider extends ServiceProvider
                 'module_slug' => $event->module->slug,
             ]);
         });
+    }
+
+    protected function registerNotificationChannels(): void
+    {
+        $registry = $this->app->make(NotificationChannelRegistry::class);
+        $registry->register('dummy-log', DummyLogChannel::class);
     }
 
     protected function registerRoutes(): void

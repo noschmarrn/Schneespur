@@ -3,13 +3,12 @@
 namespace App\Listeners;
 
 use App\Events\JobCompleted;
-use App\Mail\JobCompletedMail;
 use App\Services\Extension\FilterRegistry;
+use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\NotificationLogService;
 use App\Services\PdfReportService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class SendJobCompletedNotification implements ShouldQueue
 {
@@ -17,6 +16,7 @@ class SendJobCompletedNotification implements ShouldQueue
         private NotificationLogService $notificationLogService,
         private PdfReportService $pdfReportService,
         private FilterRegistry $filterRegistry,
+        private NotificationChannelRegistry $channelRegistry,
     ) {}
 
     public function handle(JobCompleted $event): void
@@ -66,24 +66,25 @@ class SendJobCompletedNotification implements ShouldQueue
             $pdfContent = null;
         }
 
-        foreach (array_unique($recipients) as $recipient) {
-            try {
-                Mail::to($recipient)->send(new JobCompletedMail(
-                    $job,
-                    $event->weatherAvailable,
-                    $pdfContent,
-                    $pdfFilename,
-                    $event->isWeatherUpdate,
-                ));
+        $context = [
+            'recipients' => array_unique($recipients),
+            'pdf_content' => $pdfContent,
+            'pdf_filename' => $pdfFilename,
+            'weather_available' => $event->weatherAvailable,
+            'is_weather_update' => $event->isWeatherUpdate,
+            'customer_object_id' => $object?->id,
+            'customer_object_name' => $object?->name,
+        ];
 
-                $this->notificationLogService->logSent($job, $notificationType, $recipient, [
-                    'weather_available' => $event->weatherAvailable,
-                    'pdf_attached' => $pdfContent !== null,
-                    'customer_object_id' => $object?->id,
-                    'customer_object_name' => $object?->name,
+        $results = $this->channelRegistry->dispatch($job, $notificationType, $context);
+
+        foreach ($results as $result) {
+            if ($result['status'] === 'failed') {
+                Log::warning('Notification channel dispatch failed', [
+                    'job_id' => $job->id,
+                    'channel' => $result['slug'],
+                    'error' => $result['error'],
                 ]);
-            } catch (\Throwable $e) {
-                $this->notificationLogService->logFailed($job, $notificationType, $recipient, $e->getMessage());
             }
         }
     }

@@ -9,10 +9,10 @@ use Carbon\Carbon;
 
 class NotificationLogService
 {
-    public function logSent(Job $job, string $type, string $recipient, array $metadata = []): NotificationLog
+    public function logSent(Job $job, string $type, string $recipient, array $metadata = [], string $channel = 'email'): NotificationLog
     {
         return $job->notificationLogs()->create([
-            'channel' => 'email',
+            'channel' => $channel,
             'type' => $type,
             'recipient' => $recipient,
             'status' => 'sent',
@@ -20,10 +20,10 @@ class NotificationLogService
         ]);
     }
 
-    public function logFailed(Job $job, string $type, string $recipient, string $error, array $metadata = []): NotificationLog
+    public function logFailed(Job $job, string $type, string $recipient, string $error, array $metadata = [], string $channel = 'email'): NotificationLog
     {
         return $job->notificationLogs()->create([
-            'channel' => 'email',
+            'channel' => $channel,
             'type' => $type,
             'recipient' => $recipient,
             'status' => 'failed',
@@ -32,10 +32,10 @@ class NotificationLogService
         ]);
     }
 
-    public function logSkipped(Job $job, string $type, string $status, array $metadata = []): NotificationLog
+    public function logSkipped(Job $job, string $type, string $status, array $metadata = [], string $channel = 'email'): NotificationLog
     {
         return $job->notificationLogs()->create([
-            'channel' => 'email',
+            'channel' => $channel,
             'type' => $type,
             'status' => $status,
             'metadata' => $metadata ?: null,
@@ -69,10 +69,10 @@ class NotificationLogService
             ->exists();
     }
 
-    public function logSentForCustomer(Customer $customer, string $type, string $recipient, array $metadata = []): NotificationLog
+    public function logSentForCustomer(Customer $customer, string $type, string $recipient, array $metadata = [], string $channel = 'email'): NotificationLog
     {
         return $customer->notificationLogs()->create([
-            'channel' => 'email',
+            'channel' => $channel,
             'type' => $type,
             'recipient' => $recipient,
             'status' => 'sent',
@@ -80,10 +80,10 @@ class NotificationLogService
         ]);
     }
 
-    public function logFailedForCustomer(Customer $customer, string $type, string $recipient, string $error, array $metadata = []): NotificationLog
+    public function logFailedForCustomer(Customer $customer, string $type, string $recipient, string $error, array $metadata = [], string $channel = 'email'): NotificationLog
     {
         return $customer->notificationLogs()->create([
-            'channel' => 'email',
+            'channel' => $channel,
             'type' => $type,
             'recipient' => $recipient,
             'status' => 'failed',

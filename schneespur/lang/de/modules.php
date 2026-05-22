@@ -47,4 +47,12 @@ return [
     'extraction_failed' => 'ZIP-Entpacken fehlgeschlagen.',
 
     'permission_tooltip' => 'Dieses Modul benötigt diese Berechtigung.',
+
+    'migration_failed' => 'Datenbank-Migration für ":slug" fehlgeschlagen: :error',
+    'migration_rollback_warning' => 'Migrations-Rollback für ":slug" fehlgeschlagen: :error',
+
+    'dependency_missing' => 'Modul ":slug" benötigt ":dependency" (:constraint), aber es ist nicht aktiv.',
+    'dependency_version' => 'Modul ":slug" benötigt ":dependency" :constraint, aber Version :actual ist installiert.',
+    'dependency_conflict' => 'Modul ":slug" steht in Konflikt mit ":conflict", das gerade aktiv ist.',
+    'has_dependants' => '":slug" kann nicht deaktiviert werden — folgende Module hängen davon ab: :dependants.',
 ];

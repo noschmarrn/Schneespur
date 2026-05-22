@@ -17,6 +17,8 @@ use App\Services\Diagnostic\DiagnosticReporterRegistry;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
+use App\Services\Notification\EmailNotificationChannel;
+use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\ForecastService;
 use App\Services\ModuleManager;
 use App\Services\RetentionService;
@@ -54,6 +56,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
         $this->app->singleton(DiagnosticManager::class);
         $this->app->singleton(ModuleManager::class, fn ($app) => new ModuleManager($app));
+        $this->app->singleton(NotificationChannelRegistry::class, function ($app) {
+            $registry = new NotificationChannelRegistry($app, $app->make(FilterRegistry::class));
+            $registry->register('email', EmailNotificationChannel::class);
+
+            return $registry;
+        });
+
         $this->app->singleton(WeatherProviderRegistry::class, function ($app) {
             $registry = new WeatherProviderRegistry($app);
             $registry->register('openmeteo_free', OpenMeteoFreeProvider::class);

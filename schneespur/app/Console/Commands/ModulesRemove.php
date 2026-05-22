@@ -3,9 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Models\Module;
+use App\Services\ModuleManager;
 use App\Services\SchneespurModuleClient;
 use App\Services\SchneespurModuleInstaller;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class ModulesRemove extends Command
@@ -42,6 +46,28 @@ class ModulesRemove extends Command
         }
 
         $module->update(['enabled' => false]);
+
+        $migrationPath = "modules/{$slug}/database/migrations";
+        $fullMigrationPath = base_path($migrationPath);
+
+        if (File::isDirectory($fullMigrationPath) && ! empty(File::glob($fullMigrationPath . '/*.php'))) {
+            try {
+                Artisan::call('migrate:rollback', [
+                    '--path' => $migrationPath,
+                    '--force' => true,
+                    '--step' => 999,
+                ]);
+                $this->info("Migrationen für \"{$slug}\" zurückgerollt.");
+            } catch (\Throwable $e) {
+                Log::warning("Module migration rollback failed for '{$slug}': {$e->getMessage()}");
+                $this->warn("Migrations-Rollback für \"{$slug}\" fehlgeschlagen: {$e->getMessage()}");
+            }
+        }
+
+        $deleted = app(ModuleManager::class)->cleanupSettings($slug);
+        if ($deleted > 0) {
+            $this->info("Einstellungen für \"{$slug}\" aufgeräumt ({$deleted} entfernt).");
+        }
 
         $removed = $installer->remove($slug);
 

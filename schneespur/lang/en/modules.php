@@ -47,4 +47,12 @@ return [
     'extraction_failed' => 'ZIP extraction failed.',
 
     'permission_tooltip' => 'This module requires this permission.',
+
+    'migration_failed' => 'Database migration for ":slug" failed: :error',
+    'migration_rollback_warning' => 'Migration rollback for ":slug" failed: :error',
+
+    'dependency_missing' => 'Module ":slug" requires ":dependency" (:constraint), but it is not active.',
+    'dependency_version' => 'Module ":slug" requires ":dependency" :constraint, but version :actual is installed.',
+    'dependency_conflict' => 'Module ":slug" conflicts with ":conflict" which is currently active.',
+    'has_dependants' => 'Cannot disable ":slug" — the following modules depend on it: :dependants.',
 ];

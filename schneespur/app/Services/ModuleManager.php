@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Setting;
 use App\Services\Diagnostic\DiagnosticManager;
+use App\Services\Module\DependencyValidator;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -151,10 +153,21 @@ class ModuleManager
         }
     }
 
-    public function enable(string $slug): bool
+    /**
+     * @return true|string[]  True on success, array of error strings on failure
+     */
+    public function enable(string $slug): true|array
     {
         if (! isset($this->modules[$slug])) {
-            return false;
+            return ['not_found'];
+        }
+
+        $validator = new DependencyValidator();
+        $activeModules = $this->getActiveModuleManifests();
+        $errors = $validator->validate($this->modules[$slug], $activeModules);
+
+        if (! empty($errors)) {
+            return $errors;
         }
 
         $this->disabledModules = array_diff($this->disabledModules, [$slug]);
@@ -162,10 +175,21 @@ class ModuleManager
         return true;
     }
 
-    public function disable(string $slug): bool
+    /**
+     * @return true|string[]  True on success, array of dependant slugs on failure
+     */
+    public function disable(string $slug): true|array
     {
         if (! isset($this->modules[$slug])) {
-            return false;
+            return ['not_found'];
+        }
+
+        $validator = new DependencyValidator();
+        $activeModules = $this->getActiveModuleManifests();
+        $dependants = $validator->checkReverseDependencies($slug, $this->modules, $activeModules);
+
+        if (! empty($dependants)) {
+            return $dependants;
         }
 
         if (! in_array($slug, $this->disabledModules, true)) {
@@ -202,6 +226,43 @@ class ModuleManager
         $manifest = $this->getManifest($slug);
 
         return $manifest['requires_permissions'] ?? [];
+    }
+
+    public function registerSettings(string $slug, array $defaults): void
+    {
+        foreach ($defaults as $key => $value) {
+            $fullKey = $slug . '.' . $key;
+
+            if (Setting::where('key', $fullKey)->exists()) {
+                continue;
+            }
+
+            $type = match (true) {
+                is_bool($value) => 'bool',
+                is_int($value) => 'int',
+                is_array($value) => 'json',
+                default => 'string',
+            };
+
+            Setting::set($fullKey, $value, $type);
+        }
+    }
+
+    public function cleanupSettings(string $slug): int
+    {
+        return Setting::where('key', 'like', $slug . '.%')->delete();
+    }
+
+    public function getActiveModuleManifests(): array
+    {
+        $active = [];
+        foreach ($this->modules as $slug => $manifest) {
+            if ($this->isEnabled($slug)) {
+                $active[$slug] = $manifest;
+            }
+        }
+
+        return $active;
     }
 
     protected function autoDisable(string $slug, string $reason): void

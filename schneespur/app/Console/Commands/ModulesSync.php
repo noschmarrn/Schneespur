@@ -6,6 +6,9 @@ use App\Models\Module;
 use App\Services\SchneespurModuleClient;
 use App\Services\SchneespurModuleInstaller;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 class ModulesSync extends Command
@@ -90,6 +93,10 @@ class ModulesSync extends Command
 
                 if ($dryRun) {
                     $this->info("[DRY-RUN] Würde aktualisieren: {$slug} → v{$version}");
+                    $migPath = base_path("modules/{$slug}/database/migrations");
+                    if (File::isDirectory($migPath) && ! empty(File::glob($migPath . '/*.php'))) {
+                        $this->info("[DRY-RUN] Würde Migrationen ausführen für {$slug}");
+                    }
                     $updated++;
                     continue;
                 }
@@ -110,6 +117,9 @@ class ModulesSync extends Command
                         'version' => $version,
                         'manifest_json' => $entry,
                     ]);
+
+                    $this->runModuleMigrations($slug);
+
                     $updated++;
                     $this->info("  ✓ {$slug} aktualisiert auf v{$version}.");
                 } catch (\Throwable $e) {
@@ -121,6 +131,7 @@ class ModulesSync extends Command
                     $installed++;
                     continue;
                 }
+
 
                 $this->info("Installiere {$slug} v{$version}…");
 
@@ -134,13 +145,24 @@ class ModulesSync extends Command
                         continue;
                     }
 
-                    Module::create([
+                    $newModule = Module::create([
                         'slug' => $slug,
                         'version' => $version,
                         'enabled' => true,
                         'manifest_json' => $entry,
                         'installed_at' => now(),
                     ]);
+
+                    try {
+                        $this->runModuleMigrations($slug);
+                    } catch (\Throwable $migError) {
+                        Log::error("Module migration failed during sync install of '{$slug}': {$migError->getMessage()}");
+                        $this->error("Migration fehlgeschlagen für {$slug}: {$migError->getMessage()}");
+                        $installer->remove($slug);
+                        $newModule->delete();
+                        continue;
+                    }
+
                     $installed++;
                     $this->info("  ✓ {$slug} v{$version} installiert.");
                 } catch (\Throwable $e) {
@@ -161,6 +183,23 @@ class ModulesSync extends Command
         }
 
         return 0;
+    }
+
+    private function runModuleMigrations(string $slug): void
+    {
+        $migrationPath = "modules/{$slug}/database/migrations";
+        $fullPath = base_path($migrationPath);
+
+        if (! File::isDirectory($fullPath) || empty(File::glob($fullPath . '/*.php'))) {
+            return;
+        }
+
+        Artisan::call('migrate', [
+            '--path' => $migrationPath,
+            '--force' => true,
+        ]);
+
+        $this->info("  Migrationen ausgeführt für {$slug}.");
     }
 
     private function detectOrphans(array $catalogSlugs, SchneespurModuleClient $client): void
