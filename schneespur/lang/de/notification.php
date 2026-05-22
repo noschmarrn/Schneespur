@@ -104,5 +104,10 @@ return [
     'portal_credentials_email_label'      => 'E-Mail:',
     'portal_credentials_password_label'   => 'Passwort:',
     'portal_credentials_change_hint'      => 'Bitte ändern Sie Ihr Passwort nach der ersten Anmeldung.',
+    'portal_credentials_login_button'     => 'Zum Kundenportal',
     'type_portal_credentials'             => 'Portal-Zugangsdaten',
+
+    // Mail layout (header/footer)
+    'mail_footer_phone_label' => 'Tel:',
+    'mail_footer_rights'      => 'Alle Rechte vorbehalten.',
 ];

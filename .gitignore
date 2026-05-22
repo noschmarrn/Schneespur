@@ -42,3 +42,22 @@ Thumbs.db
 .gsd-id
 .mcp.json
 .bg-shell/
+
+# ── GSD baseline (auto-generated) ──
+*.swo
+*~
+*.code-workspace
+node_modules/
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+*.log
+coverage/
+.cache/
+tmp/
