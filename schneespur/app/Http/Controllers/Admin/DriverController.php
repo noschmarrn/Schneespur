@@ -44,6 +44,7 @@ class DriverController extends Controller
         $driver = User::create($request->safe()->only(['name', 'email', 'password', 'phone', 'notes', 'default_vehicle_id']));
         $driver->role = UserRole::Driver;
         $driver->save();
+        $driver->assignRole('driver');
 
         UserCreated::dispatch($driver);
 

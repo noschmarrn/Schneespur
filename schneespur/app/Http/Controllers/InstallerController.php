@@ -246,6 +246,7 @@ class InstallerController extends Controller
             'password' => $validated['password'],
         ]);
         $user->forceFill(['role' => UserRole::Admin])->save();
+        $user->assignRole('admin');
 
         UserCreated::dispatch($user);
 
@@ -403,7 +404,7 @@ class InstallerController extends Controller
             return view('installer.step1-welcome', ['currentStep' => 1]);
         }
 
-        $admin = User::where('role', UserRole::Admin)->first();
+        $admin = User::admins()->first();
 
         return view('installer.done', [
             'currentStep' => 10,

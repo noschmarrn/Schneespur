@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Models\Scopes\ExcludeAnonymizedScope;
+use App\Models\Traits\HasRoles;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,7 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
@@ -49,6 +50,17 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         static::addGlobalScope(new ExcludeAnonymizedScope);
+
+        static::saved(function (User $user) {
+            if (! $user->wasChanged('role') || $user->role === null) {
+                return;
+            }
+
+            $role = Role::where('slug', $user->role->value)->first();
+            if ($role) {
+                $user->roles()->syncWithoutDetaching($role->id);
+            }
+        });
     }
 
     // --- Relations ---
@@ -92,12 +104,12 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin;
+        return $this->hasRole('admin');
     }
 
     public function isDriver(): bool
     {
-        return $this->role === UserRole::Driver;
+        return $this->hasRole('driver');
     }
 
     public function isAnonymized(): bool
@@ -118,12 +130,12 @@ class User extends Authenticatable
 
     public function scopeDrivers(Builder $query): Builder
     {
-        return $query->where('role', UserRole::Driver);
+        return $query->whereHas('roles', fn (Builder $q) => $q->where('slug', 'driver'));
     }
 
     public function scopeAdmins(Builder $query): Builder
     {
-        return $query->where('role', UserRole::Admin);
+        return $query->whereHas('roles', fn (Builder $q) => $q->where('slug', 'admin'));
     }
 
     public function scopeWithAnonymized(Builder $query): Builder

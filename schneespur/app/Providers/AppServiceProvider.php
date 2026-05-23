@@ -17,6 +17,8 @@ use App\Services\Diagnostic\DiagnosticReporterRegistry;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
+use App\Services\Extension\PermissionRegistry;
+use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Notification\EmailNotificationChannel;
 use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\ForecastService;
@@ -52,6 +54,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DashboardWidgetRegistry::class);
         $this->app->singleton(FilterRegistry::class);
         $this->app->singleton(NavigationRegistry::class);
+        $this->app->singleton(PermissionRegistry::class);
+        $this->app->singleton(RoleTemplateRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
         $this->app->singleton(DiagnosticManager::class);
@@ -110,6 +114,12 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::policy(Job::class, JobPolicy::class);
 
+        Gate::before(function (User $user, string $ability) {
+            if ($user->isAdmin()) {
+                return true;
+            }
+        });
+
         Route::bind('driver', fn (string $value) => User::drivers()->findOrFail($value));
         Route::model('serviceJob', Job::class);
         Route::model('object', CustomerObject::class);
@@ -127,6 +137,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->booted(function () {
             app(ModuleManager::class)->boot();
+            $this->registerPermissionGates();
         });
     }
 
@@ -322,6 +333,15 @@ class AppServiceProvider extends ServiceProvider
             order: 51,
             activePattern: 'admin.settings.modules.*',
         );
+    }
+
+    private function registerPermissionGates(): void
+    {
+        $registry = app(PermissionRegistry::class);
+
+        foreach ($registry->all() as $slug => $entry) {
+            Gate::define($slug, fn (User $user) => $user->hasPermission($slug));
+        }
     }
 
     private function registerCoreDashboardWidgets(): void

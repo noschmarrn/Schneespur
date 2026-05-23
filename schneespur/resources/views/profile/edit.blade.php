@@ -10,7 +10,7 @@
             @include('profile.partials.update-password-form')
         </div>
 
-        @php $isOnlyAdmin = auth()->user()->role === \App\Enums\UserRole::Admin && \App\Models\User::where('role', \App\Enums\UserRole::Admin)->count() <= 1; @endphp
+        @php $isOnlyAdmin = auth()->user()->isAdmin() && \App\Models\User::admins()->count() <= 1; @endphp
         @unless($isOnlyAdmin)
         <div class="bg-white shadow-sm rounded-lg p-6">
             @include('profile.partials.delete-user-form')
