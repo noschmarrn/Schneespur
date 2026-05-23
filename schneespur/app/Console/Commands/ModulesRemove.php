@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Module;
+use App\Services\Module\DependencyValidator;
 use App\Services\ModuleManager;
 use App\Services\SchneespurModuleClient;
 use App\Services\SchneespurModuleInstaller;
@@ -16,7 +17,7 @@ class ModulesRemove extends Command
 {
     protected $signature = 'schneespur:modules-remove
         {slug : The module slug to remove}
-        {--force : Skip confirmation prompt}';
+        {--force : Skip confirmation prompt and override dependency checks}';
 
     protected $description = 'Remove an installed module completely.';
 
@@ -36,6 +37,30 @@ class ModulesRemove extends Command
         if (! $module) {
             $this->error("Modul \"{$slug}\" nicht gefunden.");
             return 1;
+        }
+
+        $manager = app(ModuleManager::class);
+        $manager->discover();
+
+        $enabledSlugs = Module::where('enabled', true)->pluck('slug')->toArray();
+        $activeModules = [];
+        foreach ($enabledSlugs as $activeSlug) {
+            $manifest = $manager->getManifest($activeSlug);
+            if ($manifest) {
+                $activeModules[$activeSlug] = $manifest;
+            }
+        }
+
+        $validator = new DependencyValidator();
+        $dependants = $validator->checkReverseDependencies($slug, $manager->getAll(), $activeModules);
+
+        if (! empty($dependants)) {
+            $list = implode(', ', $dependants);
+            if (! $this->option('force')) {
+                $this->error(__('modules.cli_has_dependants', ['slug' => $slug, 'dependants' => $list]));
+                return 1;
+            }
+            $this->warn(__('modules.cli_force_dependants_warning', ['slug' => $slug, 'dependants' => $list]));
         }
 
         if (! $this->option('force')) {

@@ -64,6 +64,56 @@ class DependencyValidator
         return $dependants;
     }
 
+    /**
+     * @param  string  $slug  The module being enabled
+     * @param  array  $manifest  Its manifest
+     * @param  array<string, array>  $allModules  Slug => manifest of all discovered modules
+     * @return string[]|null  Cycle path as slug array if found, null if clean
+     */
+    public function detectCircularDependencies(string $slug, array $manifest, array $allModules): ?array
+    {
+        $graph = [];
+        foreach ($allModules as $s => $m) {
+            $requires = $m['requires'] ?? [];
+            $graph[$s] = is_array($requires) ? array_keys($requires) : [];
+        }
+
+        $requires = $manifest['requires'] ?? [];
+        $graph[$slug] = is_array($requires) ? array_keys($requires) : [];
+
+        $visited = [];
+        $stack = [];
+
+        $dfs = function (string $node) use (&$dfs, &$graph, &$visited, &$stack): ?array {
+            if (isset($stack[$node])) {
+                $cycle = [$node];
+                return $cycle;
+            }
+            if (isset($visited[$node])) {
+                return null;
+            }
+
+            $stack[$node] = true;
+
+            foreach ($graph[$node] ?? [] as $dep) {
+                $result = $dfs($dep);
+                if ($result !== null) {
+                    if (count($result) === 1 || $result[0] !== $result[count($result) - 1]) {
+                        array_unshift($result, $node);
+                    }
+                    return $result;
+                }
+            }
+
+            unset($stack[$node]);
+            $visited[$node] = true;
+
+            return null;
+        };
+
+        return $dfs($slug);
+    }
+
     public function satisfiesConstraint(string $version, string $constraint): bool
     {
         $constraint = trim($constraint);

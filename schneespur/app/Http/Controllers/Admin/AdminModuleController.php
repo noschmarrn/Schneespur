@@ -249,6 +249,18 @@ class AdminModuleController extends Controller
                 return redirect()->route('admin.settings.modules.index')
                     ->with('error', $this->formatDependencyErrors($errors, $slug, $manager));
             }
+
+            $cycle = $validator->detectCircularDependencies($slug, $manifest, $manager->getAll());
+
+            if ($cycle !== null) {
+                Log::warning('Module circular dependency detected', ['slug' => $slug, 'cycle' => $cycle]);
+
+                return redirect()->route('admin.settings.modules.index')
+                    ->with('error', __('modules.circular_dependency', [
+                        'slug' => $slug,
+                        'cycle' => implode(' → ', $cycle),
+                    ]));
+            }
         }
 
         $module->update(['enabled' => true]);

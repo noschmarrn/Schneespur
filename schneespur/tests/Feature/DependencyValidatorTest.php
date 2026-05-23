@@ -158,4 +158,58 @@ class DependencyValidatorTest extends TestCase
         $this->assertTrue($this->validator->satisfiesConstraint('2.0.0', '1.0.0'));
         $this->assertFalse($this->validator->satisfiesConstraint('0.9.0', '1.0.0'));
     }
+
+    public function test_circular_dependency_detected_simple(): void
+    {
+        $allModules = [
+            'b' => ['name' => 'B', 'version' => '1.0.0', 'requires' => ['a' => '>=1.0']],
+        ];
+        $manifest = ['name' => 'A', 'version' => '1.0.0', 'requires' => ['b' => '>=1.0']];
+
+        $cycle = $this->validator->detectCircularDependencies('a', $manifest, $allModules);
+
+        $this->assertNotNull($cycle);
+        $this->assertContains('a', $cycle);
+        $this->assertContains('b', $cycle);
+    }
+
+    public function test_no_circular_dependency_in_clean_graph(): void
+    {
+        $allModules = [
+            'b' => ['name' => 'B', 'version' => '1.0.0'],
+            'c' => ['name' => 'C', 'version' => '1.0.0', 'requires' => ['b' => '>=1.0']],
+        ];
+        $manifest = ['name' => 'A', 'version' => '1.0.0', 'requires' => ['c' => '>=1.0']];
+
+        $cycle = $this->validator->detectCircularDependencies('a', $manifest, $allModules);
+
+        $this->assertNull($cycle);
+    }
+
+    public function test_deep_circular_dependency_detected(): void
+    {
+        $allModules = [
+            'b' => ['name' => 'B', 'version' => '1.0.0', 'requires' => ['c' => '>=1.0']],
+            'c' => ['name' => 'C', 'version' => '1.0.0', 'requires' => ['a' => '>=1.0']],
+        ];
+        $manifest = ['name' => 'A', 'version' => '1.0.0', 'requires' => ['b' => '>=1.0']];
+
+        $cycle = $this->validator->detectCircularDependencies('a', $manifest, $allModules);
+
+        $this->assertNotNull($cycle);
+        $this->assertContains('a', $cycle);
+        $this->assertContains('b', $cycle);
+        $this->assertContains('c', $cycle);
+    }
+
+    public function test_self_dependency_detected(): void
+    {
+        $allModules = [];
+        $manifest = ['name' => 'A', 'version' => '1.0.0', 'requires' => ['a' => '>=1.0']];
+
+        $cycle = $this->validator->detectCircularDependencies('a', $manifest, $allModules);
+
+        $this->assertNotNull($cycle);
+        $this->assertContains('a', $cycle);
+    }
 }

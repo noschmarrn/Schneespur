@@ -55,4 +55,8 @@ return [
     'dependency_version' => 'Module ":slug" requires ":dependency" :constraint, but version :actual is installed.',
     'dependency_conflict' => 'Module ":slug" conflicts with ":conflict" which is currently active.',
     'has_dependants' => 'Cannot disable ":slug" — the following modules depend on it: :dependants.',
+    'circular_dependency' => 'Module ":slug" would create a circular dependency: :cycle.',
+
+    'cli_has_dependants' => 'Cannot remove ":slug" — the following active modules depend on it: :dependants. Use --force to override.',
+    'cli_force_dependants_warning' => 'Warning: removing ":slug" despite active dependants: :dependants.',
 ];

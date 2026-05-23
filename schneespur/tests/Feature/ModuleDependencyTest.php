@@ -17,6 +17,7 @@ class ModuleDependencyTest extends TestCase
     private string $baseModulePath;
     private string $childModulePath;
     private string $conflictModulePath;
+    private string $cycleModulePath;
 
     protected function setUp(): void
     {
@@ -31,11 +32,12 @@ class ModuleDependencyTest extends TestCase
         $this->baseModulePath = base_path('modules/base-mod');
         $this->childModulePath = base_path('modules/child-mod');
         $this->conflictModulePath = base_path('modules/conflict-mod');
+        $this->cycleModulePath = base_path('modules/cycle-mod');
     }
 
     protected function tearDown(): void
     {
-        foreach ([$this->baseModulePath, $this->childModulePath, $this->conflictModulePath] as $path) {
+        foreach ([$this->baseModulePath, $this->childModulePath, $this->conflictModulePath, $this->cycleModulePath] as $path) {
             if (File::isDirectory($path)) {
                 File::deleteDirectory($path);
             }
@@ -217,5 +219,38 @@ class ModuleDependencyTest extends TestCase
         $response->assertRedirect(route('admin.settings.modules.index'));
         $response->assertSessionHas('success');
         $this->assertTrue(Module::where('slug', 'child-mod')->first()->enabled);
+    }
+
+    public function test_enable_fails_when_circular_dependency_detected(): void
+    {
+        $this->createModuleOnDisk('base-mod', [
+            'name' => 'Base',
+            'version' => '1.0.0',
+            'requires' => ['cycle-mod' => '>=1.0.0'],
+            'conflicts' => [],
+        ]);
+        $this->createModuleOnDisk('cycle-mod', [
+            'name' => 'Cycle',
+            'version' => '1.0.0',
+            'requires' => ['base-mod' => '>=1.0.0'],
+            'conflicts' => [],
+        ]);
+
+        $this->createModuleRecord('base-mod', enabled: false);
+        $this->createModuleRecord('cycle-mod', enabled: true);
+
+        $admin = $this->createAdmin();
+
+        $response = $this->actingAs($admin)
+            ->post(route('admin.settings.modules.enable', 'base-mod'));
+
+        $response->assertRedirect(route('admin.settings.modules.index'));
+        $response->assertSessionHas('error');
+        $errorMsg = strtolower(session('error'));
+        $this->assertTrue(
+            str_contains($errorMsg, 'circular') || str_contains($errorMsg, 'zirkul'),
+            "Expected circular dependency error, got: {$errorMsg}"
+        );
+        $this->assertFalse(Module::where('slug', 'base-mod')->first()->enabled);
     }
 }

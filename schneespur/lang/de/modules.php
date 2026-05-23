@@ -55,4 +55,8 @@ return [
     'dependency_version' => 'Modul ":slug" benötigt ":dependency" :constraint, aber Version :actual ist installiert.',
     'dependency_conflict' => 'Modul ":slug" steht in Konflikt mit ":conflict", das gerade aktiv ist.',
     'has_dependants' => '":slug" kann nicht deaktiviert werden — folgende Module hängen davon ab: :dependants.',
+    'circular_dependency' => 'Modul ":slug" würde eine zirkuläre Abhängigkeit erzeugen: :cycle.',
+
+    'cli_has_dependants' => '":slug" kann nicht entfernt werden — folgende aktive Module hängen davon ab: :dependants. Verwende --force zum Überschreiben.',
+    'cli_force_dependants_warning' => 'Warnung: ":slug" wird trotz aktiver Abhängigkeiten entfernt: :dependants.',
 ];
