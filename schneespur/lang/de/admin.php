@@ -53,4 +53,7 @@ return [
     'page_help'            => 'Hilfe',
 
     'footer_help'          => 'Hilfe & Dokumentation',
+
+    'nav_users'            => 'Benutzer',
+    'page_users'           => 'Benutzer',
 ];

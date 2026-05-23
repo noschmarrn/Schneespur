@@ -24,4 +24,7 @@ return [
     'dsgvo_edit' => 'Edit GDPR',
     'gps_view' => 'View GPS status',
     'help_view' => 'View help',
+    'users_view' => 'View users',
+    'users_edit' => 'Edit users',
+    'users_delete' => 'Delete users',
 ];

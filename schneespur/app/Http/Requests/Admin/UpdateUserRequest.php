@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Requests\Admin;
+
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class UpdateUserRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:200'],
+            'email' => ['required', 'email', 'max:200', Rule::unique('users')->ignore($this->route('user'))],
+            'password' => ['nullable', 'string', 'min:8'],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['exists:roles,id'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => __('user.field_name'),
+            'email' => __('user.field_email'),
+            'password' => __('user.field_password'),
+            'roles' => __('user.field_roles'),
+        ];
+    }
+}

@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\Admin\OwntracksOverviewController;
 use App\Http\Controllers\Admin\WeatherRetryController;
 use App\Http\Controllers\Admin\AdminModuleController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\UpdateSettingsController;
 use App\Http\Controllers\Admin\WeatherSettingsController;
 use App\Http\Controllers\Admin\ManualJobController as AdminManualJobController;
@@ -124,6 +125,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/drivers/{driver}/anonymize', DriverAnonymizationController::class)->name('drivers.anonymize');
 
     Route::resource('vehicles', VehicleController::class)->except(['show']);
+
+    Route::resource('users', AdminUserController::class)->except(['show']);
 
     Route::get('/dsgvo', [DsgvoAdminController::class, 'index'])->name('dsgvo.index');
     Route::put('/dsgvo', [DsgvoAdminController::class, 'update'])->name('dsgvo.update');

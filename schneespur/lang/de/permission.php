@@ -24,4 +24,7 @@ return [
     'dsgvo_edit' => 'DSGVO bearbeiten',
     'gps_view' => 'GPS-Status anzeigen',
     'help_view' => 'Hilfe anzeigen',
+    'users_view' => 'Benutzer anzeigen',
+    'users_edit' => 'Benutzer bearbeiten',
+    'users_delete' => 'Benutzer löschen',
 ];
