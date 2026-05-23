@@ -12,6 +12,7 @@ use App\Models\Vehicle;
 use App\Services\JobLifecycleService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class ManualJobController extends Controller
@@ -22,6 +23,8 @@ class ManualJobController extends Controller
 
     public function create(): View
     {
+        Gate::authorize('jobs.edit');
+
         return view('admin.jobs.manual.create', [
             'customers' => Customer::with('objects')->orderBy('name')->get(),
             'drivers' => User::drivers()->get(),
@@ -32,6 +35,8 @@ class ManualJobController extends Controller
 
     public function store(StoreManualJobRequest $request): RedirectResponse
     {
+        Gate::authorize('jobs.edit');
+
         $validated = $request->validated();
 
         $driver = User::findOrFail($validated['user_id']);

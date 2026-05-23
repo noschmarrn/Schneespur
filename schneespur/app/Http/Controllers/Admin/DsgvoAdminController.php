@@ -9,12 +9,15 @@ use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class DsgvoAdminController extends Controller
 {
     public function index(): View
     {
+        Gate::authorize('dsgvo.view');
+
         $markdown = Setting::get('dsgvo_template_markdown');
         $version = (int) Setting::get('dsgvo_template_version', 1);
 
@@ -35,6 +38,8 @@ class DsgvoAdminController extends Controller
 
     public function update(Request $request)
     {
+        Gate::authorize('dsgvo.edit');
+
         $validated = $request->validate([
             'markdown' => 'required|string|min:50|max:200000',
             'substantial_change' => 'nullable|boolean',
@@ -56,6 +61,8 @@ class DsgvoAdminController extends Controller
 
     public function preview(Request $request): Response
     {
+        Gate::authorize('dsgvo.edit');
+
         $request->validate([
             'markdown' => 'required|string',
         ]);
@@ -67,6 +74,8 @@ class DsgvoAdminController extends Controller
 
     public function confirmations(Request $request): View
     {
+        Gate::authorize('dsgvo.view');
+
         $query = DsgvoConfirmation::with('driver')
             ->orderByDesc('confirmed_at');
 
@@ -88,6 +97,8 @@ class DsgvoAdminController extends Controller
 
     public function showConfirmation(int $id): View
     {
+        Gate::authorize('dsgvo.view');
+
         $confirmation = DsgvoConfirmation::findOrFail($id);
         $confirmation->load('driver');
 

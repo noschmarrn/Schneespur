@@ -8,12 +8,15 @@ use App\Models\User;
 use App\Models\WorkShift;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class DriverReportController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('reports.view');
+
         $drivers = User::withAnonymized()->drivers()->orderBy('name')->get();
 
         $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth());

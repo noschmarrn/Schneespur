@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -13,6 +14,8 @@ class BrandingController extends Controller
 {
     public function edit(): View
     {
+        Gate::authorize('settings.view');
+
         return view('admin.settings.branding', [
             'logoPath' => Setting::get('company_logo_path'),
         ]);
@@ -20,6 +23,8 @@ class BrandingController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $request->validate([
             'company_logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg', 'max:2048'],
         ]);
@@ -40,6 +45,8 @@ class BrandingController extends Controller
 
     public function deleteLogo(): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $path = Setting::get('company_logo_path');
 
         if ($path && Storage::disk('public')->exists($path)) {

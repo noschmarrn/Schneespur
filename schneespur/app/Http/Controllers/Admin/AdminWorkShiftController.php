@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\WorkShift;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class AdminWorkShiftController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('workshifts.view');
+
         $shifts = WorkShift::query()
             ->with('user')
             ->withCount('jobs')
@@ -29,6 +32,8 @@ class AdminWorkShiftController extends Controller
 
     public function show(WorkShift $workShift): View
     {
+        Gate::authorize('workshifts.view');
+
         $workShift->load(['user', 'jobs.customer']);
 
         $duration = null;

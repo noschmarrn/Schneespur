@@ -8,12 +8,15 @@ use App\Services\SchneespurUpdater;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class UpdateSettingsController extends Controller
 {
     public function edit(): View
     {
+        Gate::authorize('settings.view');
+
         $hasSodium = function_exists('sodium_crypto_sign_verify_detached');
         $state     = null;
 
@@ -44,6 +47,8 @@ class UpdateSettingsController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         Setting::set('auto_update_check', $request->boolean('auto_update_check'), 'bool');
 
         return redirect()->route('admin.settings.update')
@@ -52,6 +57,8 @@ class UpdateSettingsController extends Controller
 
     public function checkNow(): JsonResponse
     {
+        Gate::authorize('settings.edit');
+
         if (! function_exists('sodium_crypto_sign_verify_detached')) {
             return response()->json([
                 'ok'      => false,
@@ -94,6 +101,8 @@ class UpdateSettingsController extends Controller
 
     public function install(): JsonResponse
     {
+        Gate::authorize('settings.edit');
+
         if (! function_exists('sodium_crypto_sign_verify_detached')) {
             return response()->json([
                 'ok'      => false,

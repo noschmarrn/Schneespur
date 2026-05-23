@@ -7,12 +7,15 @@ use App\Models\User;
 use App\Services\OwntracksCredentialService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class DriverCredentialController extends Controller
 {
     public function show(Request $request, User $driver): View|RedirectResponse
     {
+        Gate::authorize('drivers.view');
+
         $credentials = session('owntracks_credentials');
 
         if (! $credentials) {
@@ -27,6 +30,8 @@ class DriverCredentialController extends Controller
 
     public function rotate(Request $request, User $driver, OwntracksCredentialService $credentialService): RedirectResponse
     {
+        Gate::authorize('drivers.edit');
+
         $credentials = $credentialService->generateCredentials($driver, $request->user());
 
         session()->flash('owntracks_credentials', $credentials);

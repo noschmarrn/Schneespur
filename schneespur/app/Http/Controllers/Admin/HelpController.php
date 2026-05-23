@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Gate;
 
 class HelpController extends Controller
 {
@@ -23,6 +24,8 @@ class HelpController extends Controller
 
     public function index()
     {
+        Gate::authorize('help.view');
+
         return view('admin.help.index', [
             'topics' => self::TOPICS,
         ]);
@@ -30,6 +33,8 @@ class HelpController extends Controller
 
     public function show(string $topic)
     {
+        Gate::authorize('help.view');
+
         if (! array_key_exists($topic, self::TOPICS)) {
             abort(404);
         }

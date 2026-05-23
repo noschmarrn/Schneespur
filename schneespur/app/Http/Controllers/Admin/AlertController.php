@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Services\AlertService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AlertController extends Controller
 {
@@ -13,6 +14,8 @@ class AlertController extends Controller
 
     public function index(Request $request)
     {
+        Gate::authorize('alerts.view');
+
         $filters = $request->only(['type', 'date_from', 'date_to', 'status']);
         $counts = $this->alertService->counts();
 
@@ -41,6 +44,8 @@ class AlertController extends Controller
 
     public function resolve(Request $request, Job $serviceJob)
     {
+        Gate::authorize('alerts.resolve');
+
         $validated = $request->validate([
             'alert_type' => 'required|in:missing_gps,missing_weather,overdue',
             'note' => 'nullable|string|max:1000',
@@ -58,6 +63,8 @@ class AlertController extends Controller
 
     public function bulkResolve(Request $request)
     {
+        Gate::authorize('alerts.resolve');
+
         $validated = $request->validate([
             'type' => 'required|in:missing_gps,missing_weather,overdue',
         ]);

@@ -7,12 +7,15 @@ use App\Models\Customer;
 use App\Models\Job;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class CustomerReportController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('reports.view');
+
         $customers = Customer::orderBy('name')->get();
 
         $from = $this->parseDate($request->input('from'), Carbon::now()->startOfMonth());

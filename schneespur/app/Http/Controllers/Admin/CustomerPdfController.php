@@ -8,6 +8,7 @@ use App\Models\Job;
 use App\Services\PdfReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -19,6 +20,8 @@ class CustomerPdfController extends Controller
 
     public function index(Request $request): View
     {
+        Gate::authorize('reports.view');
+
         $customers = Customer::orderBy('name')->get();
 
         return view('admin.exports.customer-pdf', [
@@ -31,6 +34,8 @@ class CustomerPdfController extends Controller
 
     public function generate(Request $request): Response
     {
+        Gate::authorize('reports.view');
+
         $validated = $request->validate([
             'customer_id' => ['required', 'exists:customers,id'],
             'from' => ['required', 'date'],

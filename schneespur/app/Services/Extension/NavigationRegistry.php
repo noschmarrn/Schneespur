@@ -2,6 +2,8 @@
 
 namespace App\Services\Extension;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 class NavigationRegistry extends ExtensionRegistry
@@ -58,13 +60,13 @@ class NavigationRegistry extends ExtensionRegistry
     /**
      * @return array<string, array<int, array{slug: string, label: string, route: string, icon: string, order: int, permission: string|null}>>
      */
-    public function getItems(?string $userPermission = null): array
+    public function getItems(?User $user = null): array
     {
         $items = $this->items;
 
-        if ($userPermission !== null) {
-            $items = array_filter($items, function (array $item) use ($userPermission) {
-                return $item['permission'] === null || $item['permission'] === $userPermission;
+        if ($user !== null) {
+            $items = array_filter($items, function (array $item) use ($user) {
+                return $item['permission'] === null || Gate::forUser($user)->allows($item['permission']);
             });
         }
 

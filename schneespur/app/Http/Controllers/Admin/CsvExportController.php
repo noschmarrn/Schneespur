@@ -9,6 +9,7 @@ use App\Services\CsvExportService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class CsvExportController extends Controller
@@ -19,6 +20,8 @@ class CsvExportController extends Controller
 
     public function index(): View
     {
+        Gate::authorize('reports.view');
+
         $drivers = User::withAnonymized()->drivers()->orderBy('name')->get();
         $customers = Customer::orderBy('name')->get();
 
@@ -32,6 +35,8 @@ class CsvExportController extends Controller
 
     public function download(Request $request): Response
     {
+        Gate::authorize('reports.view');
+
         $validated = $request->validate([
             'from' => ['required', 'date'],
             'to' => ['required', 'date', 'after_or_equal:from'],

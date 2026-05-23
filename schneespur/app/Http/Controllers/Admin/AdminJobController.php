@@ -15,12 +15,15 @@ use App\Services\RetentionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class AdminJobController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('jobs.view');
+
         $jobs = Job::query()
             ->with(['customer', 'customerObject.customer', 'user'])
             ->withCount('gpsPoints')
@@ -46,6 +49,8 @@ class AdminJobController extends Controller
 
     public function show(Job $serviceJob, GpsSmoothingService $gpsSmoother): View
     {
+        Gate::authorize('jobs.view');
+
         $serviceJob->load([
             'customer',
             'customerObject.customer',
@@ -65,6 +70,7 @@ class AdminJobController extends Controller
 
     public function edit(Job $serviceJob): View
     {
+        Gate::authorize('jobs.edit');
         $this->authorize('update', $serviceJob);
 
         $serviceJob->load(['customer', 'customerObject.customer', 'user']);
@@ -74,6 +80,7 @@ class AdminJobController extends Controller
 
     public function update(Request $request, Job $serviceJob, JobAuditService $auditService): RedirectResponse
     {
+        Gate::authorize('jobs.edit');
         $this->authorize('update', $serviceJob);
 
         $validated = $request->validate([
@@ -92,6 +99,7 @@ class AdminJobController extends Controller
 
     public function destroy(Request $request, Job $serviceJob, JobAuditService $auditService, RetentionService $retentionService): RedirectResponse
     {
+        Gate::authorize('jobs.delete');
         $this->authorize('delete', $serviceJob);
 
         $request->validate([
@@ -111,6 +119,8 @@ class AdminJobController extends Controller
 
     public function pdf(Job $serviceJob, PdfReportService $pdfService): Response
     {
+        Gate::authorize('jobs.view');
+
         abort_if(is_null($serviceJob->ended_at), 422, __('job.pdf_active_blocked'));
 
         $pdf = $pdfService->generateJobReport($serviceJob);

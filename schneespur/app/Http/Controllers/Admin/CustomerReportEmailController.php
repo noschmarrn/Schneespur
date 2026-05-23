@@ -10,11 +10,14 @@ use App\Services\NotificationLogService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CustomerReportEmailController extends Controller
 {
     public function send(Request $request, NotificationLogService $notificationLogService): RedirectResponse
     {
+        Gate::authorize('reports.view');
+
         $validated = $request->validate([
             'customer_id' => ['required', 'exists:customers,id'],
             'customer_object_id' => ['nullable', 'exists:customer_objects,id'],

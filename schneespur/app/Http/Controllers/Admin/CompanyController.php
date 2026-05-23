@@ -7,6 +7,7 @@ use App\Models\Setting;
 use App\Services\GeocodingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class CompanyController extends Controller
@@ -18,6 +19,8 @@ class CompanyController extends Controller
 
     public function edit(): View
     {
+        Gate::authorize('settings.view');
+
         return view('admin.settings.company', [
             'company_name' => Setting::get('company_name', ''),
             'company_street' => Setting::get('company_street', ''),
@@ -39,6 +42,8 @@ class CompanyController extends Controller
 
     public function update(Request $request, GeocodingService $geocoding): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $validated = $request->validate([
             'company_name' => ['required', 'string', 'max:255'],
             'company_street' => ['nullable', 'string', 'max:255'],

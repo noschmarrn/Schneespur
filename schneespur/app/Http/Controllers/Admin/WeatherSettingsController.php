@@ -8,12 +8,15 @@ use App\Services\Weather\WeatherProviderRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class WeatherSettingsController extends Controller
 {
     public function edit(WeatherProviderRegistry $registry): View
     {
+        Gate::authorize('settings.view');
+
         return view('admin.settings.weather', [
             'providers' => $registry->availableProviders(),
             'activeProvider' => $registry->activeSlug(),
@@ -25,6 +28,8 @@ class WeatherSettingsController extends Controller
 
     public function update(Request $request, WeatherProviderRegistry $registry): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $providerSlugs = array_keys($registry->availableProviders());
 
         $validated = $request->validate([
@@ -45,6 +50,8 @@ class WeatherSettingsController extends Controller
 
     public function testConnection(Request $request, WeatherProviderRegistry $registry): JsonResponse
     {
+        Gate::authorize('settings.edit');
+
         $request->validate([
             'provider' => ['required', 'string'],
         ]);

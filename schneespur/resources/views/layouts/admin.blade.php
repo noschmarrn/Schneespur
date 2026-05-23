@@ -39,7 +39,7 @@
                 @php
                     $navRegistry = app(\App\Services\Extension\NavigationRegistry::class);
                     $navGroups = $navRegistry->getGroups();
-                    $navItems = $navRegistry->getItems();
+                    $navItems = $navRegistry->getItems(auth()->user());
                 @endphp
                 <nav class="flex-1 overflow-y-auto py-4" aria-label="{{ __('admin.nav_main_aria') }}">
                     @foreach($navGroups as $group)

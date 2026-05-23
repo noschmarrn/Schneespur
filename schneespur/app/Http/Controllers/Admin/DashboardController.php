@@ -7,6 +7,8 @@ use App\Models\Setting;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -18,9 +20,11 @@ class DashboardController extends Controller
         return redirect()->route('admin.dashboard');
     }
 
-    public function index(DashboardWidgetRegistry $widgetRegistry, FilterRegistry $filterRegistry): View
+    public function index(Request $request, DashboardWidgetRegistry $widgetRegistry, FilterRegistry $filterRegistry): View
     {
-        $widgets = $widgetRegistry->getWidgets();
+        Gate::authorize('dashboard.view');
+
+        $widgets = $widgetRegistry->getWidgets($request->user());
         $widgets = $filterRegistry->apply('schneespur.dashboard.kpis', $widgets);
 
         return view('admin.dashboard', compact('widgets'));

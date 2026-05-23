@@ -9,12 +9,15 @@ use App\Models\WeatherSnapshot;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class OverviewController extends Controller
 {
     public function daily(Request $request): View
     {
+        Gate::authorize('reports.view');
+
         $date = $this->parseDate($request->input('date'));
         $dayStart = $date->copy()->startOfDay();
         $dayEnd = $date->copy()->addDay()->startOfDay();
@@ -71,6 +74,8 @@ class OverviewController extends Controller
 
     public function monthly(Request $request): View
     {
+        Gate::authorize('reports.view');
+
         $month = $this->parseMonth($request->input('month'));
         $monthStart = $month->copy()->startOfMonth();
         $monthEnd = $month->copy()->endOfMonth()->addDay()->startOfDay();
@@ -126,6 +131,8 @@ class OverviewController extends Controller
 
     public function dayDetail(Request $request): View
     {
+        Gate::authorize('reports.view');
+
         $date = $this->parseDate($request->input('date'));
         $dayStart = $date->copy()->startOfDay();
         $dayEnd = $date->copy()->addDay()->startOfDay();

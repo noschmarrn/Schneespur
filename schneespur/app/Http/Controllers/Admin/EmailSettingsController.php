@@ -7,6 +7,7 @@ use App\Services\Installer\EnvFileWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
@@ -26,6 +27,8 @@ class EmailSettingsController extends Controller
 
     public function edit(EnvFileWriter $envWriter): View
     {
+        Gate::authorize('settings.view');
+
         $config = [];
         foreach (self::MAIL_KEYS as $key) {
             $value = $envWriter->get($key) ?? '';
@@ -61,6 +64,8 @@ class EmailSettingsController extends Controller
 
     public function update(Request $request, EnvFileWriter $envWriter): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $request->validate([
             'mail_mailer' => 'required|string',
             'mail_host' => 'required|string|max:255',
@@ -108,6 +113,8 @@ class EmailSettingsController extends Controller
 
     public function sendTest(Request $request): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $request->validate([
             'test_recipient' => 'required|email|max:255',
         ]);

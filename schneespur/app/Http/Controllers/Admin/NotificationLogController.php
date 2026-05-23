@@ -6,12 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Models\NotificationLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class NotificationLogController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('settings.view');
+
         $logs = NotificationLog::query()
             ->select('notification_logs.*')
             ->leftJoin('service_jobs', function ($join) {

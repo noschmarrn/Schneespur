@@ -7,12 +7,15 @@ use App\Models\GpsPoint;
 use App\Models\Job;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class OwntracksOverviewController extends Controller
 {
     public function __invoke(): View
     {
+        Gate::authorize('gps.view');
+
         $drivers = User::drivers()->orderBy('name')->get();
         $driverIds = $drivers->pluck('id');
 

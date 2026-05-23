@@ -7,11 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Jobs\FetchWeather;
 use App\Models\Job;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class WeatherRetryController extends Controller
 {
     public function __invoke(Job $serviceJob, string $moment): RedirectResponse
     {
+        Gate::authorize('jobs.edit');
+
         $weatherMoment = WeatherMoment::from($moment);
 
         $object = $serviceJob->customerObject;

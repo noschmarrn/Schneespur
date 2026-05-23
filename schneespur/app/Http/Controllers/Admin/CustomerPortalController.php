@@ -9,12 +9,15 @@ use App\Services\NotificationLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class CustomerPortalController extends Controller
 {
     public function setupAccess(Request $request, Customer $customer, NotificationLogService $logService): RedirectResponse
     {
+        Gate::authorize('customers.edit');
+
         if (! $customer->email) {
             return redirect()
                 ->route('admin.customers.edit', $customer)
@@ -53,6 +56,8 @@ class CustomerPortalController extends Controller
 
     public function updateSettings(Request $request, Customer $customer): RedirectResponse
     {
+        Gate::authorize('customers.edit');
+
         $validated = $request->validate([
             'portal_enabled' => ['required', 'boolean'],
             'portal_show_gps' => ['required', 'boolean'],

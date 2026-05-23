@@ -2,6 +2,8 @@
 
 namespace App\Services\Extension;
 
+use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
 class DashboardWidgetRegistry extends ExtensionRegistry
@@ -25,12 +27,12 @@ class DashboardWidgetRegistry extends ExtensionRegistry
     /**
      * @return array<int, array{slug: string, label: string, view: string|null, data: mixed, order: int, permission: string|null, size: string, error: bool}>
      */
-    public function getWidgets(?string $userPermission = null): array
+    public function getWidgets(?User $user = null): array
     {
         $widgets = [];
 
         foreach ($this->items as $config) {
-            if ($config['permission'] !== null && $userPermission !== null && $config['permission'] !== $userPermission) {
+            if ($config['permission'] !== null && $user !== null && ! Gate::forUser($user)->allows($config['permission'])) {
                 continue;
             }
 

@@ -12,12 +12,15 @@ use App\Models\Vehicle;
 use App\Services\OwntracksCredentialService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class DriverController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('drivers.view');
+
         $drivers = User::drivers()
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -34,6 +37,8 @@ class DriverController extends Controller
 
     public function create(): View
     {
+        Gate::authorize('drivers.view');
+
         return view('admin.drivers.create', [
             'vehicles' => Vehicle::orderBy('name')->get(),
         ]);
@@ -41,6 +46,8 @@ class DriverController extends Controller
 
     public function store(StoreDriverRequest $request, OwntracksCredentialService $credentialService): RedirectResponse
     {
+        Gate::authorize('drivers.edit');
+
         $driver = User::create($request->safe()->only(['name', 'email', 'password', 'phone', 'notes', 'default_vehicle_id']));
         $driver->role = UserRole::Driver;
         $driver->save();
@@ -59,6 +66,8 @@ class DriverController extends Controller
 
     public function edit(User $driver): View
     {
+        Gate::authorize('drivers.view');
+
         return view('admin.drivers.edit', [
             'driver' => $driver,
             'vehicles' => Vehicle::orderBy('name')->get(),
@@ -67,6 +76,8 @@ class DriverController extends Controller
 
     public function update(UpdateDriverRequest $request, User $driver): RedirectResponse
     {
+        Gate::authorize('drivers.edit');
+
         $driver->update($request->safe()->only(['name', 'email', 'phone', 'notes', 'default_vehicle_id']));
 
         if ($request->validated('password')) {

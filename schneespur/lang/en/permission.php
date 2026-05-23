@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'dashboard_view' => 'View dashboard',
+    'customers_view' => 'View customers',
+    'customers_edit' => 'Edit customers',
+    'customers_delete' => 'Delete customers',
+    'drivers_view' => 'View drivers',
+    'drivers_edit' => 'Edit drivers',
+    'drivers_delete' => 'Delete/anonymize drivers',
+    'vehicles_view' => 'View vehicles',
+    'vehicles_edit' => 'Edit vehicles',
+    'vehicles_delete' => 'Delete vehicles',
+    'jobs_view' => 'View jobs',
+    'jobs_edit' => 'Edit jobs',
+    'jobs_delete' => 'Delete jobs',
+    'workshifts_view' => 'View work shifts',
+    'reports_view' => 'View reports & exports',
+    'alerts_view' => 'View alerts',
+    'alerts_resolve' => 'Resolve alerts',
+    'settings_view' => 'View settings',
+    'settings_edit' => 'Edit settings',
+    'dsgvo_view' => 'View GDPR',
+    'dsgvo_edit' => 'Edit GDPR',
+    'gps_view' => 'View GPS status',
+    'help_view' => 'View help',
+];

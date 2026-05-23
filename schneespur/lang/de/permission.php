@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'dashboard_view' => 'Dashboard anzeigen',
+    'customers_view' => 'Kunden anzeigen',
+    'customers_edit' => 'Kunden bearbeiten',
+    'customers_delete' => 'Kunden löschen',
+    'drivers_view' => 'Fahrer anzeigen',
+    'drivers_edit' => 'Fahrer bearbeiten',
+    'drivers_delete' => 'Fahrer löschen/anonymisieren',
+    'vehicles_view' => 'Fahrzeuge anzeigen',
+    'vehicles_edit' => 'Fahrzeuge bearbeiten',
+    'vehicles_delete' => 'Fahrzeuge löschen',
+    'jobs_view' => 'Einsätze anzeigen',
+    'jobs_edit' => 'Einsätze bearbeiten',
+    'jobs_delete' => 'Einsätze löschen',
+    'workshifts_view' => 'Schichten anzeigen',
+    'reports_view' => 'Auswertungen & Exporte anzeigen',
+    'alerts_view' => 'Warnungen anzeigen',
+    'alerts_resolve' => 'Warnungen auflösen',
+    'settings_view' => 'Einstellungen anzeigen',
+    'settings_edit' => 'Einstellungen bearbeiten',
+    'dsgvo_view' => 'DSGVO anzeigen',
+    'dsgvo_edit' => 'DSGVO bearbeiten',
+    'gps_view' => 'GPS-Status anzeigen',
+    'help_view' => 'Hilfe anzeigen',
+];

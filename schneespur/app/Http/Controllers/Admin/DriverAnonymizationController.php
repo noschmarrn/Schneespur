@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\AnonymizeDriverRequest;
 use App\Models\User;
 use App\Services\DriverAnonymizationService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class DriverAnonymizationController extends Controller
 {
@@ -15,6 +16,8 @@ class DriverAnonymizationController extends Controller
         User $driver,
         DriverAnonymizationService $service
     ): RedirectResponse {
+        Gate::authorize('drivers.delete');
+
         $service->anonymize($driver, $request->validated('reason'));
 
         return redirect()

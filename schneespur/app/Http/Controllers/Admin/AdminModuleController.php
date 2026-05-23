@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -21,6 +22,8 @@ class AdminModuleController extends Controller
 {
     public function index(SchneespurModuleClient $client): View
     {
+        Gate::authorize('settings.view');
+
         $installed = Module::all()->keyBy('slug');
 
         $catalogModules = [];
@@ -94,6 +97,8 @@ class AdminModuleController extends Controller
 
     public function install(Request $request, string $slug, SchneespurModuleClient $client, SchneespurModuleInstaller $installer): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $catalog = null;
         try {
             $catalog = $client->fetchCatalog();
@@ -171,6 +176,8 @@ class AdminModuleController extends Controller
 
     public function update(Request $request, string $slug, SchneespurModuleClient $client, SchneespurModuleInstaller $installer): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $catalog = null;
         try {
             $catalog = $client->fetchCatalog();
@@ -230,6 +237,8 @@ class AdminModuleController extends Controller
 
     public function enable(string $slug, ModuleManager $manager): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $module = Module::where('slug', $slug)->first();
 
         if (! $module) {
@@ -289,6 +298,8 @@ class AdminModuleController extends Controller
 
     public function disable(string $slug, ModuleManager $manager): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $module = Module::where('slug', $slug)->first();
 
         if (! $module) {
@@ -416,6 +427,8 @@ class AdminModuleController extends Controller
 
     public function remove(string $slug, SchneespurModuleInstaller $installer): RedirectResponse
     {
+        Gate::authorize('settings.edit');
+
         $module = Module::where('slug', $slug)->first();
 
         if (! $module) {

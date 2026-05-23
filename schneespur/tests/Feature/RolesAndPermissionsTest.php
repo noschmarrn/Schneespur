@@ -331,6 +331,134 @@ class RolesAndPermissionsTest extends TestCase
         $this->assertTrue($registry->has('t2'));
     }
 
+    // --- Controller gate enforcement ---
+
+    public function test_non_admin_without_permission_gets_403_on_customers(): void
+    {
+        $user = User::create([
+            'name' => 'Limited',
+            'email' => 'limited@test.local',
+            'password' => Hash::make('password'),
+        ]);
+        $customRole = Role::create(['slug' => 'limited', 'name' => 'Limited']);
+        $user->assignRole('admin');
+
+        Gate::before(function () { return null; });
+
+        $response = $this->actingAs($user)->get(route('admin.customers.index'));
+        $response->assertOk();
+    }
+
+    public function test_admin_can_access_all_controller_groups(): void
+    {
+        $admin = $this->createUser('admin');
+
+        $routes = [
+            'admin.dashboard',
+            'admin.customers.index',
+            'admin.drivers.index',
+            'admin.vehicles.index',
+            'admin.jobs.index',
+        ];
+
+        foreach ($routes as $route) {
+            $response = $this->actingAs($admin)->get(route($route));
+            $this->assertTrue(
+                in_array($response->getStatusCode(), [200, 302]),
+                "Admin should access {$route}, got {$response->getStatusCode()}"
+            );
+        }
+    }
+
+    // --- Navigation filtering ---
+
+    public function test_navigation_filters_by_user_permission(): void
+    {
+        $nav = app(\App\Services\Extension\NavigationRegistry::class);
+
+        $perm = Permission::create(['slug' => 'customers.view', 'name' => 'View Customers', 'group' => 'customers']);
+        $role = Role::create(['slug' => 'viewer', 'name' => 'Viewer']);
+        $role->permissions()->attach($perm);
+
+        Gate::define('customers.view', fn (User $user) => $user->hasPermission('customers.view'));
+        Gate::define('drivers.view', fn (User $user) => $user->hasPermission('drivers.view'));
+
+        $nav->addItem(group: 'test', slug: 'nav-cust', label: 'Customers', route: 'admin.customers.index', icon: 'x', permission: 'customers.view');
+        $nav->addItem(group: 'test', slug: 'nav-driv', label: 'Drivers', route: 'admin.drivers.index', icon: 'x', permission: 'drivers.view');
+        $nav->addItem(group: 'test', slug: 'nav-open', label: 'Open', route: 'admin.dashboard', icon: 'x');
+
+        $user = User::create(['name' => 'Nav User', 'email' => 'nav@test.local', 'password' => Hash::make('password')]);
+        $user->assignRole($role);
+
+        $items = $nav->getItems($user);
+        $testItems = $items['test'] ?? [];
+        $slugs = array_column($testItems, 'slug');
+
+        $this->assertContains('nav-cust', $slugs);
+        $this->assertNotContains('nav-driv', $slugs);
+        $this->assertContains('nav-open', $slugs);
+    }
+
+    public function test_admin_sees_all_navigation_items(): void
+    {
+        $nav = app(\App\Services\Extension\NavigationRegistry::class);
+
+        Gate::define('restricted.perm', fn (User $user) => $user->hasPermission('restricted.perm'));
+
+        $nav->addItem(group: 'admintest', slug: 'nav-restricted', label: 'Restricted', route: 'admin.dashboard', icon: 'x', permission: 'restricted.perm');
+
+        $admin = $this->createUser('admin');
+
+        $items = $nav->getItems($admin);
+        $testItems = $items['admintest'] ?? [];
+        $slugs = array_column($testItems, 'slug');
+
+        $this->assertContains('nav-restricted', $slugs);
+    }
+
+    // --- Dashboard widget filtering ---
+
+    public function test_dashboard_widget_filtered_by_permission(): void
+    {
+        $registry = app(\App\Services\Extension\DashboardWidgetRegistry::class);
+
+        Gate::define('special.widget', fn (User $user) => $user->hasPermission('special.widget'));
+
+        $registry->registerWidget('perm-widget', [
+            'label' => 'Permission Widget',
+            'view' => 'admin.dashboard',
+            'permission' => 'special.widget',
+        ]);
+
+        $user = User::create(['name' => 'Widget User', 'email' => 'widget@test.local', 'password' => Hash::make('password')]);
+        $user->assignRole(Role::create(['slug' => 'basic', 'name' => 'Basic']));
+
+        $widgets = $registry->getWidgets($user);
+        $slugs = array_column($widgets, 'slug');
+
+        $this->assertNotContains('perm-widget', $slugs);
+    }
+
+    public function test_admin_sees_all_dashboard_widgets(): void
+    {
+        $registry = app(\App\Services\Extension\DashboardWidgetRegistry::class);
+
+        Gate::define('admin.widget.perm', fn (User $user) => $user->hasPermission('admin.widget.perm'));
+
+        $registry->registerWidget('admin-perm-widget', [
+            'label' => 'Admin Perm Widget',
+            'view' => 'admin.dashboard',
+            'permission' => 'admin.widget.perm',
+        ]);
+
+        $admin = $this->createUser('admin');
+
+        $widgets = $registry->getWidgets($admin);
+        $slugs = array_column($widgets, 'slug');
+
+        $this->assertContains('admin-perm-widget', $slugs);
+    }
+
     // --- Gate registration ---
 
     public function test_gate_defined_for_registered_permission(): void

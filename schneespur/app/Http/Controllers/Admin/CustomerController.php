@@ -14,12 +14,15 @@ use App\Services\NotificationLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
     public function index(Request $request): View
     {
+        Gate::authorize('customers.view');
+
         $customers = Customer::query()
             ->with('objects')
             ->when($request->search, function ($query, $search) {
@@ -37,11 +40,15 @@ class CustomerController extends Controller
 
     public function create(): View
     {
+        Gate::authorize('customers.view');
+
         return view('admin.customers.create');
     }
 
     public function store(StoreCustomerRequest $request): RedirectResponse
     {
+        Gate::authorize('customers.edit');
+
         $customer = Customer::create($request->validated());
 
         CustomerCreatedEvent::dispatch($customer);
@@ -53,11 +60,15 @@ class CustomerController extends Controller
 
     public function edit(Customer $customer): View
     {
+        Gate::authorize('customers.view');
+
         return view('admin.customers.edit', compact('customer'));
     }
 
     public function update(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
+        Gate::authorize('customers.edit');
+
         $customer->update($request->validated());
 
         CustomerUpdated::dispatch($customer);
@@ -69,6 +80,8 @@ class CustomerController extends Controller
 
     public function geocode(Request $request, GeocodingService $geocoding): JsonResponse
     {
+        Gate::authorize('customers.view');
+
         $request->validate([
             'street' => ['required', 'string'],
             'zip' => ['required', 'string'],
@@ -86,6 +99,8 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer, NotificationLogService $notificationLogService): RedirectResponse
     {
+        Gate::authorize('customers.delete');
+
         $name = $customer->name;
         CustomerDeleted::dispatch($customer);
         $notificationLogService->anonymizeForCustomer($customer);
