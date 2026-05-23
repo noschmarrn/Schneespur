@@ -12,10 +12,12 @@ use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\ModuleManager;
+use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Notification\NotificationChannelRegistry;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Schneespur\Module\Example\Auth\DummyTwoFactorMethod;
 use Schneespur\Module\Example\Notification\DummyLogChannel;
 
 class ExampleServiceProvider extends ServiceProvider
@@ -39,6 +41,7 @@ class ExampleServiceProvider extends ServiceProvider
         $this->registerFilters();
         $this->registerEventListeners();
         $this->registerNotificationChannels();
+        $this->registerTwoFactorMethods();
         $this->registerRoutes();
     }
 
@@ -169,6 +172,12 @@ class ExampleServiceProvider extends ServiceProvider
     {
         $registry = $this->app->make(NotificationChannelRegistry::class);
         $registry->register('dummy-log', DummyLogChannel::class);
+    }
+
+    protected function registerTwoFactorMethods(): void
+    {
+        $registry = $this->app->make(TwoFactorMethodRegistry::class);
+        $registry->registerMethod('dummy-2fa', DummyTwoFactorMethod::class);
     }
 
     protected function registerRoutes(): void

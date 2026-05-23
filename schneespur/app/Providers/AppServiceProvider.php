@@ -19,6 +19,7 @@ use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
+use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Notification\EmailNotificationChannel;
 use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\ForecastService;
@@ -56,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NavigationRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RoleTemplateRegistry::class);
+        $this->app->singleton(TwoFactorMethodRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
         $this->app->singleton(DiagnosticManager::class);
