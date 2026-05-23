@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
+use App\Services\Extension\SlotRegistry;
 use App\Services\ModuleManager;
 use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Notification\NotificationChannelRegistry;
@@ -39,6 +40,7 @@ class ExampleServiceProvider extends ServiceProvider
         $this->registerNavigation();
         $this->registerWidget();
         $this->registerFilters();
+        $this->registerSlots();
         $this->registerEventListeners();
         $this->registerNotificationChannels();
         $this->registerTwoFactorMethods();
@@ -129,6 +131,13 @@ class ExampleServiceProvider extends ServiceProvider
 
             return $recipients;
         }, 150);
+    }
+
+    protected function registerSlots(): void
+    {
+        $slots = $this->app->make(SlotRegistry::class);
+
+        $slots->append('admin.content.after', 'example-module::slot-demo');
     }
 
     protected function registerEventListeners(): void

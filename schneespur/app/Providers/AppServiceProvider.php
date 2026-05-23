@@ -19,6 +19,7 @@ use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
+use App\Services\Extension\SlotRegistry;
 use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Notification\EmailNotificationChannel;
 use App\Services\Notification\NotificationChannelRegistry;
@@ -34,6 +35,7 @@ use App\Services\Weather\OpenMeteoApiProvider;
 use App\Services\Weather\OpenMeteoFreeProvider;
 use App\Services\Weather\WeatherProviderRegistry;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -57,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NavigationRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RoleTemplateRegistry::class);
+        $this->app->singleton(SlotRegistry::class);
         $this->app->singleton(TwoFactorMethodRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
@@ -133,6 +136,8 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('alertCount', 0);
             }
         });
+
+        Blade::directive('slot', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\SlotRegistry::class)->render({$expression}, auth()->user()); ?>");
 
         $this->registerCorePermissions();
         $this->registerCoreNavigation();
