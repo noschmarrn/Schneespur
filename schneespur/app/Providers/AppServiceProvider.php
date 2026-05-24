@@ -33,6 +33,11 @@ use App\Services\SeasonService;
 use App\Services\Translation\BrandedTranslator;
 use App\Services\Backup\BackupTargetRegistry;
 use App\Services\Backup\LocalBackupTarget;
+use App\Services\Scheduler\ScheduledTaskRegistry;
+use App\Services\Scheduler\Tasks\CronHeartbeatTask;
+use App\Services\Scheduler\Tasks\QueueWorkTask;
+use App\Services\Scheduler\Tasks\RetentionDeleteTask;
+use App\Services\Scheduler\Tasks\UpdateCheckTask;
 use App\Services\Storage\LocalStorageBackend;
 use App\Services\Storage\StorageBackendRegistry;
 use App\Services\Weather\BrightSkyProvider;
@@ -95,6 +100,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(BackupTargetRegistry::class, function ($app) {
             $registry = new BackupTargetRegistry($app);
             $registry->register('local', LocalBackupTarget::class);
+
+            return $registry;
+        });
+
+        $this->app->singleton(ScheduledTaskRegistry::class, function ($app) {
+            $registry = new ScheduledTaskRegistry($app);
+            $registry->register('retention-delete', RetentionDeleteTask::class);
+            $registry->register('update-check', UpdateCheckTask::class);
+            $registry->register('queue-work', QueueWorkTask::class);
+            $registry->register('cron-heartbeat', CronHeartbeatTask::class);
 
             return $registry;
         });

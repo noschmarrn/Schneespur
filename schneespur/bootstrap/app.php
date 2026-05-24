@@ -11,10 +11,12 @@ use App\Http\Middleware\SetInstallerLocale;
 use App\Services\Diagnostic\DiagnosticManager;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Services\Scheduler\ScheduledTaskRegistry;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
@@ -64,12 +66,28 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withSchedule(function (Schedule $schedule): void {
-        $schedule->command('jobs:retention-delete')->daily()->at('03:00');
-        $schedule->command('schneespur:update-check')->daily()->at('04:17')
-            ->runInBackground()
-            ->appendOutputTo(storage_path('logs/schneespur-update.log'));
-        $schedule->command('queue:work', ['--stop-when-empty'])->everyMinute()->withoutOverlapping();
-        $schedule->call(fn () => cache()->put('cron.last_run', now()))->everyMinute();
+        $registry = app(ScheduledTaskRegistry::class);
+
+        foreach ($registry->enabledTasks() as $slug => $task) {
+            $schedule->call(function () use ($registry, $slug, $task): void {
+                $start = hrtime(true);
+                try {
+                    $task->handle();
+                    $durationMs = (int) ((hrtime(true) - $start) / 1_000_000);
+                    $registry->recordRun($slug, 'success', null, $durationMs);
+                } catch (\Throwable $e) {
+                    $durationMs = (int) ((hrtime(true) - $start) / 1_000_000);
+                    $registry->recordRun($slug, 'failed', $e->getMessage(), $durationMs);
+                    Log::warning("Scheduled task '{$slug}' failed: {$e->getMessage()}");
+                }
+            })->cron($task->schedule())->name($slug);
+        }
+
+        // Fallback: hardcoded entries in case registry is empty
+        // $schedule->command('jobs:retention-delete')->daily()->at('03:00');
+        // $schedule->command('schneespur:update-check')->daily()->at('04:17');
+        // $schedule->command('queue:work', ['--stop-when-empty'])->everyMinute()->withoutOverlapping();
+        // $schedule->call(fn () => cache()->put('cron.last_run', now()))->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->reportable(function (\Throwable $e) {
