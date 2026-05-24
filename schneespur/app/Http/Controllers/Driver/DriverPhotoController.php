@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Driver;
 use App\Http\Controllers\Controller;
 use App\Services\JobLifecycleService;
 use App\Services\PhotoService;
+use App\Services\Storage\StorageBackendRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class DriverPhotoController extends Controller
 {
@@ -36,9 +36,11 @@ class DriverPhotoController extends Controller
             $photo->update(['caption' => $validated['caption']]);
         }
 
+        $registry = app(StorageBackendRegistry::class);
+
         return response()->json([
             'id' => $photo->id,
-            'thumbnail_url' => Storage::disk('public')->url($photo->thumbnail_path),
+            'thumbnail_url' => $registry->resolve()->url($photo->thumbnail_path),
             'photos_remaining' => PhotoService::MAX_PHOTOS_PER_JOB - $job->jobPhotos()->count(),
         ], 201);
     }

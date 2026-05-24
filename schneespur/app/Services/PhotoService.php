@@ -4,9 +4,9 @@ namespace App\Services;
 
 use App\Models\Job;
 use App\Models\JobPhoto;
+use App\Services\Storage\StorageBackendRegistry;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
 
@@ -19,6 +19,10 @@ class PhotoService
     private const THUMB_WIDTH_PX = 300;
 
     private const JPEG_QUALITY = 80;
+
+    public function __construct(
+        private readonly StorageBackendRegistry $storageRegistry,
+    ) {}
 
     public function store(UploadedFile $file, Job $job): JobPhoto
     {
@@ -35,17 +39,17 @@ class PhotoService
 
         $image->scaleDown(width: self::MAX_ORIGINAL_PX, height: self::MAX_ORIGINAL_PX);
 
-        $disk = Storage::disk('public');
+        $backend = $this->storageRegistry->resolve();
         $encodedOriginal = (string) $image->encodeUsingMediaType($this->mediaType($ext), quality: self::JPEG_QUALITY);
-        $disk->put($originalRelPath, $encodedOriginal);
+        $backend->store($originalRelPath, $encodedOriginal);
 
         $image->scaleDown(width: self::THUMB_WIDTH_PX);
-        $disk->put($thumbRelPath, (string) $image->encodeUsingMediaType($this->mediaType($ext), quality: self::JPEG_QUALITY));
+        $backend->store($thumbRelPath, (string) $image->encodeUsingMediaType($this->mediaType($ext), quality: self::JPEG_QUALITY));
 
         $annotationService = app(PhotoAnnotationService::class);
         try {
             $annotatedContent = $annotationService->annotate($encodedOriginal, $job);
-            $disk->put($annotatedRelPath, $annotatedContent);
+            $backend->store($annotatedRelPath, $annotatedContent);
         } catch (\Throwable $e) {
             Log::warning('Photo annotation failed, continuing without annotated version', [
                 'job_id' => $job->id,
@@ -59,6 +63,7 @@ class PhotoService
             'file' => $originalRelPath,
             'thumb' => $thumbRelPath,
             'annotated' => $annotatedRelPath,
+            'backend' => $backend->slug(),
         ]);
 
         return JobPhoto::create([

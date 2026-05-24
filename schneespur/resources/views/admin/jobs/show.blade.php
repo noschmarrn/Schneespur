@@ -1,4 +1,4 @@
-@use('Illuminate\Support\Facades\Storage')
+@use('App\Services\Storage\StorageBackendRegistry')
 <x-admin-layout>
     <x-slot name="header">
         <a href="{{ route('admin.jobs.index') }}" class="text-indigo-600 hover:text-indigo-900">&larr; {{ __('job.page_list') }}</a>
@@ -186,11 +186,11 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 @foreach ($job->jobPhotos as $photo)
                     <div class="space-y-1">
-                        <a href="{{ Storage::disk('public')->url($photo->file_path) }}" target="_blank" class="group block aspect-square rounded-lg overflow-hidden bg-gray-100 ring-1 ring-gray-200 hover:ring-indigo-400 transition">
-                            <img src="{{ Storage::disk('public')->url($photo->thumbnail_path) }}" alt="{{ $photo->caption ?? __('job.detail_photo_alt') }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
+                        <a href="{{ app(StorageBackendRegistry::class)->urlWithFallback($photo->file_path) }}" target="_blank" class="group block aspect-square rounded-lg overflow-hidden bg-gray-100 ring-1 ring-gray-200 hover:ring-indigo-400 transition">
+                            <img src="{{ app(StorageBackendRegistry::class)->urlWithFallback($photo->thumbnail_path) }}" alt="{{ $photo->caption ?? __('job.detail_photo_alt') }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
                         </a>
                         @if ($photo->annotated_path)
-                            <a href="{{ Storage::disk('public')->url($photo->annotated_path) }}" target="_blank" class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-900">
+                            <a href="{{ app(StorageBackendRegistry::class)->urlWithFallback($photo->annotated_path) }}" target="_blank" class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-900">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 {{ __('job.detail_photo_annotated') }}
                             </a>

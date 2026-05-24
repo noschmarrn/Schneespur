@@ -8,14 +8,15 @@ use App\Models\Job;
 use App\Models\MonthlyStatistic;
 use App\Models\Setting;
 use App\Models\WorkShift;
+use App\Services\Storage\StorageBackendRegistry;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class RetentionService
 {
     public function __construct(
         private readonly JobAuditService $auditService,
+        private readonly StorageBackendRegistry $storageRegistry,
     ) {}
 
     public function getExpiredJobs(int $limit = 50): Collection
@@ -127,6 +128,9 @@ class RetentionService
     {
         $photos = $job->jobPhotos()->get();
 
+        $active = $this->storageRegistry->resolve();
+        $local = $this->storageRegistry->resolve(StorageBackendRegistry::DEFAULT_BACKEND);
+
         foreach ($photos as $photo) {
             $paths = array_filter([
                 $photo->file_path,
@@ -135,7 +139,10 @@ class RetentionService
             ]);
 
             foreach ($paths as $path) {
-                Storage::disk('public')->delete($path);
+                $active->delete($path);
+                if ($active->slug() !== $local->slug()) {
+                    $local->delete($path);
+                }
             }
         }
 

@@ -255,10 +255,14 @@
                             <td>
                                 @php
                                     $photoPath = $photo->annotated_path ?? $photo->file_path;
-                                    $photoAbsPath = storage_path('app/public/' . $photoPath);
+                                    $photoContents = app(\App\Services\Storage\StorageBackendRegistry::class)->retrieveWithFallback($photoPath);
                                 @endphp
-                                @if (file_exists($photoAbsPath))
-                                    <img src="{{ $photoAbsPath }}" alt="{{ $photo->caption ?? '' }}">
+                                @if ($photoContents)
+                                    @php
+                                        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+                                        $photoMime = $finfo->buffer($photoContents) ?: 'image/jpeg';
+                                    @endphp
+                                    <img src="data:{{ $photoMime }};base64,{{ base64_encode($photoContents) }}" alt="{{ $photo->caption ?? '' }}">
                                 @endif
                                 @if ($photo->caption)
                                     <div class="photo-caption">{{ $photo->caption }}</div>

@@ -2,26 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Storage;
+use App\Services\Storage\StorageBackendRegistry;
 use Symfony\Component\HttpFoundation\Response;
 
 class StorageFallbackController extends Controller
 {
-    public function __invoke(string $path): Response
+    public function __invoke(string $path, StorageBackendRegistry $registry): Response
     {
-        $disk = Storage::disk('public');
+        $contents = $registry->retrieveWithFallback($path);
 
-        if (! $disk->exists($path)) {
+        if ($contents === null) {
             abort(404);
         }
 
-        $mimeType = $disk->mimeType($path) ?: 'application/octet-stream';
-        $lastModified = $disk->lastModified($path);
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $finfo->buffer($contents) ?: 'application/octet-stream';
 
-        return response($disk->get($path), 200, [
+        return response($contents, 200, [
             'Content-Type' => $mimeType,
             'Cache-Control' => 'public, max-age=604800',
-            'Last-Modified' => gmdate('D, d M Y H:i:s', $lastModified) . ' GMT',
         ]);
     }
 }

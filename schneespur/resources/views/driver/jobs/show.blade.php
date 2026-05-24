@@ -118,7 +118,7 @@
                 <div class="grid grid-cols-3 gap-2">
                     @foreach($job->jobPhotos->sortBy('sort_order') as $photo)
                         <div class="aspect-square rounded-lg overflow-hidden bg-gray-700">
-                            <img src="{{ Storage::disk('public')->url($photo->thumbnail_path ?: $photo->file_path) }}"
+                            <img src="{{ app(\App\Services\Storage\StorageBackendRegistry::class)->urlWithFallback($photo->thumbnail_path ?: $photo->file_path) }}"
                                  alt="{{ $photo->caption ?: __('driver.dash_photo_alt') }}"
                                  class="w-full h-full object-cover">
                         </div>

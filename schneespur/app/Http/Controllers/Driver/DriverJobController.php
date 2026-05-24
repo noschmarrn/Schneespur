@@ -9,10 +9,10 @@ use App\Models\CustomerObject;
 use App\Models\Vehicle;
 use App\Services\JobLifecycleService;
 use App\Services\PhotoService;
+use App\Services\Storage\StorageBackendRegistry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class DriverJobController extends Controller
@@ -88,8 +88,8 @@ class DriverJobController extends Controller
                 'photos_remaining' => PhotoService::MAX_PHOTOS_PER_JOB - $job->jobPhotos->count(),
                 'photos' => $job->jobPhotos->map(fn ($p) => [
                     'id' => $p->id,
-                    'thumbnail_url' => Storage::disk('public')->url($p->thumbnail_path),
-                    'full_url' => Storage::disk('public')->url($p->file_path),
+                    'thumbnail_url' => app(StorageBackendRegistry::class)->urlWithFallback($p->thumbnail_path),
+                    'full_url' => app(StorageBackendRegistry::class)->urlWithFallback($p->file_path),
                     'caption' => $p->caption,
                 ]),
             ] : null,

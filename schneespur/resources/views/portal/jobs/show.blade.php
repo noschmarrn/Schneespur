@@ -1,4 +1,4 @@
-@use('Illuminate\Support\Facades\Storage')
+@use('App\Services\Storage\StorageBackendRegistry')
 <x-portal-layout>
     <div class="mb-4">
         <a href="{{ route('portal.jobs.index') }}" class="text-indigo-600 hover:text-indigo-900 text-sm">&larr; {{ __('portal.job_back_to_list') }}</a>
@@ -98,8 +98,8 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ __('portal.job_detail_photos') }}</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 @foreach ($job->jobPhotos as $photo)
-                    <a href="{{ Storage::disk('public')->url($photo->file_path) }}" target="_blank" class="group block aspect-square rounded-lg overflow-hidden bg-gray-100 ring-1 ring-gray-200 hover:ring-indigo-400 transition">
-                        <img src="{{ Storage::disk('public')->url($photo->thumbnail_path) }}" alt="{{ $photo->caption ?? __('portal.job_detail_photo_alt') }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
+                    <a href="{{ app(StorageBackendRegistry::class)->urlWithFallback($photo->file_path) }}" target="_blank" class="group block aspect-square rounded-lg overflow-hidden bg-gray-100 ring-1 ring-gray-200 hover:ring-indigo-400 transition">
+                        <img src="{{ app(StorageBackendRegistry::class)->urlWithFallback($photo->thumbnail_path) }}" alt="{{ $photo->caption ?? __('portal.job_detail_photo_alt') }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-200">
                     </a>
                 @endforeach
             </div>
