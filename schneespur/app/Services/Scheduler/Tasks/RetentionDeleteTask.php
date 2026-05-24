@@ -31,4 +31,9 @@ class RetentionDeleteTask implements ScheduledTaskInterface
     {
         return true;
     }
+
+    public function source(): string
+    {
+        return 'core';
+    }
 }

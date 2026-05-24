@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\DriverReportController;
 use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\Admin\OwntracksOverviewController;
 use App\Http\Controllers\Admin\WeatherRetryController;
+use App\Http\Controllers\Admin\AdminCronTaskController;
 use App\Http\Controllers\Admin\AdminModuleController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\UpdateSettingsController;
@@ -209,6 +210,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/settings/update', [UpdateSettingsController::class, 'update'])->name('settings.update.update');
     Route::post('/settings/update/check', [UpdateSettingsController::class, 'checkNow'])->name('settings.update.check');
     Route::post('/settings/update/install', [UpdateSettingsController::class, 'install'])->name('settings.update.install');
+
+    Route::get('/crontasks', [AdminCronTaskController::class, 'index'])->name('crontasks.index');
+    Route::post('/crontasks/{slug}/toggle', [AdminCronTaskController::class, 'toggle'])->name('crontasks.toggle');
 
     Route::get('/settings/modules', [AdminModuleController::class, 'index'])->name('settings.modules.index');
     Route::post('/settings/modules/{slug}/install', [AdminModuleController::class, 'install'])->name('settings.modules.install');

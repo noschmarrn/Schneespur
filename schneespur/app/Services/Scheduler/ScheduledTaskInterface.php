@@ -13,4 +13,6 @@ interface ScheduledTaskInterface
     public function handle(): void;
 
     public function isEnabled(): bool;
+
+    public function source(): string;
 }

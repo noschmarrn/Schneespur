@@ -27,4 +27,6 @@ return [
     'users_view' => 'View users',
     'users_edit' => 'Edit users',
     'users_delete' => 'Delete users',
+    'crontasks_view' => 'View scheduled tasks',
+    'crontasks_manage' => 'Manage scheduled tasks',
 ];

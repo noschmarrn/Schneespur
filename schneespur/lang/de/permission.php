@@ -27,4 +27,6 @@ return [
     'users_view' => 'Benutzer anzeigen',
     'users_edit' => 'Benutzer bearbeiten',
     'users_delete' => 'Benutzer löschen',
+    'crontasks_view' => 'Cronjobs anzeigen',
+    'crontasks_manage' => 'Cronjobs verwalten',
 ];

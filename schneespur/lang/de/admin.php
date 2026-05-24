@@ -54,6 +54,7 @@ return [
 
     'footer_help'          => 'Hilfe & Dokumentation',
 
+    'nav_crontasks'        => 'Cronjobs',
     'nav_users'            => 'Benutzer',
     'page_users'           => 'Benutzer',
 ];

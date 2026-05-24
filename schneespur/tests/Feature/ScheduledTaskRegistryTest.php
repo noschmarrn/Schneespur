@@ -220,6 +220,11 @@ class FakeEnabledTask implements ScheduledTaskInterface
     {
         return true;
     }
+
+    public function source(): string
+    {
+        return 'module';
+    }
 }
 
 class FakeDisabledTask implements ScheduledTaskInterface
@@ -244,5 +249,10 @@ class FakeDisabledTask implements ScheduledTaskInterface
     public function isEnabled(): bool
     {
         return false;
+    }
+
+    public function source(): string
+    {
+        return 'module';
     }
 }

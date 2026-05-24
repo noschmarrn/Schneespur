@@ -222,6 +222,8 @@ class AppServiceProvider extends ServiceProvider
             ['users.view', __('permission.users_view'), 'users'],
             ['users.edit', __('permission.users_edit'), 'users'],
             ['users.delete', __('permission.users_delete'), 'users'],
+            ['crontasks.view', __('permission.crontasks_view'), 'crontasks'],
+            ['crontasks.manage', __('permission.crontasks_manage'), 'crontasks'],
         ];
 
         foreach ($permissions as [$slug, $label, $group]) {
@@ -428,6 +430,16 @@ class AppServiceProvider extends ServiceProvider
             permission: 'help.view',
             routeCheck: 'admin.help.index',
             activePattern: 'admin.help.*',
+        );
+        $nav->addItem(
+            group: 'system',
+            slug: 'crontasks',
+            label: __('admin.nav_crontasks'),
+            route: 'admin.crontasks.index',
+            icon: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z',
+            order: 45,
+            permission: 'crontasks.view',
+            activePattern: 'admin.crontasks.*',
         );
         $nav->addItem(
             group: 'system',
