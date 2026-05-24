@@ -21,6 +21,8 @@ use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\SlotRegistry;
 use App\Services\Extension\TwoFactorMethodRegistry;
+use App\Services\Dispatch\ManualDispatchStrategy;
+use App\Services\Extension\DispatchStrategyRegistry;
 use App\Services\Notification\EmailNotificationChannel;
 use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\ForecastService;
@@ -68,6 +70,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(NotificationChannelRegistry::class, function ($app) {
             $registry = new NotificationChannelRegistry($app, $app->make(FilterRegistry::class));
             $registry->register('email', EmailNotificationChannel::class);
+
+            return $registry;
+        });
+
+        $this->app->singleton(DispatchStrategyRegistry::class, function ($app) {
+            $registry = new DispatchStrategyRegistry($app);
+            $registry->register('manual', ManualDispatchStrategy::class);
 
             return $registry;
         });
