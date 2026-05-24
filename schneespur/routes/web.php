@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\WeatherRetryController;
 use App\Http\Controllers\Admin\AdminModuleController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\UpdateSettingsController;
+use App\Http\Controllers\Admin\DispatchSettingsController;
 use App\Http\Controllers\Admin\WeatherSettingsController;
 use App\Http\Controllers\Admin\ManualJobController as AdminManualJobController;
 use App\Http\Controllers\Driver\DriverJobController;
@@ -192,6 +193,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/settings/company', [CompanyController::class, 'update'])->name('settings.company.update');
     Route::get('/settings/retention', [RetentionController::class, 'edit'])->name('settings.retention');
     Route::post('/settings/retention', [RetentionController::class, 'update'])->name('settings.retention.update');
+
+    Route::get('/settings/dispatch', [DispatchSettingsController::class, 'edit'])->name('settings.dispatch');
+    Route::post('/settings/dispatch', [DispatchSettingsController::class, 'update'])->name('settings.dispatch.update');
 
     Route::get('/settings/weather', [WeatherSettingsController::class, 'edit'])->name('settings.weather');
     Route::post('/settings/weather', [WeatherSettingsController::class, 'update'])->name('settings.weather.update');

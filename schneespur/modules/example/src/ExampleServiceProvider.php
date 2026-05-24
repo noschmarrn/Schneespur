@@ -9,12 +9,14 @@ use App\Events\Shift\WorkShiftStarted;
 use App\Events\User\UserLoggedIn;
 use App\Models\Setting;
 use App\Services\Extension\DashboardWidgetRegistry;
+use App\Services\Extension\DispatchStrategyRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\SlotRegistry;
 use App\Services\ModuleManager;
 use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Notification\NotificationChannelRegistry;
+use Schneespur\Module\Example\Dispatch\FirstAvailableStrategy;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -44,6 +46,7 @@ class ExampleServiceProvider extends ServiceProvider
         $this->registerEventListeners();
         $this->registerNotificationChannels();
         $this->registerTwoFactorMethods();
+        $this->registerDispatchStrategy();
         $this->registerRoutes();
     }
 
@@ -189,6 +192,12 @@ class ExampleServiceProvider extends ServiceProvider
     {
         $registry = $this->app->make(TwoFactorMethodRegistry::class);
         $registry->registerMethod('dummy-2fa', DummyTwoFactorMethod::class);
+    }
+
+    protected function registerDispatchStrategy(): void
+    {
+        $registry = $this->app->make(DispatchStrategyRegistry::class);
+        $registry->register('first_available', FirstAvailableStrategy::class);
     }
 
     protected function registerRoutes(): void
