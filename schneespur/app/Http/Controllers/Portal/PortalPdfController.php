@@ -23,10 +23,13 @@ class PortalPdfController extends Controller
         abort_unless($serviceJob->customer_id === $customer->id, 404);
         abort_unless($serviceJob->ended_at !== null, 422, __('portal.reports_job_not_completed'));
 
-        $pdf = $this->pdfReportService->generateJobReport($serviceJob);
+        $pdfContent = $this->pdfReportService->generateJobReport($serviceJob);
         $filename = $this->pdfReportService->jobReportFilename($serviceJob);
 
-        return $pdf->download($filename);
+        return new Response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 
     public function index(): View
@@ -73,7 +76,7 @@ class PortalPdfController extends Controller
                     ->with('error', __('portal.reports_no_jobs'));
             }
 
-            $pdf = $this->pdfReportService->generateObjectReport($object, $from, $to);
+            $pdfContent = $this->pdfReportService->generateObjectReport($object, $from, $to);
             $filename = $this->pdfReportService->objectReportFilename($object, $from, $to);
         } else {
             $jobCount = Job::where('customer_id', $customer->id)
@@ -88,10 +91,13 @@ class PortalPdfController extends Controller
                     ->with('error', __('portal.reports_no_jobs'));
             }
 
-            $pdf = $this->pdfReportService->generateCustomerReport($customer, $from, $to);
+            $pdfContent = $this->pdfReportService->generateCustomerReport($customer, $from, $to);
             $filename = $this->pdfReportService->customerReportFilename($customer, $from, $to);
         }
 
-        return $pdf->download($filename);
+        return new Response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

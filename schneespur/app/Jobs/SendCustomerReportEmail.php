@@ -64,10 +64,9 @@ class SendCustomerReportEmail implements ShouldQueue
         $pdfFilename = '';
 
         try {
-            $pdf = $object
+            $pdfContent = $object
                 ? $pdfReportService->generateObjectReport($object, $this->from, $this->to)
                 : $pdfReportService->generateCustomerReport($this->customer, $this->from, $this->to);
-            $pdfContent = $pdf->output();
             $pdfFilename = $object
                 ? $pdfReportService->objectReportFilename($object, $this->from, $this->to)
                 : $pdfReportService->customerReportFilename($this->customer, $this->from, $this->to);

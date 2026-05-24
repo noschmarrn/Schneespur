@@ -33,6 +33,8 @@ use App\Services\SeasonService;
 use App\Services\Translation\BrandedTranslator;
 use App\Services\Backup\BackupTargetRegistry;
 use App\Services\Backup\LocalBackupTarget;
+use App\Services\Pdf\DomPdfRenderer;
+use App\Services\Pdf\PdfRendererRegistry;
 use App\Services\Scheduler\ScheduledTaskRegistry;
 use App\Services\Scheduler\Tasks\CronHeartbeatTask;
 use App\Services\Scheduler\Tasks\QueueWorkTask;
@@ -110,6 +112,13 @@ class AppServiceProvider extends ServiceProvider
             $registry->register('update-check', UpdateCheckTask::class);
             $registry->register('queue-work', QueueWorkTask::class);
             $registry->register('cron-heartbeat', CronHeartbeatTask::class);
+
+            return $registry;
+        });
+
+        $this->app->singleton(PdfRendererRegistry::class, function ($app) {
+            $registry = new PdfRendererRegistry($app);
+            $registry->register('dompdf', DomPdfRenderer::class);
 
             return $registry;
         });

@@ -5,17 +5,23 @@ namespace App\Services;
 use App\Models\Customer;
 use App\Models\CustomerObject;
 use App\Models\Job;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\Pdf\PdfRendererRegistry;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class PdfReportService
 {
     public function __construct(
+        private readonly PdfRendererRegistry $rendererRegistry,
         private GpsSmoothingService $gpsSmoother = new GpsSmoothingService,
     ) {}
 
-    public function generateJobReport(Job $job): \Barryvdh\DomPDF\PDF
+    private function renderer(): Pdf\PdfRendererInterface
+    {
+        return $this->rendererRegistry->resolve();
+    }
+
+    public function generateJobReport(Job $job): string
     {
         $job->load([
             'customer',
@@ -31,18 +37,16 @@ class PdfReportService
         $svgTrack = $this->renderGpsTrackSvg($smoothedPoints);
         $gpsTableData = $this->sampleGpsPointsForTable($job->gpsPoints);
 
-        $pdf = Pdf::loadView('pdf.job-report', [
+        return $this->renderer()->render('pdf.job-report', [
             'job' => $job,
             'svgTrack' => $svgTrack ? $this->svgToImgTag($svgTrack, $width = 500, $height = 300) : null,
             'gpsTableData' => $gpsTableData,
+        ], [
+            'footer' => [
+                'left' => __('job.pdf_generated_at', ['date' => now()->format('d.m.Y H:i')]),
+                'right' => __('job.pdf_title'),
+            ],
         ]);
-
-        $pdf->setPaper('a4', 'portrait');
-        $pdf->setOption('isRemoteEnabled', true);
-        $pdf->render();
-        $this->addCanvasFooter($pdf, __('job.pdf_title'));
-
-        return $pdf;
     }
 
     public function sampleGpsPointsForTable(Collection $gpsPoints, int $maxRows = 30): array
@@ -136,23 +140,6 @@ class PdfReportService
         SVG;
     }
 
-    private function addCanvasFooter(\Barryvdh\DomPDF\PDF $pdf, string $rightText): void
-    {
-        $canvas = $pdf->getDomPDF()->getCanvas();
-        $font = $pdf->getDomPDF()->getFontMetrics()->getFont('DejaVu Sans');
-        $size = 7;
-        $color = [0.58, 0.64, 0.72];
-        $lineColor = [0.89, 0.91, 0.94];
-        $leftText = __('job.pdf_generated_at', ['date' => now()->format('d.m.Y H:i')]);
-        $y = $canvas->get_height() - 30;
-        $xLeft = 42;
-        $xRight = $canvas->get_width() - 42;
-
-        $canvas->page_line($xLeft, $y, $xRight, $y, $lineColor, 0.5);
-        $canvas->page_text($xLeft, $y + 5, $leftText, $font, $size, $color);
-        $canvas->page_text($xRight - $pdf->getDomPDF()->getFontMetrics()->getTextWidth($rightText, $font, $size), $y + 5, $rightText, $font, $size, $color);
-    }
-
     private function svgToImgTag(string $svg, int $width, int $height): string
     {
         return '<img src="data:image/svg+xml;base64,' . base64_encode($svg) . '" width="' . $width . '" height="' . $height . '">';
@@ -173,7 +160,7 @@ class PdfReportService
         SVG;
     }
 
-    public function generateCustomerReport(Customer $customer, Carbon $from, Carbon $to, bool $includeActive = false): \Barryvdh\DomPDF\PDF
+    public function generateCustomerReport(Customer $customer, Carbon $from, Carbon $to, bool $includeActive = false): string
     {
         $query = $customer->serviceJobs()
             ->where('started_at', '>=', $from)
@@ -208,21 +195,19 @@ class PdfReportService
 
         $customer->loadMissing('objects');
 
-        $pdf = Pdf::loadView('pdf.customer-report', [
+        return $this->renderer()->render('pdf.customer-report', [
             'customer' => $customer,
             'jobs' => $jobs,
             'jobData' => $jobData,
             'from' => $from,
             'to' => $to,
             'coverData' => $coverData,
+        ], [
+            'footer' => [
+                'left' => __('job.pdf_generated_at', ['date' => now()->format('d.m.Y H:i')]),
+                'right' => __('job.pdf_customer_report_title'),
+            ],
         ]);
-
-        $pdf->setPaper('a4', 'portrait');
-        $pdf->setOption('isRemoteEnabled', true);
-        $pdf->render();
-        $this->addCanvasFooter($pdf, __('job.pdf_customer_report_title'));
-
-        return $pdf;
     }
 
     private function buildCoverData(Collection $jobs): array
@@ -274,7 +259,7 @@ class PdfReportService
         ];
     }
 
-    public function generateObjectReport(CustomerObject $object, Carbon $from, Carbon $to, bool $includeActive = false): \Barryvdh\DomPDF\PDF
+    public function generateObjectReport(CustomerObject $object, Carbon $from, Carbon $to, bool $includeActive = false): string
     {
         $query = $object->serviceJobs()
             ->where('started_at', '>=', $from)
@@ -307,7 +292,7 @@ class PdfReportService
 
         $coverData = $this->buildCoverData($jobs);
 
-        $pdf = Pdf::loadView('pdf.customer-report', [
+        return $this->renderer()->render('pdf.customer-report', [
             'customer' => $object->customer,
             'customerObject' => $object,
             'jobs' => $jobs,
@@ -315,14 +300,12 @@ class PdfReportService
             'from' => $from,
             'to' => $to,
             'coverData' => $coverData,
+        ], [
+            'footer' => [
+                'left' => __('job.pdf_generated_at', ['date' => now()->format('d.m.Y H:i')]),
+                'right' => __('job.pdf_customer_report_title'),
+            ],
         ]);
-
-        $pdf->setPaper('a4', 'portrait');
-        $pdf->setOption('isRemoteEnabled', true);
-        $pdf->render();
-        $this->addCanvasFooter($pdf, __('job.pdf_customer_report_title'));
-
-        return $pdf;
     }
 
     public function objectReportFilename(CustomerObject $object, Carbon $from, Carbon $to): string

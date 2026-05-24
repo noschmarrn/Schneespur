@@ -68,10 +68,13 @@ class CustomerPdfController extends Controller
         }
 
         try {
-            $pdf = $this->pdfReportService->generateCustomerReport($customer, $from, $to, $includeActive);
+            $pdfContent = $this->pdfReportService->generateCustomerReport($customer, $from, $to, $includeActive);
             $filename = $this->pdfReportService->customerReportFilename($customer, $from, $to);
 
-            return $pdf->download($filename);
+            return new Response($pdfContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
         } catch (\Throwable $e) {
             report($e);
 

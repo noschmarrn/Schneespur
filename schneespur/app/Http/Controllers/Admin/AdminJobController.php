@@ -123,9 +123,12 @@ class AdminJobController extends Controller
 
         abort_if(is_null($serviceJob->ended_at), 422, __('job.pdf_active_blocked'));
 
-        $pdf = $pdfService->generateJobReport($serviceJob);
+        $pdfContent = $pdfService->generateJobReport($serviceJob);
         $filename = $pdfService->jobReportFilename($serviceJob);
 
-        return $pdf->download($filename);
+        return new Response($pdfContent, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

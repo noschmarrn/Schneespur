@@ -49,8 +49,7 @@ class SendJobCompletedNotification implements ShouldQueue
         $pdfFilename = '';
 
         try {
-            $pdf = $this->pdfReportService->generateJobReport($job);
-            $pdfContent = $pdf->output();
+            $pdfContent = $this->pdfReportService->generateJobReport($job);
             $pdfFilename = $this->pdfReportService->jobReportFilename($job);
         } catch (\Throwable $e) {
             Log::warning('PDF generation failed for job notification', [
