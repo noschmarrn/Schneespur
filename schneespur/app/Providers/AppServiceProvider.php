@@ -31,6 +31,8 @@ use App\Services\RetentionService;
 use App\Services\SchneespurUpdater;
 use App\Services\SeasonService;
 use App\Services\Translation\BrandedTranslator;
+use App\Services\Backup\BackupTargetRegistry;
+use App\Services\Backup\LocalBackupTarget;
 use App\Services\Weather\BrightSkyProvider;
 use App\Services\Weather\MetNorwayProvider;
 use App\Services\Weather\OpenMeteoApiProvider;
@@ -77,6 +79,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DispatchStrategyRegistry::class, function ($app) {
             $registry = new DispatchStrategyRegistry($app);
             $registry->register('manual', ManualDispatchStrategy::class);
+
+            return $registry;
+        });
+
+        $this->app->singleton(BackupTargetRegistry::class, function ($app) {
+            $registry = new BackupTargetRegistry($app);
+            $registry->register('local', LocalBackupTarget::class);
 
             return $registry;
         });
