@@ -16,6 +16,8 @@
         <link rel="apple-touch-icon" href="/pwa-icon-192x192.png">
         <link rel="manifest" href="/manifest.webmanifest">
 
+        @extensionSlot('driver.head.after')
+
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
@@ -36,6 +38,8 @@
                         </div>
 
                         <div class="flex items-center gap-2">
+                            @extensionSlot('driver.topbar.actions')
+
                             <div x-data="connectivityIndicator()" x-init="init()" class="flex items-center gap-1">
                                 <span class="relative flex h-2 w-2">
                                     <template x-if="state === 'syncing'">
@@ -77,8 +81,10 @@
 
             {{-- Page content --}}
             <main class="flex-1 px-4 py-4 pb-24">
+                @extensionSlot('driver.content.before')
                 <x-driver-flash-message />
                 {{ $slot }}
+                @extensionSlot('driver.content.after')
             </main>
 
             {{-- Bottom nav area for main actions --}}
@@ -89,6 +95,7 @@
                     </div>
                 </div>
             @endisset
+            @extensionSlot('driver.bottom-nav.after')
         </div>
         <script>
             if ('serviceWorker' in navigator) {

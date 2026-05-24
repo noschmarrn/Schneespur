@@ -138,6 +138,8 @@ class ExampleServiceProvider extends ServiceProvider
         $slots = $this->app->make(SlotRegistry::class);
 
         $slots->append('admin.content.after', 'example-module::slot-demo');
+        $slots->append('driver.content.after', 'example-module::driver-slot-demo');
+        $slots->append('portal.content.after', 'example-module::portal-slot-demo');
     }
 
     protected function registerEventListeners(): void

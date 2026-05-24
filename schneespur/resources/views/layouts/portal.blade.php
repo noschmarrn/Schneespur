@@ -12,6 +12,7 @@
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @extensionSlot('portal.head.after')
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen flex flex-col bg-gray-50">
@@ -46,6 +47,7 @@
                                     {{ __('portal.nav_profile') }}
                                 </a>
                             </nav>
+                            @extensionSlot('portal.nav.after')
                         </div>
 
                         <div class="hidden sm:flex items-center space-x-4">
@@ -102,14 +104,17 @@
             {{-- Page content --}}
             <main class="flex-1 py-8">
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    @extensionSlot('portal.content.before')
                     <x-flash-message />
                     {{ $slot }}
+                    @extensionSlot('portal.content.after')
                 </div>
             </main>
 
             {{-- Footer --}}
             <footer class="border-t border-gray-200 bg-white">
                 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    @extensionSlot('portal.footer.before')
                     <p class="text-xs text-gray-400 text-center">
                         {{ brand() }} &middot; {{ __('portal.footer_portal') }}
                     </p>

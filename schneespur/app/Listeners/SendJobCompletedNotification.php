@@ -26,7 +26,7 @@ class SendJobCompletedNotification implements ShouldQueue
         $object = $job->customerObject;
         $customer = $job->customer;
 
-        if (! ($object->auto_notify_email ?? $customer->auto_notify_email)) {
+        if (! ($object->auto_notify_email || $customer->auto_notify_email)) {
             return;
         }
 

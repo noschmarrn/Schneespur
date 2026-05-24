@@ -137,7 +137,7 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
-        Blade::directive('slot', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\SlotRegistry::class)->render({$expression}, auth()->user()); ?>");
+        Blade::directive('extensionSlot', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\SlotRegistry::class)->render({$expression}, auth()->user()); ?>");
 
         $this->registerCorePermissions();
         $this->registerCoreNavigation();

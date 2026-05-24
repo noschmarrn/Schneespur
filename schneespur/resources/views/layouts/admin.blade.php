@@ -13,7 +13,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('head')
-        @slot('admin.head.after')
+        @extensionSlot('admin.head.after')
     </head>
     <body class="font-sans antialiased">
         <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-gray-100">
@@ -36,7 +36,7 @@
                     <span class="text-xl font-bold tracking-wide text-white">{{ brand() }}</span>
                 </div>
 
-                @slot('admin.sidebar.before-nav')
+                @extensionSlot('admin.sidebar.before-nav')
 
                 {{-- Navigation (registry-driven) --}}
                 @php
@@ -90,7 +90,7 @@
                     @endforeach
                 </nav>
 
-                @slot('admin.sidebar.after-nav')
+                @extensionSlot('admin.sidebar.after-nav')
             </aside>
 
             {{-- Main content area --}}
@@ -145,11 +145,11 @@
 
                 {{-- Page content --}}
                 <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                    @slot('admin.content.before')
+                    @extensionSlot('admin.content.before')
                     <x-flash-message />
                     {{ $slot }}
 
-                    @slot('admin.content.after')
+                    @extensionSlot('admin.content.after')
 
                     <footer class="mt-12 pt-4 border-t border-gray-200 text-xs text-gray-400">
                         {{ brand() }} {{ config('app.version', '1.0') }} &middot;
