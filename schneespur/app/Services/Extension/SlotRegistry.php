@@ -2,7 +2,7 @@
 
 namespace App\Services\Extension;
 
-use App\Models\User;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
@@ -35,7 +35,7 @@ class SlotRegistry extends ExtensionRegistry
         ];
     }
 
-    public function render(string $slotName, ?User $user = null): string
+    public function render(string $slotName, ?Authenticatable $user = null): string
     {
         if (isset($this->replaces[$slotName])) {
             $replace = $this->replaces[$slotName];

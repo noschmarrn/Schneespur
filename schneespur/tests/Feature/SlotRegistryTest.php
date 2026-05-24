@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\UserRole;
+use App\Models\Customer;
 use App\Models\User;
 use App\Services\Extension\SlotRegistry;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -235,5 +236,85 @@ class SlotRegistryTest extends TestCase
         foreach ($expectedDirectives as $directive) {
             $this->assertStringContainsString($directive, $layoutContent, "Driver layout should contain {$directive}");
         }
+    }
+
+    public function test_portal_slot_append_renders_in_portal_layout_context(): void
+    {
+        View::addLocation(__DIR__ . '/../fixtures/views');
+
+        $this->registry->append('portal.content.after', 'slot-alpha');
+
+        $html = $this->registry->render('portal.content.after');
+
+        $this->assertStringContainsString('ALPHA_CONTENT', $html);
+    }
+
+    public function test_portal_slot_replace_overrides_appends(): void
+    {
+        View::addLocation(__DIR__ . '/../fixtures/views');
+
+        $this->registry->append('portal.nav.after', 'slot-alpha', [], 100);
+        $this->registry->append('portal.nav.after', 'slot-beta', [], 200);
+        $this->registry->replace('portal.nav.after', 'slot-replace');
+
+        $html = $this->registry->render('portal.nav.after');
+
+        $this->assertStringContainsString('REPLACE_CONTENT', $html);
+        $this->assertStringNotContainsString('ALPHA_CONTENT', $html);
+        $this->assertStringNotContainsString('BETA_CONTENT', $html);
+    }
+
+    public function test_portal_slot_names_follow_convention(): void
+    {
+        $expectedSlots = [
+            'portal.head.after',
+            'portal.nav.after',
+            'portal.content.before',
+            'portal.content.after',
+            'portal.footer.before',
+        ];
+
+        View::addLocation(__DIR__ . '/../fixtures/views');
+
+        foreach ($expectedSlots as $slot) {
+            $this->registry->append($slot, 'slot-alpha');
+        }
+
+        $registeredSlots = $this->registry->getSlotNames();
+
+        foreach ($expectedSlots as $slot) {
+            $this->assertContains($slot, $registeredSlots, "Slot '{$slot}' should be registered");
+        }
+    }
+
+    public function test_portal_layout_contains_extension_slot_directives(): void
+    {
+        $layoutContent = file_get_contents(resource_path('views/layouts/portal.blade.php'));
+
+        $expectedDirectives = [
+            "@extensionSlot('portal.head.after')",
+            "@extensionSlot('portal.nav.after')",
+            "@extensionSlot('portal.content.before')",
+            "@extensionSlot('portal.content.after')",
+            "@extensionSlot('portal.footer.before')",
+        ];
+
+        foreach ($expectedDirectives as $directive) {
+            $this->assertStringContainsString($directive, $layoutContent, "Portal layout should contain {$directive}");
+        }
+    }
+
+    public function test_portal_home_renders_without_registered_slots(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Test Customer',
+            'email' => 'portal-slot@test.local',
+            'password' => 'password',
+            'portal_enabled' => true,
+        ]);
+
+        $response = $this->actingAs($customer, 'customer')->get(route('portal.home'));
+
+        $response->assertStatus(200);
     }
 }
