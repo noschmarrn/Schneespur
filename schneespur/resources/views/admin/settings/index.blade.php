@@ -46,6 +46,12 @@
                 'icon'  => 'M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z',
             ],
             [
+                'route' => 'admin.settings.backup',
+                'title' => __('backup.settings_title'),
+                'desc'  => __('backup.settings_description'),
+                'icon'  => 'M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z',
+            ],
+            [
                 'route' => 'admin.settings.update',
                 'title' => __('update.settings_title'),
                 'desc'  => __('update.settings_description'),
