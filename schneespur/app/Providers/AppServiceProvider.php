@@ -35,6 +35,9 @@ use App\Services\Backup\BackupTargetRegistry;
 use App\Services\Backup\LocalBackupTarget;
 use App\Services\Pdf\DomPdfRenderer;
 use App\Services\Pdf\PdfRendererRegistry;
+use App\Services\Report\CsvReportFormat;
+use App\Services\Report\PdfReportFormat;
+use App\Services\Report\ReportFormatRegistry;
 use App\Services\Scheduler\ScheduledTaskRegistry;
 use App\Services\Scheduler\Tasks\CronHeartbeatTask;
 use App\Services\Scheduler\Tasks\QueueWorkTask;
@@ -119,6 +122,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PdfRendererRegistry::class, function ($app) {
             $registry = new PdfRendererRegistry($app);
             $registry->register('dompdf', DomPdfRenderer::class);
+
+            return $registry;
+        });
+
+        $this->app->singleton(ReportFormatRegistry::class, function ($app) {
+            $registry = new ReportFormatRegistry($app);
+            $registry->register('pdf', PdfReportFormat::class);
+            $registry->register('csv', CsvReportFormat::class);
 
             return $registry;
         });
