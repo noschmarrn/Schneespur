@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\WeatherRetryController;
 use App\Http\Controllers\Admin\AdminCronTaskController;
 use App\Http\Controllers\Admin\AdminModuleApiTokenController;
 use App\Http\Controllers\Admin\AdminModuleController;
+use App\Http\Controllers\Admin\AdminModuleLogController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\UpdateSettingsController;
 use App\Http\Controllers\Admin\BackupSettingsController;
@@ -226,6 +227,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings/modules/{slug}/api-tokens/create', [AdminModuleApiTokenController::class, 'create'])->name('settings.modules.api-tokens.create');
     Route::post('/settings/modules/{slug}/api-tokens', [AdminModuleApiTokenController::class, 'store'])->name('settings.modules.api-tokens.store');
     Route::delete('/settings/modules/{slug}/api-tokens/{token}', [AdminModuleApiTokenController::class, 'destroy'])->name('settings.modules.api-tokens.destroy');
+
+    Route::get('/settings/modules/{slug}/logs', [AdminModuleLogController::class, 'index'])->name('settings.modules.logs');
 });
 
 Route::middleware(['auth', 'dsgvo', 'driver'])->prefix('driver')->name('driver.')->group(function () {

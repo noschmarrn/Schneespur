@@ -122,6 +122,7 @@ return [
     'log_col_time' => 'Zeitpunkt',
     'log_col_level' => 'Level',
     'log_col_message' => 'Nachricht',
+    'log_col_context' => 'Kontext',
     'log_level_info' => 'Info',
     'log_level_warning' => 'Warnung',
     'log_level_error' => 'Fehler',

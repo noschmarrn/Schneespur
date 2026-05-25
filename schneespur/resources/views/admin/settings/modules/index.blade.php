@@ -149,6 +149,10 @@
                                 {{-- Action Buttons --}}
                                 <div class="flex flex-shrink-0 items-center gap-2">
                                     @if($module['installed'])
+                                        <a href="{{ route('admin.settings.modules.logs', $slug) }}"
+                                           class="rounded bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-200">
+                                            {{ __('modules.btn_logs') }}
+                                        </a>
                                         <a href="{{ route('admin.settings.modules.api-tokens.index', $slug) }}"
                                            class="rounded bg-indigo-100 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-200">
                                             {{ __('modules.api_tokens_title') }}
