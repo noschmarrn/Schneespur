@@ -69,4 +69,16 @@ return [
     'signature_unsigned_tooltip' => 'Dieses Modul wurde nicht kryptographisch verifiziert.',
     'unsigned_warning' => 'Modul ":slug" wurde installiert, ist aber nicht signiert.',
     'trust_refresh_failed' => 'Trust-Liste konnte nicht aktualisiert werden: :error',
+
+    'trust_official' => 'Offiziell',
+    'trust_verified' => 'Verifiziert',
+    'trust_community' => 'Community',
+    'trust_unknown' => 'Unbekannt',
+    'trust_official_tooltip' => 'Dieses Modul stammt vom Schneespur-Team.',
+    'trust_verified_tooltip' => 'Dieses Modul wurde vom Schneespur-Team geprüft.',
+    'trust_community_tooltip' => 'Dieses Modul stammt von einem Drittanbieter.',
+    'trust_unknown_tooltip' => 'Trust-Level für dieses Modul ist nicht bekannt.',
+    'trust_filter_label' => 'Trust-Level',
+    'trust_filter_all' => 'Alle',
+    'trust_community_install_warning' => 'Dieses Modul stammt von einem Drittanbieter und wurde nicht vom Schneespur-Team geprüft. Trotzdem installieren?',
 ];

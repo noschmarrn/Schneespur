@@ -1,7 +1,7 @@
 <x-admin-layout>
     <x-slot name="header">{{ __('modules.page_title') }}</x-slot>
 
-    <div class="max-w-4xl" x-data="{ confirmRemove: null }">
+    <div class="max-w-4xl" x-data="{ confirmRemove: null, trustFilter: '', confirmCommunityInstall: null }">
         @if(session('success'))
             <div class="mb-4 rounded-md bg-green-50 p-4 text-sm text-green-700">
                 {{ session('success') }}
@@ -25,6 +25,17 @@
             $availableModules = collect($modules)->filter(fn($m) => !$m['installed']);
         @endphp
 
+        {{-- Trust Level Filter --}}
+        <div class="mb-6">
+            <label for="trustFilter" class="block text-sm font-medium text-gray-700 mb-1">{{ __('modules.trust_filter_label') }}</label>
+            <select id="trustFilter" x-model="trustFilter" class="rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                <option value="">{{ __('modules.trust_filter_all') }}</option>
+                <option value="official">{{ __('modules.trust_official') }}</option>
+                <option value="verified">{{ __('modules.trust_verified') }}</option>
+                <option value="community">{{ __('modules.trust_community') }}</option>
+            </select>
+        </div>
+
         {{-- Installed Modules --}}
         <section class="mb-8">
             <h2 class="mb-4 text-lg font-semibold text-gray-900">{{ __('modules.section_installed') }}</h2>
@@ -34,7 +45,7 @@
             @else
                 <div class="space-y-4">
                     @foreach($installedModules as $slug => $module)
-                        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" x-show="trustFilter === '' || trustFilter === '{{ $module['trust_level'] ?? '' }}'">
                             <div class="flex items-start gap-4">
                                 {{-- Module Icon/Image --}}
                                 <div class="flex-shrink-0">
@@ -72,6 +83,27 @@
                                             <span class="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
                                                 <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                                                 {{ __('modules.signature_failed_badge') }}
+                                            </span>
+                                        @endif
+                                        @if(($module['trust_level'] ?? null) === 'official')
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800" title="{{ __('modules.trust_official_tooltip') }}">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+                                                {{ __('modules.trust_official') }}
+                                            </span>
+                                        @elseif(($module['trust_level'] ?? null) === 'verified')
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800" title="{{ __('modules.trust_verified_tooltip') }}">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                                {{ __('modules.trust_verified') }}
+                                            </span>
+                                        @elseif(($module['trust_level'] ?? null) === 'community')
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800" title="{{ __('modules.trust_community_tooltip') }}">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/></svg>
+                                                {{ __('modules.trust_community') }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600" title="{{ __('modules.trust_unknown_tooltip') }}">
+                                                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/></svg>
+                                                {{ __('modules.trust_unknown') }}
                                             </span>
                                         @endif
                                     </div>
@@ -165,7 +197,7 @@
             @else
                 <div class="grid gap-4 sm:grid-cols-2">
                     @foreach($availableModules as $slug => $module)
-                        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm" x-show="trustFilter === '' || trustFilter === '{{ $module['trust_level'] ?? '' }}'">
                             <div class="flex items-start gap-3">
                                 {{-- Module Icon/Image --}}
                                 <div class="flex-shrink-0">
@@ -203,6 +235,27 @@
                                                 {{ __('modules.signature_unsigned') }}
                                             </span>
                                         @endif
+                                        @if(($module['trust_level'] ?? null) === 'official')
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 font-medium text-blue-800" title="{{ __('modules.trust_official_tooltip') }}">
+                                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg>
+                                                {{ __('modules.trust_official') }}
+                                            </span>
+                                        @elseif(($module['trust_level'] ?? null) === 'verified')
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-800" title="{{ __('modules.trust_verified_tooltip') }}">
+                                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                                {{ __('modules.trust_verified') }}
+                                            </span>
+                                        @elseif(($module['trust_level'] ?? null) === 'community')
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 font-medium text-orange-800" title="{{ __('modules.trust_community_tooltip') }}">
+                                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"/></svg>
+                                                {{ __('modules.trust_community') }}
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600" title="{{ __('modules.trust_unknown_tooltip') }}">
+                                                <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/></svg>
+                                                {{ __('modules.trust_unknown') }}
+                                            </span>
+                                        @endif
                                     </div>
                                     @if(!empty($module['requires_permissions']))
                                         <div class="mt-2 flex flex-wrap gap-1">
@@ -220,18 +273,65 @@
                             </div>
 
                             <div class="mt-3">
-                                <form method="POST" action="{{ route('admin.settings.modules.install', $slug) }}">
-                                    @csrf
-                                    <button type="submit" class="w-full rounded bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">
+                                @if(($module['trust_level'] ?? null) === 'community')
+                                    <button
+                                        type="button"
+                                        class="w-full rounded bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600"
+                                        x-on:click="confirmCommunityInstall = '{{ $slug }}'"
+                                    >
                                         {{ __('modules.btn_install') }}
                                     </button>
-                                </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.settings.modules.install', $slug) }}">
+                                        @csrf
+                                        <button type="submit" class="w-full rounded bg-blue-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600">
+                                            {{ __('modules.btn_install') }}
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     @endforeach
                 </div>
             @endif
         </section>
+
+        {{-- Community Install Confirmation Dialog (Alpine.js) --}}
+        <div
+            x-show="confirmCommunityInstall !== null"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+        >
+            <div
+                class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl"
+                x-on:click.away="confirmCommunityInstall = null"
+                x-on:keydown.escape.window="confirmCommunityInstall = null"
+            >
+                <h3 class="text-lg font-semibold text-gray-900">{{ __('modules.trust_community') }}</h3>
+                <p class="mt-2 text-sm text-gray-600">{{ __('modules.trust_community_install_warning') }}</p>
+                <div class="mt-4 flex justify-end gap-3">
+                    <button
+                        type="button"
+                        class="rounded bg-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-300"
+                        x-on:click="confirmCommunityInstall = null"
+                    >
+                        {{ __('modules.btn_cancel') }}
+                    </button>
+                    <form method="POST" x-bind:action="'{{ url('admin/settings/modules') }}/' + confirmCommunityInstall + '/install'">
+                        @csrf
+                        <button type="submit" class="rounded bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-600">
+                            {{ __('modules.btn_install') }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
         {{-- Remove Confirmation Dialog (Alpine.js) --}}
         <div

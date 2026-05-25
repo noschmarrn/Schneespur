@@ -69,4 +69,16 @@ return [
     'signature_unsigned_tooltip' => 'This module has not been cryptographically verified.',
     'unsigned_warning' => 'Module ":slug" was installed but is not signed.',
     'trust_refresh_failed' => 'Failed to refresh trust list: :error',
+
+    'trust_official' => 'Official',
+    'trust_verified' => 'Verified',
+    'trust_community' => 'Community',
+    'trust_unknown' => 'Unknown',
+    'trust_official_tooltip' => 'This module is maintained by the Schneespur team.',
+    'trust_verified_tooltip' => 'This module has been reviewed by the Schneespur team.',
+    'trust_community_tooltip' => 'This module is from a third-party developer.',
+    'trust_unknown_tooltip' => 'Trust level for this module is unknown.',
+    'trust_filter_label' => 'Trust Level',
+    'trust_filter_all' => 'All',
+    'trust_community_install_warning' => 'This module is from a third-party developer and has not been reviewed by the Schneespur team. Install anyway?',
 ];

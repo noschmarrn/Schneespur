@@ -125,6 +125,10 @@ class AdminModuleController extends Controller
                 ->with('error', __('modules.not_found_in_catalog', ['slug' => $slug]));
         }
 
+        if (($moduleData['trust_level'] ?? 'community') === 'community') {
+            Log::warning('schneespur-modules: community module install attempted', ['slug' => $slug]);
+        }
+
         try {
             $verifier->refreshTrust();
         } catch (\RuntimeException $e) {
