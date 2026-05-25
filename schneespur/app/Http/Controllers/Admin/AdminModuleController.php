@@ -67,6 +67,7 @@ class AdminModuleController extends Controller
                 'size_bytes' => $catModule['size_bytes'] ?? null,
                 'requires_permissions' => $catModule['requires_permissions'] ?? [],
                 'signature_status' => $local !== null ? $local->signature_status : ($catalogSigned ? 'signed' : 'unsigned'),
+                'trust_level' => $catModule['trust_level'] ?? 'community',
             ];
         }
 
@@ -91,6 +92,7 @@ class AdminModuleController extends Controller
                 'size_bytes' => null,
                 'requires_permissions' => $this->resolveLocalPermissions($slug),
                 'signature_status' => $local->signature_status,
+                'trust_level' => $local->trust_level,
             ];
         }
 
@@ -166,6 +168,7 @@ class AdminModuleController extends Controller
                 'enabled' => true,
                 'manifest_json' => $moduleData,
                 'signature_status' => $sigResult->status,
+                'trust_level' => $moduleData['trust_level'] ?? 'community',
                 'installed_at' => now(),
             ],
         );
@@ -260,6 +263,7 @@ class AdminModuleController extends Controller
             'version' => $moduleData['version'] ?? '0.0.0',
             'manifest_json' => $moduleData,
             'signature_status' => $sigResult->status,
+            'trust_level' => $moduleData['trust_level'] ?? 'community',
         ]);
 
         if ($sigResult->status === 'unsigned') {

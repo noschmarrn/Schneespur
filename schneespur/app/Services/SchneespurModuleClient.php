@@ -125,6 +125,15 @@ class SchneespurModuleClient
             'primary_locale'       => $primary,
         ];
 
+        if (isset($raw['trust_level'])) {
+            $normalized['trust_level'] = $raw['trust_level'];
+        } else {
+            $normalized['trust_level'] = 'community';
+            Log::info('schneespur-modules: trust_level missing, defaulting to community', [
+                'slug' => $raw['slug'] ?? 'unknown',
+            ]);
+        }
+
         if (isset($raw['signature'])) {
             $normalized['signature'] = $raw['signature'];
         }

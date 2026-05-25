@@ -14,6 +14,7 @@ class Module extends Model
         'enabled',
         'manifest_json',
         'signature_status',
+        'trust_level',
         'installed_at',
     ];
 
