@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\DispatchStrategyRegistry;
 use App\Services\Extension\FilterRegistry;
+use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\SlotRegistry;
 use App\Services\ModuleManager;
@@ -48,6 +49,7 @@ class ExampleServiceProvider extends ServiceProvider
         $this->registerTwoFactorMethods();
         $this->registerDispatchStrategy();
         $this->registerRoutes();
+        $this->registerApiRoutes();
     }
 
     /**
@@ -209,5 +211,13 @@ class ExampleServiceProvider extends ServiceProvider
                 Route::get('settings', [Http\Controllers\ExampleSettingsController::class, 'index'])
                     ->name('settings');
             });
+    }
+
+    protected function registerApiRoutes(): void
+    {
+        $this->app->make(ModuleApiRegistrar::class)->routes('example', 1, function () {
+            Route::get('status', [Http\Controllers\ExampleApiController::class, 'status'])
+                ->name('status');
+        });
     }
 }

@@ -20,6 +20,7 @@ use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\SlotRegistry;
+use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\ModuleAssetRegistry;
 use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Dispatch\ManualDispatchStrategy;
@@ -72,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AlertService::class);
+        $this->app->singleton(ModuleApiRegistrar::class);
         $this->app->singleton(ModuleAssetRegistry::class);
         $this->app->singleton(DashboardWidgetRegistry::class);
         $this->app->singleton(FilterRegistry::class);

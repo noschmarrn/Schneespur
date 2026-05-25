@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AuthenticateModuleApi;
 use App\Http\Middleware\AuthenticateOwntracks;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureCustomer;
@@ -48,6 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'driver' => EnsureDriver::class,
             'dsgvo' => EnsureDsgvoInformed::class,
             'installer.guard' => InstallerGuard::class,
+            'module.api' => AuthenticateModuleApi::class,
             'owntracks' => AuthenticateOwntracks::class,
             'portal' => EnsureCustomer::class,
         ]);
