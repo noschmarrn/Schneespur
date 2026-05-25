@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Services\Module\DependencyValidator;
 use App\Services\ModuleManager;
+use App\Services\ModuleSignatureVerifier;
 use App\Services\SchneespurModuleClient;
 use App\Services\SchneespurModuleInstaller;
 use Illuminate\Http\RedirectResponse;
@@ -95,7 +96,7 @@ class AdminModuleController extends Controller
         ]);
     }
 
-    public function install(Request $request, string $slug, SchneespurModuleClient $client, SchneespurModuleInstaller $installer): RedirectResponse
+    public function install(Request $request, string $slug, SchneespurModuleClient $client, SchneespurModuleInstaller $installer, ModuleSignatureVerifier $verifier): RedirectResponse
     {
         Gate::authorize('settings.edit');
 
@@ -116,6 +117,19 @@ class AdminModuleController extends Controller
         if (! $moduleData) {
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.not_found_in_catalog', ['slug' => $slug]));
+        }
+
+        try {
+            $verifier->refreshTrust();
+        } catch (\RuntimeException $e) {
+            return redirect()->route('admin.settings.modules.index')
+                ->with('error', __('modules.trust_refresh_failed', ['error' => $e->getMessage()]));
+        }
+
+        $sigResult = $verifier->verifyModuleManifest($moduleData);
+        if (! $sigResult->isAllowed) {
+            return redirect()->route('admin.settings.modules.index')
+                ->with('error', __('modules.signature_failed', ['slug' => $slug, 'reason' => $sigResult->message]));
         }
 
         try {
@@ -147,9 +161,14 @@ class AdminModuleController extends Controller
                 'version' => $moduleData['version'] ?? '0.0.0',
                 'enabled' => true,
                 'manifest_json' => $moduleData,
+                'signature_status' => $sigResult->status,
                 'installed_at' => now(),
             ],
         );
+
+        if ($sigResult->status === 'unsigned') {
+            session()->flash('warning', __('modules.unsigned_warning', ['slug' => $slug]));
+        }
 
         try {
             $this->runModuleMigrations($slug);
@@ -174,7 +193,7 @@ class AdminModuleController extends Controller
             ->with('success', __('modules.installed', ['slug' => $slug]));
     }
 
-    public function update(Request $request, string $slug, SchneespurModuleClient $client, SchneespurModuleInstaller $installer): RedirectResponse
+    public function update(Request $request, string $slug, SchneespurModuleClient $client, SchneespurModuleInstaller $installer, ModuleSignatureVerifier $verifier): RedirectResponse
     {
         Gate::authorize('settings.edit');
 
@@ -195,6 +214,19 @@ class AdminModuleController extends Controller
         if (! $moduleData) {
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.not_found_in_catalog', ['slug' => $slug]));
+        }
+
+        try {
+            $verifier->refreshTrust();
+        } catch (\RuntimeException $e) {
+            return redirect()->route('admin.settings.modules.index')
+                ->with('error', __('modules.trust_refresh_failed', ['error' => $e->getMessage()]));
+        }
+
+        $sigResult = $verifier->verifyModuleManifest($moduleData);
+        if (! $sigResult->isAllowed) {
+            return redirect()->route('admin.settings.modules.index')
+                ->with('error', __('modules.signature_failed', ['slug' => $slug, 'reason' => $sigResult->message]));
         }
 
         try {
@@ -223,7 +255,12 @@ class AdminModuleController extends Controller
         Module::where('slug', $slug)->update([
             'version' => $moduleData['version'] ?? '0.0.0',
             'manifest_json' => $moduleData,
+            'signature_status' => $sigResult->status,
         ]);
+
+        if ($sigResult->status === 'unsigned') {
+            session()->flash('warning', __('modules.unsigned_warning', ['slug' => $slug]));
+        }
 
         try {
             $this->runModuleMigrations($slug);

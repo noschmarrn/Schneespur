@@ -13,6 +13,7 @@ class Module extends Model
         'version',
         'enabled',
         'manifest_json',
+        'signature_status',
         'installed_at',
     ];
 

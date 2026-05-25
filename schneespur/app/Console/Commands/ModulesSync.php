@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Module;
+use App\Services\ModuleSignatureVerifier;
 use App\Services\SchneespurModuleClient;
 use App\Services\SchneespurModuleInstaller;
 use Illuminate\Console\Command;
@@ -21,6 +22,7 @@ class ModulesSync extends Command
     public function handle(
         SchneespurModuleClient $client,
         SchneespurModuleInstaller $installer,
+        ModuleSignatureVerifier $verifier,
     ): int {
         if (! Schema::hasTable('modules')) {
             $this->error('Modules-Tabelle nicht vorhanden. Bitte zuerst "php artisan migrate" ausführen.');
@@ -46,6 +48,13 @@ class ModulesSync extends Command
         if ($catalog === null) {
             $this->info('Katalog nicht geändert (304). Nichts zu tun.');
             return 0;
+        }
+
+        try {
+            $verifier->refreshTrust();
+        } catch (\RuntimeException $e) {
+            $this->error('Trust-Refresh fehlgeschlagen: ' . $e->getMessage());
+            return 1;
         }
 
         $modules = $catalog['modules'] ?? [];
@@ -77,6 +86,18 @@ class ModulesSync extends Command
                 $this->warn("Modul {$slug}: Fehlende Metadaten (sha256/download_url/size) — übersprungen.");
                 $skipped++;
                 continue;
+            }
+
+            $sigResult = $verifier->verifyModuleManifest($entry);
+            if (! $sigResult->isAllowed) {
+                $this->error("Modul {$slug}: Signaturprüfung fehlgeschlagen — {$sigResult->message}");
+                $skipped++;
+                continue;
+            }
+            if ($sigResult->status === 'unsigned') {
+                $this->warn("Modul {$slug}: nicht signiert — wird mit Warnung installiert.");
+            } else {
+                $this->info("  Signatur verifiziert für {$slug} (key: {$sigResult->keyId}).");
             }
 
             $existing = Module::bySlug($slug)->first();
@@ -116,6 +137,7 @@ class ModulesSync extends Command
                     $existing->update([
                         'version' => $version,
                         'manifest_json' => $entry,
+                        'signature_status' => $sigResult->status,
                     ]);
 
                     $this->runModuleMigrations($slug);
@@ -150,6 +172,7 @@ class ModulesSync extends Command
                         'version' => $version,
                         'enabled' => true,
                         'manifest_json' => $entry,
+                        'signature_status' => $sigResult->status,
                         'installed_at' => now(),
                     ]);
 
