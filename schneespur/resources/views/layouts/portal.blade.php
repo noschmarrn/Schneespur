@@ -13,6 +13,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @extensionSlot('portal.head.after')
+        @moduleAssets
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen flex flex-col bg-gray-50">

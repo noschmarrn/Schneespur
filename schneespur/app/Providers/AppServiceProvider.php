@@ -20,6 +20,7 @@ use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\SlotRegistry;
+use App\Services\Extension\ModuleAssetRegistry;
 use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Dispatch\ManualDispatchStrategy;
 use App\Services\Extension\DispatchStrategyRegistry;
@@ -70,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AlertService::class);
+        $this->app->singleton(ModuleAssetRegistry::class);
         $this->app->singleton(DashboardWidgetRegistry::class);
         $this->app->singleton(FilterRegistry::class);
         $this->app->singleton(NavigationRegistry::class);
@@ -200,6 +202,16 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Blade::directive('extensionSlot', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\SlotRegistry::class)->render({$expression}, auth()->user()); ?>");
+
+        Blade::directive('moduleAssets', fn () => "<?php
+            \$__mar = app(\\App\\Services\\Extension\\ModuleAssetRegistry::class);
+            foreach (\$__mar->getCss() as \$__css) {
+                echo '<link rel=\"stylesheet\" href=\"' . e(\$__css) . '\">' . \"\\n\";
+            }
+            foreach (\$__mar->getJs() as \$__js) {
+                echo '<script src=\"' . e(\$__js) . '\" defer></script>' . \"\\n\";
+            }
+        ?>");
 
         $this->registerCorePermissions();
         $this->registerCoreNavigation();

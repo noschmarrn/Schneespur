@@ -14,6 +14,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @stack('head')
         @extensionSlot('admin.head.after')
+        @moduleAssets
     </head>
     <body class="font-sans antialiased">
         <div x-data="{ sidebarOpen: false }" class="min-h-screen flex bg-gray-100">

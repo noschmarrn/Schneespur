@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Setting;
 use App\Services\Diagnostic\DiagnosticManager;
+use App\Services\Extension\ModuleAssetRegistry;
 use App\Services\Module\DependencyValidator;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
@@ -137,6 +138,8 @@ class ModuleManager
                 $provider->register();
                 $provider->boot();
 
+                $this->registerModuleAssets($slug, $manifest['path']);
+
                 Log::debug('ModuleManager: module booted', [
                     'slug' => $slug,
                     'version' => $manifest['version'] ?? 'unknown',
@@ -172,6 +175,8 @@ class ModuleManager
 
         $this->disabledModules = array_diff($this->disabledModules, [$slug]);
 
+        $this->createAssetSymlink($slug);
+
         return true;
     }
 
@@ -195,6 +200,8 @@ class ModuleManager
         if (! in_array($slug, $this->disabledModules, true)) {
             $this->disabledModules[] = $slug;
         }
+
+        $this->removeAssetSymlink($slug);
 
         Log::debug('ModuleManager: module disabled', ['slug' => $slug]);
 
@@ -275,6 +282,48 @@ class ModuleManager
             'slug' => $slug,
             'reason' => $reason,
         ]);
+    }
+
+    protected function registerModuleAssets(string $slug, string $modulePath): void
+    {
+        $manifestPath = rtrim($modulePath, '/') . '/dist/manifest.json';
+        if (! file_exists($manifestPath)) {
+            return;
+        }
+
+        $this->app->make(ModuleAssetRegistry::class)->registerAssets($slug, $modulePath);
+        $this->createAssetSymlink($slug);
+    }
+
+    protected function createAssetSymlink(string $slug): void
+    {
+        $manifest = $this->modules[$slug] ?? null;
+        if (! $manifest) {
+            return;
+        }
+
+        $distPath = rtrim($manifest['path'], '/') . '/dist';
+        if (! is_dir($distPath)) {
+            return;
+        }
+
+        $publicModules = public_path('modules');
+        if (! is_dir($publicModules)) {
+            @mkdir($publicModules, 0755, true);
+        }
+
+        $link = $publicModules . '/' . $slug;
+        if (! file_exists($link)) {
+            @symlink($distPath, $link);
+        }
+    }
+
+    protected function removeAssetSymlink(string $slug): void
+    {
+        $link = public_path('modules/' . $slug);
+        if (is_link($link)) {
+            @unlink($link);
+        }
     }
 
     private function reportDiagnostic(string $type, string $slug, \Throwable $e): void

@@ -66,3 +66,8 @@ function dsgvo_apply_company_placeholders(string $text): string
 
     return $text;
 }
+
+function module_asset(string $slug, string $file): string
+{
+    return '/modules/' . $slug . '/' . ltrim($file, '/');
+}
