@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\OverviewController;
 use App\Http\Controllers\Admin\OwntracksOverviewController;
 use App\Http\Controllers\Admin\WeatherRetryController;
 use App\Http\Controllers\Admin\AdminCronTaskController;
+use App\Http\Controllers\Admin\AdminModuleApiTokenController;
 use App\Http\Controllers\Admin\AdminModuleController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\UpdateSettingsController;
@@ -220,6 +221,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/settings/modules/{slug}/disable', [AdminModuleController::class, 'disable'])->name('settings.modules.disable');
     Route::post('/settings/modules/{slug}/update', [AdminModuleController::class, 'update'])->name('settings.modules.update');
     Route::delete('/settings/modules/{slug}/remove', [AdminModuleController::class, 'remove'])->name('settings.modules.remove');
+
+    Route::get('/settings/modules/{slug}/api-tokens', [AdminModuleApiTokenController::class, 'index'])->name('settings.modules.api-tokens.index');
+    Route::get('/settings/modules/{slug}/api-tokens/create', [AdminModuleApiTokenController::class, 'create'])->name('settings.modules.api-tokens.create');
+    Route::post('/settings/modules/{slug}/api-tokens', [AdminModuleApiTokenController::class, 'store'])->name('settings.modules.api-tokens.store');
+    Route::delete('/settings/modules/{slug}/api-tokens/{token}', [AdminModuleApiTokenController::class, 'destroy'])->name('settings.modules.api-tokens.destroy');
 });
 
 Route::middleware(['auth', 'dsgvo', 'driver'])->prefix('driver')->name('driver.')->group(function () {

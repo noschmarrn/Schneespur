@@ -6,6 +6,7 @@ use App\Models\Setting;
 use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Extension\ModuleAssetRegistry;
 use App\Services\Module\DependencyValidator;
+use App\Services\ModuleLogger;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -144,6 +145,10 @@ class ModuleManager
                     'slug' => $slug,
                     'version' => $manifest['version'] ?? 'unknown',
                 ]);
+
+                $this->logEvent($slug, 'info', 'Module booted', [
+                    'version' => $manifest['version'] ?? 'unknown',
+                ]);
             } catch (\Throwable $e) {
                 Log::error('ModuleManager: module boot failed', [
                     'slug' => $slug,
@@ -152,6 +157,9 @@ class ModuleManager
                 ]);
                 $this->autoDisable($slug, $e->getMessage());
                 $this->reportDiagnostic('module_boot_failed', $slug, $e);
+                $this->logEvent($slug, 'error', 'Boot failed', [
+                    'exception' => $e->getMessage(),
+                ]);
             }
         }
     }
@@ -282,6 +290,8 @@ class ModuleManager
             'slug' => $slug,
             'reason' => $reason,
         ]);
+
+        $this->logEvent($slug, 'warning', 'Auto-disabled', ['reason' => $reason]);
     }
 
     protected function registerModuleAssets(string $slug, string $modulePath): void
@@ -323,6 +333,14 @@ class ModuleManager
         $link = public_path('modules/' . $slug);
         if (is_link($link)) {
             @unlink($link);
+        }
+    }
+
+    private function logEvent(string $slug, string $level, string $message, array $context = []): void
+    {
+        try {
+            app(ModuleLogger::class)->log($slug, $level, $message, $context);
+        } catch (\Throwable) {
         }
     }
 

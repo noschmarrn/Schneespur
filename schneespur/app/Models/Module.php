@@ -43,6 +43,11 @@ class Module extends Model
         return $this->hasMany(ModuleApiToken::class, 'module_slug', 'slug');
     }
 
+    public function logs(): HasMany
+    {
+        return $this->hasMany(ModLog::class, 'module_slug', 'slug');
+    }
+
     protected function name(): Attribute
     {
         return Attribute::get(fn () => $this->pickLocalized('name'));

@@ -28,6 +28,7 @@ use App\Services\Extension\DispatchStrategyRegistry;
 use App\Services\Notification\EmailNotificationChannel;
 use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\ForecastService;
+use App\Services\ModuleLogger;
 use App\Services\ModuleManager;
 use App\Services\ModuleSignatureVerifier;
 use App\Services\RetentionService;
@@ -85,6 +86,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
         $this->app->singleton(DiagnosticManager::class);
+        $this->app->singleton(ModuleLogger::class);
         $this->app->singleton(ModuleManager::class, fn ($app) => new ModuleManager($app));
         $this->app->singleton(ModuleSignatureVerifier::class);
         $this->app->singleton(NotificationChannelRegistry::class, function ($app) {

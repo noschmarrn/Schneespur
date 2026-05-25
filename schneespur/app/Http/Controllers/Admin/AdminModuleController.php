@@ -7,6 +7,7 @@ use App\Events\Module\ModuleEnabled;
 use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Services\Module\DependencyValidator;
+use App\Services\ModuleLogger;
 use App\Services\ModuleManager;
 use App\Services\ModuleSignatureVerifier;
 use App\Services\SchneespurModuleClient;
@@ -200,6 +201,10 @@ class AdminModuleController extends Controller
 
         ModuleEnabled::dispatch($module);
 
+        app(ModuleLogger::class)->info($slug, 'Module installed', [
+            'version' => $moduleData['version'] ?? '0.0.0',
+        ]);
+
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.installed', ['slug' => $slug]));
     }
@@ -280,6 +285,10 @@ class AdminModuleController extends Controller
             Log::warning("Module migration failed during update of '{$slug}': {$e->getMessage()}");
         }
 
+        app(ModuleLogger::class)->info($slug, 'Module updated', [
+            'version' => $moduleData['version'] ?? '0.0.0',
+        ]);
+
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.updated', ['slug' => $slug]));
     }
@@ -341,6 +350,8 @@ class AdminModuleController extends Controller
 
         ModuleEnabled::dispatch($module);
 
+        app(ModuleLogger::class)->info($slug, 'Module enabled');
+
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.enabled', ['slug' => $slug]));
     }
@@ -369,6 +380,8 @@ class AdminModuleController extends Controller
         $module->update(['enabled' => false]);
 
         ModuleDisabled::dispatch($module);
+
+        app(ModuleLogger::class)->info($slug, 'Module disabled');
 
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.disabled', ['slug' => $slug]));
@@ -503,6 +516,8 @@ class AdminModuleController extends Controller
         $installer->remove($slug);
 
         $module->delete();
+
+        app(ModuleLogger::class)->info($slug, 'Module removed');
 
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.removed', ['slug' => $slug]));

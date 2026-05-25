@@ -81,4 +81,52 @@ return [
     'trust_filter_label' => 'Trust Level',
     'trust_filter_all' => 'All',
     'trust_community_install_warning' => 'This module is from a third-party developer and has not been reviewed by the Schneespur team. Install anyway?',
+
+    'api_tokens_title' => 'API Tokens',
+    'api_tokens_description' => 'Manage API tokens for the ":name" module.',
+    'no_tokens' => 'No API tokens created yet.',
+
+    'token_col_name' => 'Name',
+    'token_col_created' => 'Created',
+    'token_col_last_used' => 'Last used',
+    'token_col_expires' => 'Expires',
+
+    'token_expired' => 'Expired',
+    'token_never_used' => 'Never used',
+    'token_no_expiry' => 'No expiry',
+
+    'token_create_title' => 'Create token',
+    'token_field_name' => 'Name',
+    'token_field_name_placeholder' => 'e.g. Weather station integration',
+    'token_field_expires' => 'Expiry date (optional)',
+    'token_field_expires_hint' => 'Leave empty for a token that never expires.',
+
+    'token_btn_create' => 'New token',
+    'token_btn_generate' => 'Create token',
+    'token_btn_revoke' => 'Revoke',
+    'token_btn_confirm_revoke' => 'Revoke token',
+
+    'token_show_once_title' => 'New API token',
+    'token_show_once_warning' => 'This token will only be shown once. Please copy it now and store it securely.',
+    'token_copy' => 'Copy',
+    'token_copied' => 'Copied!',
+
+    'token_confirm_revoke_title' => 'Revoke token',
+    'token_confirm_revoke' => 'Really revoke this token? All integrations using this token will immediately lose access.',
+
+    'token_created' => 'Token ":name" created.',
+    'token_revoked' => 'Token ":name" revoked.',
+
+    'logs_title' => 'Module Logs',
+    'logs_description' => 'Recent events and log entries for the ":name" module.',
+    'log_col_time' => 'Time',
+    'log_col_level' => 'Level',
+    'log_col_message' => 'Message',
+    'log_level_info' => 'Info',
+    'log_level_warning' => 'Warning',
+    'log_level_error' => 'Error',
+    'no_logs' => 'No log entries found.',
+    'btn_logs' => 'Logs',
+    'log_filter_label' => 'Level filter',
+    'log_filter_all' => 'All',
 ];

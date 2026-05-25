@@ -81,4 +81,52 @@ return [
     'trust_filter_label' => 'Trust-Level',
     'trust_filter_all' => 'Alle',
     'trust_community_install_warning' => 'Dieses Modul stammt von einem Drittanbieter und wurde nicht vom Schneespur-Team geprüft. Trotzdem installieren?',
+
+    'api_tokens_title' => 'API-Tokens',
+    'api_tokens_description' => 'API-Tokens für das Modul ":name" verwalten.',
+    'no_tokens' => 'Noch keine API-Tokens erstellt.',
+
+    'token_col_name' => 'Name',
+    'token_col_created' => 'Erstellt',
+    'token_col_last_used' => 'Zuletzt verwendet',
+    'token_col_expires' => 'Läuft ab',
+
+    'token_expired' => 'Abgelaufen',
+    'token_never_used' => 'Nie verwendet',
+    'token_no_expiry' => 'Kein Ablaufdatum',
+
+    'token_create_title' => 'Token erstellen',
+    'token_field_name' => 'Bezeichnung',
+    'token_field_name_placeholder' => 'z.B. Wetterstation-Integration',
+    'token_field_expires' => 'Ablaufdatum (optional)',
+    'token_field_expires_hint' => 'Leer lassen für unbefristeten Token.',
+
+    'token_btn_create' => 'Neuer Token',
+    'token_btn_generate' => 'Token erstellen',
+    'token_btn_revoke' => 'Widerrufen',
+    'token_btn_confirm_revoke' => 'Token widerrufen',
+
+    'token_show_once_title' => 'Neuer API-Token',
+    'token_show_once_warning' => 'Dieser Token wird nur einmal angezeigt. Bitte jetzt kopieren und sicher aufbewahren.',
+    'token_copy' => 'Kopieren',
+    'token_copied' => 'Kopiert!',
+
+    'token_confirm_revoke_title' => 'Token widerrufen',
+    'token_confirm_revoke' => 'Diesen Token wirklich widerrufen? Alle Integrationen, die diesen Token verwenden, verlieren sofort den Zugang.',
+
+    'token_created' => 'Token ":name" wurde erstellt.',
+    'token_revoked' => 'Token ":name" wurde widerrufen.',
+
+    'logs_title' => 'Modul-Logs',
+    'logs_description' => 'Letzte Events und Log-Einträge für das Modul ":name".',
+    'log_col_time' => 'Zeitpunkt',
+    'log_col_level' => 'Level',
+    'log_col_message' => 'Nachricht',
+    'log_level_info' => 'Info',
+    'log_level_warning' => 'Warnung',
+    'log_level_error' => 'Fehler',
+    'no_logs' => 'Keine Log-Einträge vorhanden.',
+    'btn_logs' => 'Logs',
+    'log_filter_label' => 'Level-Filter',
+    'log_filter_all' => 'Alle',
 ];
