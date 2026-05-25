@@ -111,7 +111,7 @@ class SchneespurModuleClient
             $category = self::i18nPick($category, $primary);
         }
 
-        return [
+        $normalized = [
             'slug'                 => $raw['slug'] ?? null,
             'name'                 => $raw['name'] ?? [],
             'description'          => $raw['description'] ?? [],
@@ -124,6 +124,15 @@ class SchneespurModuleClient
             'requires_permissions' => $raw['requires_permissions'] ?? [],
             'primary_locale'       => $primary,
         ];
+
+        if (isset($raw['signature'])) {
+            $normalized['signature'] = $raw['signature'];
+        }
+        if (isset($raw['key_id'])) {
+            $normalized['key_id'] = $raw['key_id'];
+        }
+
+        return $normalized;
     }
 
     /**
