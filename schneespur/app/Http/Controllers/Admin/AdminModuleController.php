@@ -48,6 +48,8 @@ class AdminModuleController extends Controller
             }
 
             $local = $installed->get($slug);
+            $catalogSigned = ! empty($catModule['signature']) && ! empty($catModule['key_id']);
+
             $modules[$slug] = [
                 'slug' => $slug,
                 'name' => SchneespurModuleClient::i18nPick($catModule['name'] ?? [], app()->getLocale()),
@@ -64,6 +66,7 @@ class AdminModuleController extends Controller
                 'sha256' => $catModule['sha256'] ?? null,
                 'size_bytes' => $catModule['size_bytes'] ?? null,
                 'requires_permissions' => $catModule['requires_permissions'] ?? [],
+                'signature_status' => $local !== null ? $local->signature_status : ($catalogSigned ? 'signed' : 'unsigned'),
             ];
         }
 
@@ -87,6 +90,7 @@ class AdminModuleController extends Controller
                 'sha256' => null,
                 'size_bytes' => null,
                 'requires_permissions' => $this->resolveLocalPermissions($slug),
+                'signature_status' => $local->signature_status,
             ];
         }
 

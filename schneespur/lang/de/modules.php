@@ -59,4 +59,14 @@ return [
 
     'cli_has_dependants' => '":slug" kann nicht entfernt werden — folgende aktive Module hängen davon ab: :dependants. Verwende --force zum Überschreiben.',
     'cli_force_dependants_warning' => 'Warnung: ":slug" wird trotz aktiver Abhängigkeiten entfernt: :dependants.',
+
+    'signature_verified' => 'Signiert',
+    'signature_unsigned' => 'Unsigniert',
+    'signature_failed_badge' => 'Signatur ungültig',
+    'signature_failed' => 'Signatur ungültig (":slug"): :reason',
+    'signature_unknown' => 'Unbekannt',
+    'signature_verified_tooltip' => 'Dieses Modul wurde kryptographisch verifiziert.',
+    'signature_unsigned_tooltip' => 'Dieses Modul wurde nicht kryptographisch verifiziert.',
+    'unsigned_warning' => 'Modul ":slug" wurde installiert, ist aber nicht signiert.',
+    'trust_refresh_failed' => 'Trust-Liste konnte nicht aktualisiert werden: :error',
 ];
