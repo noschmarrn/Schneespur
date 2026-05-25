@@ -216,11 +216,15 @@ class SchneespurModuleClient
     {
         if (! is_file($this->stateFilePath)) {
             return [
-                'catalog_etag'  => null,
-                'catalog_cache' => null,
-                'synced_at'     => null,
-                'installed'     => [],
-                'orphans'       => [],
+                'catalog_etag'     => null,
+                'catalog_cache'    => null,
+                'synced_at'        => null,
+                'installed'        => [],
+                'orphans'          => [],
+                'trust_version'    => 0,
+                'valid_keys'       => [],
+                'revoked_keys'     => [],
+                'trust_expires_at' => '',
             ];
         }
 
@@ -235,11 +239,15 @@ class SchneespurModuleClient
         }
 
         return [
-            'catalog_etag'  => $parsed['catalog_etag'] ?? null,
-            'catalog_cache' => $parsed['catalog_cache'] ?? null,
-            'synced_at'     => $parsed['synced_at'] ?? null,
-            'installed'     => $parsed['installed'] ?? [],
-            'orphans'       => $parsed['orphans'] ?? [],
+            'catalog_etag'     => $parsed['catalog_etag'] ?? null,
+            'catalog_cache'    => $parsed['catalog_cache'] ?? null,
+            'synced_at'        => $parsed['synced_at'] ?? null,
+            'installed'        => $parsed['installed'] ?? [],
+            'orphans'          => $parsed['orphans'] ?? [],
+            'trust_version'    => (int) ($parsed['trust_version'] ?? 0),
+            'valid_keys'       => $parsed['valid_keys'] ?? [],
+            'revoked_keys'     => $parsed['revoked_keys'] ?? [],
+            'trust_expires_at' => (string) ($parsed['trust_expires_at'] ?? ''),
         ];
     }
 

@@ -3,5 +3,9 @@
     "catalog_cache": null,
     "synced_at": null,
     "installed": [],
-    "orphans": []
+    "orphans": [],
+    "trust_version": 0,
+    "valid_keys": [],
+    "revoked_keys": [],
+    "trust_expires_at": ""
 }

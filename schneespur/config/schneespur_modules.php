@@ -8,4 +8,7 @@ return [
     'download_timeout' => 120,
     'state_file_path'  => storage_path('app/schneespur_modules_state.json'),
     'modules_path'     => base_path('modules'),
+
+    // Same root pubkey as the update system — same signing server.
+    'root_pubkey_b64'  => 'bbYkDrjwTapdcONvnhB3tfcwe0aA+lAcgnd0dLMlkmg=',
 ];
