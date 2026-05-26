@@ -111,6 +111,12 @@ class ModuleManager
                 $this->registerAutoloader($slug, $namespace, $srcPath);
             }
 
+            $langPath = ($manifest['path'] ?? '') . '/lang';
+            if (is_dir($langPath)) {
+                $this->app->make('translator')->addNamespace($slug, $langPath);
+                Log::debug('ModuleManager: translations registered', ['slug' => $slug]);
+            }
+
             $providerClass = $manifest['service_provider'] ?? null;
             if (! $providerClass) {
                 continue;

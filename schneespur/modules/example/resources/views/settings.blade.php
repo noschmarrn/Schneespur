@@ -21,8 +21,10 @@
                         </div>
                     </dl>
                     <p class="mt-6 text-sm text-gray-600">
-                        This is a reference module demonstrating all Schneespur extension points:
-                        navigation, dashboard widget, event listener, settings page, and route registration.
+                        {{ __('example::messages.description') }}
+                    </p>
+                    <p class="mt-2 text-sm text-gray-500 italic">
+                        {{ __('example::messages.greeting') }}
                     </p>
                 </div>
             </div>
