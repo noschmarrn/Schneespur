@@ -25,6 +25,7 @@
 /build.sh
 /moduldoku.md
 /package-lock.json
+/docs/superpowers/
 
 # ── Test caches ──
 .phpunit.result.cache
