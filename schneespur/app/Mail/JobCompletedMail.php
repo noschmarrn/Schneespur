@@ -17,10 +17,15 @@ class JobCompletedMail extends Mailable implements ShouldQueue
     public function __construct(
         public Job $job,
         public bool $weatherAvailable,
-        public ?string $pdfContent = null,
+        ?string $pdfContent = null,
         public string $pdfFilename = '',
         public bool $isWeatherUpdate = false,
-    ) {}
+    ) {
+        // Base64-encode binary PDF so the database queue can JSON-serialize it
+        $this->pdfContentBase64 = $pdfContent !== null ? base64_encode($pdfContent) : null;
+    }
+
+    public ?string $pdfContentBase64 = null;
 
     public function envelope(): Envelope
     {
@@ -49,8 +54,8 @@ class JobCompletedMail extends Mailable implements ShouldQueue
                 'job' => $this->job,
                 'weatherAvailable' => $this->weatherAvailable,
                 'isWeatherUpdate' => $this->isWeatherUpdate,
-                'pdfAttached' => $this->pdfContent !== null,
-                'pdfSkipped' => $this->pdfContent === null && $this->pdfFilename !== '',
+                'pdfAttached' => $this->pdfContentBase64 !== null,
+                'pdfSkipped' => $this->pdfContentBase64 === null && $this->pdfFilename !== '',
             ],
         );
     }
@@ -59,8 +64,8 @@ class JobCompletedMail extends Mailable implements ShouldQueue
     {
         $this->locale($this->job->customer->locale ?? 'de');
 
-        if ($this->pdfContent !== null) {
-            $this->attachData($this->pdfContent, $this->pdfFilename, [
+        if ($this->pdfContentBase64 !== null) {
+            $this->attachData(base64_decode($this->pdfContentBase64), $this->pdfFilename, [
                 'mime' => 'application/pdf',
             ]);
         }

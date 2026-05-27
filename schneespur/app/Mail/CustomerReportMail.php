@@ -20,10 +20,14 @@ class CustomerReportMail extends Mailable implements ShouldQueue
         public Customer $customer,
         public Carbon $periodFrom,
         public Carbon $periodTo,
-        public ?string $pdfContent = null,
+        ?string $pdfContent = null,
         public string $pdfFilename = '',
         public ?CustomerObject $customerObject = null,
-    ) {}
+    ) {
+        $this->pdfContentBase64 = $pdfContent !== null ? base64_encode($pdfContent) : null;
+    }
+
+    public ?string $pdfContentBase64 = null;
 
     public function envelope(): Envelope
     {
@@ -50,7 +54,7 @@ class CustomerReportMail extends Mailable implements ShouldQueue
                 'customerObject' => $this->customerObject,
                 'from' => $this->periodFrom,
                 'to' => $this->periodTo,
-                'pdfAttached' => $this->pdfContent !== null,
+                'pdfAttached' => $this->pdfContentBase64 !== null,
             ],
         );
     }
@@ -59,8 +63,8 @@ class CustomerReportMail extends Mailable implements ShouldQueue
     {
         $this->locale($this->customer->locale ?? 'de');
 
-        if ($this->pdfContent !== null) {
-            $this->attachData($this->pdfContent, $this->pdfFilename, [
+        if ($this->pdfContentBase64 !== null) {
+            $this->attachData(base64_decode($this->pdfContentBase64), $this->pdfFilename, [
                 'mime' => 'application/pdf',
             ]);
         }
