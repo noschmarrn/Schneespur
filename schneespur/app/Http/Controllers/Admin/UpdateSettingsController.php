@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\SchneespurUpdater;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -70,6 +71,17 @@ class UpdateSettingsController extends Controller
             $updater  = new SchneespurUpdater;
             $manifest = $updater->checkForUpdate();
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('update_check_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'UpdateSettingsController',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             return response()->json([
                 'ok'      => false,
                 'message' => __('update.check_result_error', ['error' => $e->getMessage()]),
@@ -114,6 +126,17 @@ class UpdateSettingsController extends Controller
             $updater  = new SchneespurUpdater;
             $manifest = $updater->checkForUpdate();
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('update_download_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'UpdateSettingsController',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             return response()->json([
                 'ok'      => false,
                 'message' => __('update.check_result_error', ['error' => $e->getMessage()]),
@@ -141,6 +164,18 @@ class UpdateSettingsController extends Controller
             $zipPath = $updater->downloadAndVerifyZip($manifest);
             $updater->install($zipPath, $manifest);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('update_install_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'UpdateSettingsController',
+                    'target_version' => $manifest['version'] ?? null,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             return response()->json([
                 'ok'      => false,
                 'message' => __('update.install_failed', ['error' => $e->getMessage()]),

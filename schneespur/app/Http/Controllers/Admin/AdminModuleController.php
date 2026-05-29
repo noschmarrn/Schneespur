@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Module;
 use App\Services\Module\DependencyValidator;
 use App\Services\ModuleLogger;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\ModuleManager;
 use App\Services\ModuleSignatureVerifier;
 use App\Services\SchneespurModuleClient;
@@ -35,6 +36,16 @@ class AdminModuleController extends Controller
             $catalog = $client->fetchCatalog();
             $catalogModules = $catalog['modules'] ?? [];
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_catalog_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             Log::warning('schneespur-modules: catalog fetch failed in admin UI', [
                 'error' => $e->getMessage(),
             ]);
@@ -111,6 +122,17 @@ class AdminModuleController extends Controller
         try {
             $catalog = $client->fetchCatalog();
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_download_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.catalog_fetch_failed', ['error' => $e->getMessage()]));
         }
@@ -133,6 +155,17 @@ class AdminModuleController extends Controller
         try {
             $verifier->refreshTrust();
         } catch (\RuntimeException $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_install_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.trust_refresh_failed', ['error' => $e->getMessage()]));
         }
@@ -153,6 +186,17 @@ class AdminModuleController extends Controller
 
             $success = $installer->install($zipPath, $slug);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_install_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.install_failed', ['slug' => $slug, 'error' => $e->getMessage()]));
         } finally {
@@ -185,6 +229,17 @@ class AdminModuleController extends Controller
         try {
             $this->runModuleMigrations($slug);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_migration_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             Log::error("Module migration failed during install of '{$slug}': {$e->getMessage()}");
 
             try {
@@ -217,6 +272,17 @@ class AdminModuleController extends Controller
         try {
             $catalog = $client->fetchCatalog();
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_catalog_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.catalog_fetch_failed', ['error' => $e->getMessage()]));
         }
@@ -235,6 +301,17 @@ class AdminModuleController extends Controller
         try {
             $verifier->refreshTrust();
         } catch (\RuntimeException $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_update_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.trust_refresh_failed', ['error' => $e->getMessage()]));
         }
@@ -255,6 +332,17 @@ class AdminModuleController extends Controller
 
             $success = $installer->update($zipPath, $slug);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_update_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.update_failed', ['slug' => $slug, 'error' => $e->getMessage()]));
         } finally {
@@ -282,6 +370,17 @@ class AdminModuleController extends Controller
         try {
             $this->runModuleMigrations($slug);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_operation_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             Log::warning("Module migration failed during update of '{$slug}': {$e->getMessage()}");
         }
 
@@ -335,6 +434,17 @@ class AdminModuleController extends Controller
         try {
             $this->runModuleMigrations($slug);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_update_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             Log::error("Module migration failed for '{$slug}': {$e->getMessage()}");
 
             try {
@@ -482,7 +592,18 @@ class AdminModuleController extends Controller
         try {
             $manager = app(ModuleManager::class);
             return $manager->getPermissions($slug);
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_settings_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             return [];
         }
     }
@@ -505,6 +626,17 @@ class AdminModuleController extends Controller
         try {
             $this->rollbackModuleMigrations($slug);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_settings_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'AdminModuleController',
+                    'slug' => $slug,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             Log::warning("Module migration rollback failed for '{$slug}': {$e->getMessage()}");
         }
 

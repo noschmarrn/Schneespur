@@ -81,6 +81,19 @@ return Application::configure(basePath: dirname(__DIR__))
                     $durationMs = (int) ((hrtime(true) - $start) / 1_000_000);
                     $registry->recordRun($slug, 'failed', $e->getMessage(), $durationMs);
                     Log::warning("Scheduled task '{$slug}' failed: {$e->getMessage()}");
+
+                    try {
+                        app(DiagnosticManager::class)->report('scheduled_task_failed', [
+                            'error' => $e->getMessage(),
+                            'exception_class' => get_class($e),
+                        ], [
+                            'slug' => $slug,
+                            'duration_ms' => $durationMs,
+                            'source' => 'scheduler',
+                        ]);
+                    } catch (\Throwable) {
+                        // Never let diagnostic reporting break the original flow
+                    }
                 }
             })->cron($task->schedule())->name($slug);
         }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Extension;
 
+use App\Services\Diagnostic\DiagnosticManager;
 use Illuminate\Support\Facades\Log;
 
 class FilterRegistry
@@ -29,6 +30,18 @@ class FilterRegistry
             try {
                 $value = $entry[2]($value, ...$context);
             } catch (\Throwable $e) {
+                try {
+                    app(DiagnosticManager::class)->report('filter_execution_failed', [
+                        'error' => $e->getMessage(),
+                        'exception_class' => get_class($e),
+                    ], [
+                        'source' => 'FilterRegistry',
+                        'hook' => $hook,
+                    ]);
+                } catch (\Throwable) {
+                    // Never let diagnostic reporting break the original flow
+                }
+
                 Log::warning('FilterRegistry: callback failed', [
                     'hook' => $hook,
                     'index' => $entry[1],

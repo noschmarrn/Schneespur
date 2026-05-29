@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Module;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\ModuleSignatureVerifier;
 use App\Services\SchneespurModuleClient;
 use App\Services\SchneespurModuleInstaller;
@@ -41,6 +42,16 @@ class ModulesSync extends Command
         try {
             $catalog = $client->fetchCatalog();
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_catalog_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'ModulesSync',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             $this->error('Katalog-Fetch fehlgeschlagen: ' . $e->getMessage());
             return 1;
         }
@@ -53,6 +64,16 @@ class ModulesSync extends Command
         try {
             $verifier->refreshTrust();
         } catch (\RuntimeException $e) {
+            try {
+                app(DiagnosticManager::class)->report('module_verification_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'ModulesSync',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
             $this->error('Trust-Refresh fehlgeschlagen: ' . $e->getMessage());
             return 1;
         }
@@ -145,6 +166,18 @@ class ModulesSync extends Command
                     $updated++;
                     $this->info("  ✓ {$slug} aktualisiert auf v{$version}.");
                 } catch (\Throwable $e) {
+                    try {
+                        app(DiagnosticManager::class)->report('module_install_failed', [
+                            'error' => $e->getMessage(),
+                            'exception_class' => get_class($e),
+                        ], [
+                            'source' => 'ModulesSync',
+                            'slug' => $slug,
+                            'operation' => 'update',
+                        ]);
+                    } catch (\Throwable) {
+                        // Never let diagnostic reporting break the original flow
+                    }
                     $this->error("Fehler bei {$slug}: " . $e->getMessage());
                 }
             } else {
@@ -179,6 +212,18 @@ class ModulesSync extends Command
                     try {
                         $this->runModuleMigrations($slug);
                     } catch (\Throwable $migError) {
+                        try {
+                            app(DiagnosticManager::class)->report('module_migration_failed', [
+                                'error' => $migError->getMessage(),
+                                'exception_class' => get_class($migError),
+                            ], [
+                                'source' => 'ModulesSync',
+                                'slug' => $slug,
+                                'operation' => 'install',
+                            ]);
+                        } catch (\Throwable) {
+                            // Never let diagnostic reporting break the original flow
+                        }
                         Log::error("Module migration failed during sync install of '{$slug}': {$migError->getMessage()}");
                         $this->error("Migration fehlgeschlagen für {$slug}: {$migError->getMessage()}");
                         $installer->remove($slug);
@@ -189,6 +234,18 @@ class ModulesSync extends Command
                     $installed++;
                     $this->info("  ✓ {$slug} v{$version} installiert.");
                 } catch (\Throwable $e) {
+                    try {
+                        app(DiagnosticManager::class)->report('module_install_failed', [
+                            'error' => $e->getMessage(),
+                            'exception_class' => get_class($e),
+                        ], [
+                            'source' => 'ModulesSync',
+                            'slug' => $slug,
+                            'operation' => 'install',
+                        ]);
+                    } catch (\Throwable) {
+                        // Never let diagnostic reporting break the original flow
+                    }
                     $this->error("Fehler bei {$slug}: " . $e->getMessage());
                 }
             }

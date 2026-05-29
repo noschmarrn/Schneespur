@@ -6,6 +6,7 @@ use App\Models\Job;
 use App\Services\Extension\ExtensionRegistry;
 use App\Services\Extension\FilterRegistry;
 use Illuminate\Contracts\Container\Container;
+use App\Services\Diagnostic\DiagnosticManager;
 use Illuminate\Support\Facades\Log;
 
 class NotificationChannelRegistry extends ExtensionRegistry
@@ -39,6 +40,20 @@ class NotificationChannelRegistry extends ExtensionRegistry
             } catch (\Throwable $e) {
                 Log::warning("NotificationChannelRegistry: channel '{$slug}' failed: {$e->getMessage()}");
                 $results[] = ['slug' => $slug, 'status' => 'failed', 'error' => $e->getMessage()];
+
+                try {
+                    app(DiagnosticManager::class)->report('notification_dispatch_failed', [
+                        'error' => $e->getMessage(),
+                        'exception_class' => get_class($e),
+                    ], [
+                        'slug' => $slug,
+                        'job_id' => $job->id,
+                        'type' => $type,
+                        'source' => 'NotificationChannelRegistry',
+                    ]);
+                } catch (\Throwable) {
+                    // Never let diagnostic reporting break the original flow
+                }
             }
         }
 

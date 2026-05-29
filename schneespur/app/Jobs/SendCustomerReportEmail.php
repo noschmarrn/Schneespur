@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use App\Services\Diagnostic\DiagnosticManager;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -78,6 +79,19 @@ class SendCustomerReportEmail implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
 
+            try {
+                app(DiagnosticManager::class)->report('pdf_generation_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'customer_id' => $this->customer->id,
+                    'customer_object_id' => $object?->id,
+                    'source' => 'SendCustomerReportEmail',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             foreach ($recipients as $recipient) {
                 $notificationLogService->logFailedForCustomer(
                     $this->customer,
@@ -130,6 +144,20 @@ class SendCustomerReportEmail implements ShouldQueue
                     $e->getMessage(),
                     $metadata,
                 );
+
+                try {
+                    app(DiagnosticManager::class)->report('mail_send_failed', [
+                        'error' => $e->getMessage(),
+                        'exception_class' => get_class($e),
+                    ], [
+                        'customer_id' => $this->customer->id,
+                        'customer_object_id' => $object?->id,
+                        'recipient' => $recipient,
+                        'source' => 'SendCustomerReportEmail',
+                    ]);
+                } catch (\Throwable) {
+                    // Never let diagnostic reporting break the original flow
+                }
             }
         }
     }

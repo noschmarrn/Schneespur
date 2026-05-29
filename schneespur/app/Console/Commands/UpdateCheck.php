@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Setting;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\SchneespurUpdater;
 use Illuminate\Console\Command;
 
@@ -29,6 +30,17 @@ class UpdateCheck extends Command
             $updater  = new SchneespurUpdater;
             $manifest = $updater->checkForUpdate();
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('update_check_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'UpdateCheck',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             $this->error(__('update.artisan_check_failed', ['error' => $e->getMessage()]));
 
             return 1;
@@ -55,6 +67,17 @@ class UpdateCheck extends Command
         try {
             $zipPath = $updater->downloadAndVerifyZip($manifest);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('update_download_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'UpdateCheck',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             $this->error(__('update.artisan_zip_failed', ['error' => $e->getMessage()]));
 
             return 1;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Installer\EnvFileWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -103,6 +104,17 @@ class EmailSettingsController extends Controller
         try {
             $envWriter->setMany($values);
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('env_write_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'EmailSettingsController',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             return redirect()->back()->with('error', __('notification.env_not_writable'));
         }
 
@@ -127,6 +139,18 @@ class EmailSettingsController extends Controller
                     ->subject(__('notification.test_email_subject', ['app_name' => brand()]));
             });
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('test_mail_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'EmailSettingsController',
+                    'recipient' => $recipient,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             return redirect()->back()->withInput()->with('error', __('notification.test_email_failed') . ': ' . $e->getMessage());
         }
 

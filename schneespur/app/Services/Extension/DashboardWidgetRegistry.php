@@ -3,6 +3,7 @@
 namespace App\Services\Extension;
 
 use App\Models\User;
+use App\Services\Diagnostic\DiagnosticManager;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 
@@ -42,6 +43,18 @@ class DashboardWidgetRegistry extends ExtensionRegistry
                         continue;
                     }
                 } catch (\Throwable $e) {
+                    try {
+                        app(DiagnosticManager::class)->report('widget_render_failed', [
+                            'error' => $e->getMessage(),
+                            'exception_class' => get_class($e),
+                        ], [
+                            'source' => 'DashboardWidgetRegistry',
+                            'slug' => $config['slug'],
+                        ]);
+                    } catch (\Throwable) {
+                        // Never let diagnostic reporting break the original flow
+                    }
+
                     Log::warning("DashboardWidgetRegistry: condition callback failed for '{$config['slug']}': {$e->getMessage()}");
                     continue;
                 }
@@ -54,6 +67,18 @@ class DashboardWidgetRegistry extends ExtensionRegistry
                 try {
                     $data = ($config['dataCallback'])();
                 } catch (\Throwable $e) {
+                    try {
+                        app(DiagnosticManager::class)->report('widget_render_failed', [
+                            'error' => $e->getMessage(),
+                            'exception_class' => get_class($e),
+                        ], [
+                            'source' => 'DashboardWidgetRegistry',
+                            'slug' => $config['slug'],
+                        ]);
+                    } catch (\Throwable) {
+                        // Never let diagnostic reporting break the original flow
+                    }
+
                     Log::warning("DashboardWidgetRegistry: data callback exception for '{$config['slug']}': {$e->getMessage()}");
                     $error = true;
                 }

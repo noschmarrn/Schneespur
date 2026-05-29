@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\JobCompleted;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\NotificationLogService;
@@ -56,6 +57,20 @@ class SendJobCompletedNotification implements ShouldQueue
                 'job_id' => $job->id,
                 'error' => $e->getMessage(),
             ]);
+
+            try {
+                app(DiagnosticManager::class)->report('pdf_generation_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'job_id' => $job->id,
+                    'customer_id' => $customer?->id,
+                    'customer_object_id' => $object?->id,
+                    'source' => 'SendJobCompletedNotification',
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
         }
 
         if ($pdfContent !== null && strlen($pdfContent) > 10 * 1024 * 1024) {
@@ -84,6 +99,19 @@ class SendJobCompletedNotification implements ShouldQueue
                     'channel' => $result['slug'],
                     'error' => $result['error'],
                 ]);
+
+                try {
+                    app(DiagnosticManager::class)->report('notification_dispatch_failed', [
+                        'error' => $result['error'],
+                    ], [
+                        'slug' => $result['slug'],
+                        'job_id' => $job->id,
+                        'notification_type' => $notificationType,
+                        'source' => 'SendJobCompletedNotification',
+                    ]);
+                } catch (\Throwable) {
+                    // Never let diagnostic reporting break the original flow
+                }
             }
         }
     }

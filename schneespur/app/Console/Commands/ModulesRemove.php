@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Module;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Module\DependencyValidator;
 use App\Services\ModuleManager;
 use App\Services\SchneespurModuleClient;
@@ -84,6 +85,17 @@ class ModulesRemove extends Command
                 ]);
                 $this->info("Migrationen für \"{$slug}\" zurückgerollt.");
             } catch (\Throwable $e) {
+                try {
+                    app(DiagnosticManager::class)->report('module_remove_failed', [
+                        'error' => $e->getMessage(),
+                        'exception_class' => get_class($e),
+                    ], [
+                        'source' => 'ModulesRemove',
+                        'slug' => $slug,
+                    ]);
+                } catch (\Throwable) {
+                    // Never let diagnostic reporting break the original flow
+                }
                 Log::warning("Module migration rollback failed for '{$slug}': {$e->getMessage()}");
                 $this->warn("Migrations-Rollback für \"{$slug}\" fehlgeschlagen: {$e->getMessage()}");
             }

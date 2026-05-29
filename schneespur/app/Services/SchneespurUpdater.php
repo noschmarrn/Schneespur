@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Diagnostic\DiagnosticManager;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -454,6 +455,19 @@ class SchneespurUpdater
             $this->logPhase('state', 'committed', ['version' => $manifest['version']]);
 
         } catch (\Throwable $e) {
+            try {
+                app(DiagnosticManager::class)->report('update_install_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'SchneespurUpdater',
+                    'target_version' => $manifest['version'] ?? null,
+                    'backup_dir' => $backupDir,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
+
             $this->logPhase('install', 'failed', [
                 'error'      => $e->getMessage(),
                 'backup_dir' => $backupDir,

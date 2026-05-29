@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Job;
+use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\PdfReportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -76,7 +77,17 @@ class CustomerPdfController extends Controller
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
             ]);
         } catch (\Throwable $e) {
-            report($e);
+            try {
+                app(DiagnosticManager::class)->report('pdf_generation_failed', [
+                    'error' => $e->getMessage(),
+                    'exception_class' => get_class($e),
+                ], [
+                    'source' => 'CustomerPdfController',
+                    'customer_id' => $customer->id,
+                ]);
+            } catch (\Throwable) {
+                // Never let diagnostic reporting break the original flow
+            }
 
             return redirect()->back()
                 ->withInput()
