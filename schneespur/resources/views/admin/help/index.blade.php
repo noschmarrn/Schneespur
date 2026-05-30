@@ -5,12 +5,21 @@
         <p class="text-gray-600">{{ __('help.page_description', ['app_name' => brand()]) }}</p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        @foreach($topics as $slug => $langKey)
+    <div class="max-w-2xl space-y-4">
+        @foreach($topics as $slug => $meta)
         <a href="{{ route('admin.help.show', $slug) }}"
-           class="block bg-white rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all">
-            <h3 class="text-base font-semibold text-gray-900 mb-1">{{ __($langKey) }}</h3>
-            <p class="text-sm text-gray-500">{{ __($langKey . '_desc', ['app_name' => brand()]) }}</p>
+           class="block bg-white shadow-sm rounded-lg p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $meta['icon'] }}" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-gray-900">{{ __($meta['lang']) }}</h3>
+                    <p class="mt-1 text-sm text-gray-500">{{ __($meta['lang'] . '_desc', ['app_name' => brand()]) }}</p>
+                </div>
+            </div>
         </a>
         @endforeach
     </div>
