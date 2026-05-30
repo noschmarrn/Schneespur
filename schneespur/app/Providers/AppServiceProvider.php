@@ -46,6 +46,7 @@ use App\Services\Scheduler\ScheduledTaskRegistry;
 use App\Services\Scheduler\Tasks\CronHeartbeatTask;
 use App\Services\Scheduler\Tasks\QueueWorkTask;
 use App\Services\Scheduler\Tasks\RetentionDeleteTask;
+use App\Services\Scheduler\Tasks\PurgeModuleLogsTask;
 use App\Services\Scheduler\Tasks\UpdateCheckTask;
 use App\Services\Storage\LocalStorageBackend;
 use App\Services\Storage\StorageBackendRegistry;
@@ -123,6 +124,7 @@ class AppServiceProvider extends ServiceProvider
             $registry->register('update-check', UpdateCheckTask::class);
             $registry->register('queue-work', QueueWorkTask::class);
             $registry->register('cron-heartbeat', CronHeartbeatTask::class);
+            $registry->register('purge-module-logs', PurgeModuleLogsTask::class);
 
             return $registry;
         });

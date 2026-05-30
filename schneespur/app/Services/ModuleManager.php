@@ -151,10 +151,6 @@ class ModuleManager
                     'slug' => $slug,
                     'version' => $manifest['version'] ?? 'unknown',
                 ]);
-
-                $this->logEvent($slug, 'info', 'Module booted', [
-                    'version' => $manifest['version'] ?? 'unknown',
-                ]);
             } catch (\Throwable $e) {
                 Log::error('ModuleManager: module boot failed', [
                     'slug' => $slug,
