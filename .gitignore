@@ -17,12 +17,10 @@
 /schneespur/storage/testing/
 
 # ── Build artifacts ──
-/schneespur/public/build/
 /schneespur/public/hot
 /release/
 
 # ── Internal dev files (not part of distributable app) ──
-/build.sh
 /moduldoku.md
 /package-lock.json
 /docs/superpowers/
@@ -51,7 +49,6 @@ Thumbs.db
 node_modules/
 .next/
 dist/
-build/
 __pycache__/
 *.pyc
 .venv/
