@@ -4,19 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Services\Extension\LocaleRegistry;
 use App\Services\GeocodingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CompanyController extends Controller
 {
-    private const LOCALES = [
-        'de' => 'Deutsch',
-        'en' => 'English',
-    ];
-
     public function edit(): View
     {
         Gate::authorize('settings.view');
@@ -36,7 +33,7 @@ class CompanyController extends Controller
             'season_to' => Setting::get('season_to', '03-31'),
             'alert_overdue_hours' => Setting::get('alert_overdue_hours', 4),
             'default_locale' => Setting::get('default_locale', 'de'),
-            'locales' => self::LOCALES,
+            'locales' => app(LocaleRegistry::class)->labels(),
         ]);
     }
 
@@ -56,7 +53,7 @@ class CompanyController extends Controller
             'season_from' => ['required', 'string', 'regex:/^\d{2}-\d{2}$/'],
             'season_to' => ['required', 'string', 'regex:/^\d{2}-\d{2}$/'],
             'alert_overdue_hours' => ['required', 'integer', 'min:1'],
-            'default_locale' => ['required', 'string', 'in:'.implode(',', array_keys(self::LOCALES))],
+            'default_locale' => ['required', 'string', Rule::in(app(LocaleRegistry::class)->codes())],
         ]);
 
         Setting::set('company_name', $validated['company_name']);

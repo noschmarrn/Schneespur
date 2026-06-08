@@ -100,8 +100,6 @@ return [
     'profile_subtitle' => 'Manage your email address, language, and password.',
     'profile_email' => 'Email Address',
     'profile_locale' => 'Language',
-    'profile_locale_de' => 'German',
-    'profile_locale_en' => 'English',
     'profile_section_password' => 'Change Password',
     'profile_section_password_description' => 'Leave the fields empty if you do not want to change your password.',
     'profile_current_password' => 'Current Password',

@@ -100,8 +100,6 @@ return [
     'profile_subtitle' => 'Verwalten Sie Ihre E-Mail-Adresse, Sprache und Ihr Passwort.',
     'profile_email' => 'E-Mail-Adresse',
     'profile_locale' => 'Sprache',
-    'profile_locale_de' => 'Deutsch',
-    'profile_locale_en' => 'Englisch',
     'profile_section_password' => 'Passwort ändern',
     'profile_section_password_description' => 'Lassen Sie die Felder leer, wenn Sie Ihr Passwort nicht ändern möchten.',
     'profile_current_password' => 'Aktuelles Passwort',
