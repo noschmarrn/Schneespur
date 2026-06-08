@@ -27,27 +27,17 @@
                             <a href="{{ route('portal.home') }}" class="text-xl font-bold text-gray-800 tracking-wide">
                                 {{ brand() }}
                             </a>
+                            @php
+                                $portalNav = app(\App\Services\Extension\PortalNavigationRegistry::class);
+                                $portalNavItems = $portalNav->getItems(auth('customer')->user());
+                            @endphp
                             <nav class="hidden sm:flex space-x-4">
-                                <a href="{{ route('portal.home') }}"
-                                   class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('portal.home') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                                    {{ __('portal.nav_home') }}
-                                </a>
-                                <a href="{{ route('portal.jobs.index') }}"
-                                   class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('portal.jobs.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                                    {{ __('portal.nav_jobs') }}
-                                </a>
-                                <a href="{{ route('portal.reports.index') }}"
-                                   class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('portal.reports.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                                    {{ __('portal.nav_reports') }}
-                                </a>
-                                <a href="{{ route('portal.notifications.index') }}"
-                                   class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('portal.notifications.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                                    {{ __('portal.nav_notifications') }}
-                                </a>
-                                <a href="{{ route('portal.profile.edit') }}"
-                                   class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs('portal.profile.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                                    {{ __('portal.nav_profile') }}
-                                </a>
+                                @foreach($portalNavItems as $item)
+                                    <a href="{{ route($item['route']) }}"
+                                       class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs($item['active_pattern']) ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
+                                        {{ __($item['label']) }}
+                                    </a>
+                                @endforeach
                             </nav>
                             @extensionSlot('portal.nav.after')
                         </div>
@@ -75,21 +65,12 @@
                 {{-- Mobile menu --}}
                 <div x-show="open" x-transition class="sm:hidden border-t border-gray-200" style="display: none;">
                     <div class="px-4 py-3 space-y-1">
-                        <a href="{{ route('portal.home') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">
-                            {{ __('portal.nav_home') }}
-                        </a>
-                        <a href="{{ route('portal.jobs.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">
-                            {{ __('portal.nav_jobs') }}
-                        </a>
-                        <a href="{{ route('portal.reports.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">
-                            {{ __('portal.nav_reports') }}
-                        </a>
-                        <a href="{{ route('portal.notifications.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">
-                            {{ __('portal.nav_notifications') }}
-                        </a>
-                        <a href="{{ route('portal.profile.edit') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">
-                            {{ __('portal.nav_profile') }}
-                        </a>
+                        @foreach($portalNavItems as $item)
+                            <a href="{{ route($item['route']) }}"
+                               class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs($item['active_pattern']) ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
+                                {{ __($item['label']) }}
+                            </a>
+                        @endforeach
                     </div>
                     <div class="border-t border-gray-200 px-4 py-3">
                         <div class="text-sm text-gray-600 mb-2">{{ auth('customer')->user()->name }}</div>
