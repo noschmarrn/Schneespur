@@ -46,7 +46,7 @@ class AdminUserController extends Controller
     {
         Gate::authorize('users.edit');
 
-        $user = User::create($request->safe()->only(['name', 'email', 'password']));
+        $user = User::create($request->safe()->only(['name', 'email', 'password', 'locale']));
 
         if ($request->validated('roles')) {
             $user->roles()->sync($request->validated('roles'));
@@ -73,7 +73,7 @@ class AdminUserController extends Controller
     {
         Gate::authorize('users.edit');
 
-        $user->update($request->safe()->only(['name', 'email']));
+        $user->update($request->safe()->only(['name', 'email', 'locale']));
 
         if ($request->validated('password')) {
             $user->password = $request->validated('password');

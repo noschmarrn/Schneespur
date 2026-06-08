@@ -21,6 +21,7 @@ class StoreUserRequest extends FormRequest
             'name' => ['required', 'string', 'max:200'],
             'email' => ['required', 'email', 'max:200', 'unique:users'],
             'password' => ['required', 'string', 'min:8'],
+            'locale' => ['nullable', \Illuminate\Validation\Rule::in(app(\App\Services\Extension\LocaleRegistry::class)->codes())],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['exists:roles,id'],
         ];

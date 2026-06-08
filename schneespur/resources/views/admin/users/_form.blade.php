@@ -23,6 +23,17 @@
                 @endif
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
             </div>
+
+            <div class="sm:col-span-2">
+                <x-input-label for="locale" :value="__('user.field_locale')" />
+                <select id="locale" name="locale" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="">{{ __('user.locale_app_default') }}</option>
+                    @foreach(app(\App\Services\Extension\LocaleRegistry::class)->labels() as $code => $label)
+                        <option value="{{ $code }}" @selected(old('locale', $user->locale ?? '') === $code)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <x-input-error :messages="$errors->get('locale')" class="mt-2" />
+            </div>
         </div>
     </fieldset>
 

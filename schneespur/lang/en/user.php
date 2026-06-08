@@ -8,6 +8,8 @@ return [
     'field_email' => 'Email',
     'field_password' => 'Password',
     'field_roles' => 'Roles',
+    'field_locale' => 'Language',
+    'locale_app_default' => 'Application default',
     'password_hint_edit' => 'Leave blank to keep the current password.',
     'flash_created' => 'User ":name" has been created.',
     'flash_updated' => 'User ":name" has been updated.',
