@@ -17,6 +17,7 @@ use App\Services\Diagnostic\DiagnosticReporterRegistry;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
+use App\Services\Extension\PortalNavigationRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\SlotRegistry;
@@ -80,6 +81,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(DashboardWidgetRegistry::class);
         $this->app->singleton(FilterRegistry::class);
         $this->app->singleton(NavigationRegistry::class);
+        $this->app->singleton(PortalNavigationRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RoleTemplateRegistry::class);
         $this->app->singleton(SlotRegistry::class);
@@ -223,6 +225,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->registerCorePermissions();
         $this->registerCoreNavigation();
+        $this->registerCorePortalNavigation();
         $this->registerCoreDashboardWidgets();
 
         $this->app->booted(function () {
@@ -501,6 +504,18 @@ class AppServiceProvider extends ServiceProvider
             permission: 'settings.view',
             activePattern: 'admin.settings.modules.*',
         );
+    }
+
+    private function registerCorePortalNavigation(): void
+    {
+        $nav = app(PortalNavigationRegistry::class);
+
+        // label = translation KEY (translated per-request in the portal layout)
+        $nav->addItem('home', 'portal.nav_home', 'portal.home', 10, 'portal.home');
+        $nav->addItem('jobs', 'portal.nav_jobs', 'portal.jobs.index', 20, 'portal.jobs.*');
+        $nav->addItem('reports', 'portal.nav_reports', 'portal.reports.index', 30, 'portal.reports.*');
+        $nav->addItem('notifications', 'portal.nav_notifications', 'portal.notifications.index', 40, 'portal.notifications.*');
+        $nav->addItem('profile', 'portal.nav_profile', 'portal.profile.edit', 50, 'portal.profile.*');
     }
 
     private function registerPermissionGates(): void
