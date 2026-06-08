@@ -18,8 +18,9 @@
             <div>
                 <x-input-label for="locale" :value="__('portal.profile_locale')" />
                 <select id="locale" name="locale" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-                    <option value="de" {{ old('locale', $customer->locale) === 'de' ? 'selected' : '' }}>{{ __('portal.profile_locale_de') }}</option>
-                    <option value="en" {{ old('locale', $customer->locale) === 'en' ? 'selected' : '' }}>{{ __('portal.profile_locale_en') }}</option>
+                    @foreach(app(\App\Services\Extension\LocaleRegistry::class)->labels() as $code => $label)
+                        <option value="{{ $code }}" @selected(old('locale', $customer->locale) === $code)>{{ $label }}</option>
+                    @endforeach
                 </select>
                 <x-input-error class="mt-2" :messages="$errors->get('locale')" />
             </div>
