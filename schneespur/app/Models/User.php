@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'owntracks_username',
         'phone',
+        'locale',
         'notes',
         'default_vehicle_id',
     ];
