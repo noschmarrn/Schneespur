@@ -17,6 +17,7 @@ use App\Services\Diagnostic\DiagnosticReporterRegistry;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
+use App\Services\Extension\LocaleRegistry;
 use App\Services\Extension\PortalNavigationRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
@@ -82,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(FilterRegistry::class);
         $this->app->singleton(NavigationRegistry::class);
         $this->app->singleton(PortalNavigationRegistry::class);
+        $this->app->singleton(LocaleRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RoleTemplateRegistry::class);
         $this->app->singleton(SlotRegistry::class);
@@ -186,11 +188,6 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        $locale = Setting::get('default_locale');
-        if ($locale && in_array($locale, ['de', 'en'], true)) {
-            App::setLocale($locale);
-        }
-
         Gate::policy(Job::class, JobPolicy::class);
 
         Gate::before(function (User $user, string $ability) {
@@ -223,6 +220,7 @@ class AppServiceProvider extends ServiceProvider
             }
         ?>");
 
+        $this->registerCoreLocales();
         $this->registerCorePermissions();
         $this->registerCoreNavigation();
         $this->registerCorePortalNavigation();
@@ -231,7 +229,22 @@ class AppServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             app(ModuleManager::class)->boot();
             $this->registerPermissionGates();
+
+            // Apply the app-wide default locale AFTER modules have registered
+            // their locales, so an all-Czech install (default_locale = cs)
+            // resolves through a module-provided locale pack.
+            $locale = Setting::get('default_locale');
+            if ($locale && app(LocaleRegistry::class)->has($locale)) {
+                App::setLocale($locale);
+            }
         });
+    }
+
+    private function registerCoreLocales(): void
+    {
+        $registry = app(LocaleRegistry::class);
+        $registry->add('de', 'Deutsch');
+        $registry->add('en', 'English');
     }
 
     private function registerCorePermissions(): void

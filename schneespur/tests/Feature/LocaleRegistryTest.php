@@ -25,4 +25,12 @@ class LocaleRegistryTest extends TestCase
 
         $this->assertSame(['en' => 'English'], $reg->labels());
     }
+
+    public function test_core_locales_are_registered_on_the_singleton(): void
+    {
+        $registry = app(LocaleRegistry::class);
+
+        $this->assertTrue($registry->has('de'));
+        $this->assertTrue($registry->has('en'));
+    }
 }
