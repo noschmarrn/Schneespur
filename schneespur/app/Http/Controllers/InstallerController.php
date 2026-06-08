@@ -32,7 +32,7 @@ class InstallerController extends Controller
 
     public function switchLocale(Request $request, string $locale): RedirectResponse
     {
-        if (in_array($locale, ['de', 'en'], true)) {
+        if (app(\App\Services\Extension\LocaleRegistry::class)->has($locale)) {
             $request->session()->put('installer_locale', $locale);
         }
 
@@ -180,7 +180,7 @@ class InstallerController extends Controller
         $validated = $request->validate([
             'app_url' => 'required|url',
             'timezone' => 'required|string|timezone:all',
-            'locale' => 'required|string|in:de,en',
+            'locale' => ['required', 'string', \Illuminate\Validation\Rule::in(app(\App\Services\Extension\LocaleRegistry::class)->codes())],
         ]);
 
         $this->envWriter->setMany([

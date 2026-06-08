@@ -25,7 +25,7 @@ class EnsureCustomer
                 ->with('error', __('portal.account_disabled'));
         }
 
-        if ($customer->locale && in_array($customer->locale, ['de', 'en'], true)) {
+        if ($customer->locale && app(\App\Services\Extension\LocaleRegistry::class)->has($customer->locale)) {
             \Illuminate\Support\Facades\App::setLocale($customer->locale);
         }
 

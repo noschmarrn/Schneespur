@@ -42,7 +42,7 @@ class PortalProfileController extends Controller
 
         $validated = $request->validate([
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('customers')->ignore($customer->id)],
-            'locale' => ['required', 'in:de,en'],
+            'locale' => ['required', \Illuminate\Validation\Rule::in(app(\App\Services\Extension\LocaleRegistry::class)->codes())],
             'current_password' => ['nullable', 'required_with:password', 'current_password:customer'],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);

@@ -13,7 +13,7 @@ class SetInstallerLocale
     // Order matters: Symfony's getPreferredLanguage falls back to the FIRST list
     // entry when no browser language matches, so 'en' must lead — that makes
     // zh-CN, ja, ar, etc. resolve to en/Wintertrace instead of de/Schneespur.
-    private const SUPPORTED = ['en', 'de'];
+    private const SUPPORTED = ['en', 'de', 'cs'];
 
     private const FALLBACK = 'en';
 

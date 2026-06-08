@@ -24,7 +24,7 @@ class StoreCustomerRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'auto_notify_email' => ['boolean'],
             'notification_email' => ['nullable', 'required_if:auto_notify_email,1', 'email', 'max:200'],
-            'locale' => ['sometimes', 'in:de,en'],
+            'locale' => ['sometimes', \Illuminate\Validation\Rule::in(app(\App\Services\Extension\LocaleRegistry::class)->codes())],
         ];
     }
 
