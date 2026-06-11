@@ -35,7 +35,7 @@
                                 @foreach($portalNavItems as $item)
                                     <a href="{{ route($item['route']) }}"
                                        class="px-3 py-2 rounded-md text-sm font-medium {{ request()->routeIs($item['active_pattern']) ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' }}">
-                                        {{ __($item['label']) }}
+                                        {{ $item['label'] }}
                                     </a>
                                 @endforeach
                             </nav>
@@ -68,7 +68,7 @@
                         @foreach($portalNavItems as $item)
                             <a href="{{ route($item['route']) }}"
                                class="block px-3 py-2 rounded-md text-base font-medium {{ request()->routeIs($item['active_pattern']) ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
-                                {{ __($item['label']) }}
+                                {{ $item['label'] }}
                             </a>
                         @endforeach
                     </div>

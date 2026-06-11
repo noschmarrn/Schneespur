@@ -13,10 +13,13 @@ use Illuminate\Support\Facades\Log;
  *
  * IMPORTANT: `label` stores a TRANSLATION KEY, not a translated string. The
  * portal locale is set per-request (per-customer) in EnsureCustomer, AFTER
- * boot, so the blade translates the key at render time via __($item['label']).
+ * boot, so getItems() resolves the key to the active locale at read time (see
+ * ResolvesNavigationLabels). The blade renders the resolved label as-is.
  */
 class PortalNavigationRegistry extends ExtensionRegistry
 {
+    use ResolvesNavigationLabels;
+
     public function addItem(
         string $slug,
         string $label,
@@ -53,6 +56,11 @@ class PortalNavigationRegistry extends ExtensionRegistry
         }
 
         usort($items, fn (array $a, array $b) => $a['order'] <=> $b['order']);
+
+        foreach ($items as &$item) {
+            $item['label'] = $this->resolveLabel($item['label']);
+        }
+        unset($item);
 
         return array_values($items);
     }

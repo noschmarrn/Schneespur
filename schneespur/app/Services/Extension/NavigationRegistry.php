@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Log;
 
 class NavigationRegistry extends ExtensionRegistry
 {
+    use ResolvesNavigationLabels;
+
     protected array $groups = [];
 
     public function __construct(
@@ -23,6 +25,11 @@ class NavigationRegistry extends ExtensionRegistry
     {
         $groups = $this->groups;
         usort($groups, fn (array $a, array $b) => $a['order'] <=> $b['order']);
+
+        foreach ($groups as &$group) {
+            $group['label'] = $this->resolveLabel($group['label']);
+        }
+        unset($group);
 
         return $groups;
     }
@@ -79,6 +86,16 @@ class NavigationRegistry extends ExtensionRegistry
             usort($groupItems, fn (array $a, array $b) => $a['order'] <=> $b['order']);
         }
 
-        return $this->filterRegistry->apply('schneespur.navigation.items', $grouped);
+        $grouped = $this->filterRegistry->apply('schneespur.navigation.items', $grouped);
+
+        // Resolve after the filter so module-injected items are translated too.
+        foreach ($grouped as &$groupItems) {
+            foreach ($groupItems as &$item) {
+                $item['label'] = $this->resolveLabel($item['label']);
+            }
+        }
+        unset($groupItems, $item);
+
+        return $grouped;
     }
 }

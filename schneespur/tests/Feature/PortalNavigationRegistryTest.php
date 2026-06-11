@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Services\Extension\PortalNavigationRegistry;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\App;
 use Tests\TestCase;
 
 class PortalNavigationRegistryTest extends TestCase
@@ -58,5 +59,18 @@ class PortalNavigationRegistryTest extends TestCase
         $items = $reg->getItems($customer);
 
         $this->assertSame(['always'], array_column($items, 'slug'));
+    }
+
+    public function test_item_labels_resolve_to_the_current_locale_at_read_time(): void
+    {
+        app('translator')->addLines(['nav.demo' => 'Heim'], 'de');
+        app('translator')->addLines(['nav.demo' => 'Maison'], 'fr');
+
+        $reg = new PortalNavigationRegistry;
+        $reg->addItem('demo', 'nav.demo', 'portal.home');
+
+        App::setLocale('fr');
+
+        $this->assertSame('Maison', $reg->getItems()[0]['label']);
     }
 }
