@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureDsgvoInformed;
 use App\Http\Middleware\InstallerGuard;
 use App\Http\Middleware\RedirectToInstaller;
 use App\Http\Middleware\SetInstallerLocale;
+use App\Http\Middleware\SetUserLocale;
 use App\Services\Diagnostic\DiagnosticManager;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -55,6 +56,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->prependToGroup('web', RedirectToInstaller::class);
+
+        // Apply the authenticated user's per-user locale on every web request,
+        // after StartSession/auth has resolved the user. Overrides the boot-time
+        // default_locale so the admin/users locale picker takes effect app-wide.
+        $middleware->appendToGroup('web', SetUserLocale::class);
 
         $middleware->group('installer', [
             TrustProxies::class,

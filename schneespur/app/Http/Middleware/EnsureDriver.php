@@ -2,10 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\Extension\LocaleRegistry;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Symfony\Component\HttpFoundation\Response;
 
 class EnsureDriver
@@ -18,9 +16,8 @@ class EnsureDriver
             return redirect()->route('dashboard');
         }
 
-        if ($user->locale && app(LocaleRegistry::class)->has($user->locale)) {
-            App::setLocale($user->locale);
-        }
+        // Per-user locale is applied centrally by the SetUserLocale middleware
+        // (web group), which covers admin and driver routes alike.
 
         return $next($request);
     }
