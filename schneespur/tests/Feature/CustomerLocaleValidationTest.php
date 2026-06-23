@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
-use App\Models\User;
+use App\Enums\UserRole;
 use App\Models\Customer;
+use App\Models\User;
 use App\Services\Extension\LocaleRegistry;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -33,7 +33,7 @@ class CustomerLocaleValidationTest extends TestCase
     private function admin(): User
     {
         $u = User::create(['name' => 'A', 'email' => 'a@test.local', 'password' => Hash::make('password')]);
-        $u->role = \App\Enums\UserRole::Admin;
+        $u->role = UserRole::Admin;
         $u->save();
 
         return $u->fresh();
@@ -60,5 +60,15 @@ class CustomerLocaleValidationTest extends TestCase
         ]);
 
         $response->assertSessionHasErrors('locale');
+    }
+
+    public function test_customer_form_renders_registered_locale_options(): void
+    {
+        app(LocaleRegistry::class)->add('cs', 'Čeština');
+
+        $response = $this->actingAs($this->admin())->get(route('admin.customers.create'));
+
+        $response->assertOk();
+        $response->assertSee('Čeština');
     }
 }

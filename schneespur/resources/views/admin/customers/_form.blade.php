@@ -32,6 +32,16 @@
                 <x-text-input id="phone" name="phone" type="text" class="mt-1 block w-full" :value="old('phone', $customer->phone ?? '')" />
                 <x-input-error :messages="$errors->get('phone')" class="mt-2" />
             </div>
+
+            <div>
+                <x-input-label for="locale" :value="__('customer.field_locale')" />
+                <select id="locale" name="locale" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                    @foreach(app(\App\Services\Extension\LocaleRegistry::class)->labels() as $code => $label)
+                        <option value="{{ $code }}" @selected(old('locale', $customer->locale ?? 'de') === $code)>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <x-input-error :messages="$errors->get('locale')" class="mt-2" />
+            </div>
         </div>
     </fieldset>
 
@@ -50,15 +60,6 @@
                 <x-input-label for="notification_email" :value="__('customer.field_notification_email')" />
                 <x-text-input id="notification_email" name="notification_email" type="email" class="mt-1 block w-full" :value="old('notification_email', $customer->notification_email ?? '')" />
                 <x-input-error :messages="$errors->get('notification_email')" class="mt-2" />
-            </div>
-
-            <div x-show="autoNotify" x-transition>
-                <x-input-label for="locale" :value="__('customer.field_locale')" />
-                <select id="locale" name="locale" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                    <option value="de" @selected(old('locale', $customer->locale ?? 'de') === 'de')>{{ __('customer.locale_de') }}</option>
-                    <option value="en" @selected(old('locale', $customer->locale ?? 'de') === 'en')>{{ __('customer.locale_en') }}</option>
-                </select>
-                <x-input-error :messages="$errors->get('locale')" class="mt-2" />
             </div>
         </div>
     </fieldset>
