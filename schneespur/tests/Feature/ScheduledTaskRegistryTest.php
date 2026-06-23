@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Services\Scheduler\ScheduledTaskInterface;
 use App\Services\Scheduler\ScheduledTaskRegistry;
 use App\Services\Scheduler\Tasks\CronHeartbeatTask;
+use App\Services\Scheduler\Tasks\PurgeModuleLogsTask;
 use App\Services\Scheduler\Tasks\QueueWorkTask;
 use App\Services\Scheduler\Tasks\RetentionDeleteTask;
 use App\Services\Scheduler\Tasks\UpdateCheckTask;
@@ -41,7 +42,7 @@ class ScheduledTaskRegistryTest extends TestCase
         $this->assertSame($a, $b);
     }
 
-    public function test_all_four_core_tasks_are_registered(): void
+    public function test_all_core_tasks_are_registered(): void
     {
         $registry = $this->app->make(ScheduledTaskRegistry::class);
 
@@ -49,7 +50,8 @@ class ScheduledTaskRegistryTest extends TestCase
         $this->assertTrue($registry->has('update-check'));
         $this->assertTrue($registry->has('queue-work'));
         $this->assertTrue($registry->has('cron-heartbeat'));
-        $this->assertCount(4, $registry->all());
+        $this->assertTrue($registry->has('purge-module-logs'));
+        $this->assertCount(5, $registry->all());
     }
 
     public function test_resolve_returns_task_instances(): void
@@ -60,6 +62,7 @@ class ScheduledTaskRegistryTest extends TestCase
         $this->assertInstanceOf(UpdateCheckTask::class, $registry->resolve('update-check'));
         $this->assertInstanceOf(QueueWorkTask::class, $registry->resolve('queue-work'));
         $this->assertInstanceOf(CronHeartbeatTask::class, $registry->resolve('cron-heartbeat'));
+        $this->assertInstanceOf(PurgeModuleLogsTask::class, $registry->resolve('purge-module-logs'));
     }
 
     public function test_resolve_unknown_slug_returns_null(): void
@@ -75,7 +78,7 @@ class ScheduledTaskRegistryTest extends TestCase
 
         $enabled = $registry->enabledTasks();
 
-        $this->assertCount(4, $enabled);
+        $this->assertCount(5, $enabled);
         foreach ($enabled as $task) {
             $this->assertTrue($task->isEnabled());
         }
@@ -152,7 +155,7 @@ class ScheduledTaskRegistryTest extends TestCase
 
         $all = $registry->allWithStatus();
 
-        $this->assertCount(4, $all);
+        $this->assertCount(5, $all);
 
         $this->assertInstanceOf(ScheduledTaskInterface::class, $all['retention-delete']['task']);
         $this->assertNotNull($all['retention-delete']['last_run']);
@@ -193,7 +196,7 @@ class ScheduledTaskRegistryTest extends TestCase
         $this->assertTrue($registry->has('fake-module-task'));
         $task = $registry->resolve('fake-module-task');
         $this->assertInstanceOf(FakeEnabledTask::class, $task);
-        $this->assertCount(5, $registry->all());
+        $this->assertCount(6, $registry->all());
     }
 }
 
