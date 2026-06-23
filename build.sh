@@ -60,6 +60,10 @@ if [ -d "$SOURCE_DIR/modules" ]; then
     rm -rf "$BUILD_DIR/modules/example"
 fi
 
+# The example module is dev-only: its public assets are symlinked into public/
+# and get dereferenced into the build by the wholesale public/ copy above.
+rm -rf "$BUILD_DIR/public/modules/example"
+
 # Documentation and legal → build root (flat, alongside code)
 cp "$PROJECT_DIR/README.md" "$BUILD_DIR/" 2>/dev/null || true
 cp "$PROJECT_DIR/LICENSE" "$BUILD_DIR/" 2>/dev/null || true
