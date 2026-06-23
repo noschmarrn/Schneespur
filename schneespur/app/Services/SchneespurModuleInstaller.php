@@ -12,7 +12,7 @@ class SchneespurModuleInstaller
 {
     private string $modulesPath;
 
-    public function __construct()
+    public function __construct(private ModuleCacheRefresher $cacheRefresher)
     {
         $this->modulesPath = rtrim(config('schneespur_modules.modules_path'), '/');
     }
@@ -33,9 +33,13 @@ class SchneespurModuleInstaller
 
         if (! $result) {
             $this->reportDiagnostic('module_install_failed', $slug, 'ZIP extraction failed');
+
+            return false;
         }
 
-        return $result;
+        $this->cacheRefresher->refresh();
+
+        return true;
     }
 
     public function update(string $zipPath, string $slug): bool
@@ -59,6 +63,7 @@ class SchneespurModuleInstaller
                 File::deleteDirectory($backupDir);
             }
             Log::info('schneespur-modules: update complete', ['slug' => $slug]);
+            $this->cacheRefresher->refresh();
             return true;
         }
 
@@ -81,6 +86,8 @@ class SchneespurModuleInstaller
         File::deleteDirectory($targetDir);
         Log::info('schneespur-modules: module removed', ['slug' => $slug]);
 
+        $this->cacheRefresher->refresh();
+
         return true;
     }
 
@@ -101,6 +108,8 @@ class SchneespurModuleInstaller
 
         File::moveDirectory($backupDir, $targetDir);
         Log::info('schneespur-modules: rollback triggered', ['slug' => $slug]);
+
+        $this->cacheRefresher->refresh();
 
         return true;
     }
