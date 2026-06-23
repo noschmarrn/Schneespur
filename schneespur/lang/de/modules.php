@@ -82,6 +82,11 @@ return [
     'trust_filter_all' => 'Alle',
     'trust_community_install_warning' => 'Dieses Modul stammt von einem Drittanbieter und wurde nicht vom Schneespur-Team geprüft. Trotzdem installieren?',
 
+    'module_info' => 'Modul-Info',
+    'module_info_tooltip' => 'Infoseite des Moduls öffnen (inkl. Virenscan-Ergebnis).',
+    'desc_more' => 'mehr',
+    'desc_less' => 'weniger',
+
     'api_tokens_title' => 'API-Tokens',
     'api_tokens_description' => 'API-Tokens für das Modul ":name" verwalten.',
     'no_tokens' => 'Noch keine API-Tokens erstellt.',

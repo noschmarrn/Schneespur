@@ -113,20 +113,23 @@ class ModuleTrustLevelUiTest extends TestCase
         $response->assertSee(__('modules.trust_verified_tooltip'));
     }
 
-    public function test_installed_community_module_shows_orange_badge(): void
+    public function test_community_label_is_not_shown(): void
     {
         $admin = $this->createAdmin();
 
+        // The live catalog carries no trust_level, so modules default to no
+        // trust badge. Even an explicit community trust_level must not surface
+        // the (removed) community label any more.
         Module::create([
-            'slug' => 'community-mod',
+            'slug' => 'thirdparty-mod',
             'version' => '1.0.0',
             'enabled' => true,
-            'manifest_json' => ['name' => ['de' => 'Community Mod']],
+            'manifest_json' => ['name' => ['de' => 'Drittanbieter Mod']],
             'trust_level' => 'community',
             'installed_at' => now(),
         ]);
 
-        $this->mockCatalog([$this->makeCatalogEntry('community-mod', [
+        $this->mockCatalog([$this->makeCatalogEntry('new-thirdparty', [
             'trust_level' => 'community',
         ])]);
 
@@ -134,23 +137,7 @@ class ModuleTrustLevelUiTest extends TestCase
             ->get(route('admin.settings.modules.index'));
 
         $response->assertStatus(200);
-        $response->assertSee(__('modules.trust_community'));
-        $response->assertSee(__('modules.trust_community_tooltip'));
-    }
-
-    public function test_available_community_module_shows_orange_badge(): void
-    {
-        $admin = $this->createAdmin();
-
-        $this->mockCatalog([$this->makeCatalogEntry('new-community', [
-            'trust_level' => 'community',
-        ])]);
-
-        $response = $this->actingAs($admin)
-            ->get(route('admin.settings.modules.index'));
-
-        $response->assertStatus(200);
-        $response->assertSee(__('modules.trust_community'));
+        $response->assertDontSee(__('modules.trust_community'));
     }
 
     public function test_trust_filter_dropdown_is_rendered(): void
@@ -168,22 +155,7 @@ class ModuleTrustLevelUiTest extends TestCase
         $response->assertSee(__('modules.trust_filter_all'));
     }
 
-    public function test_community_install_warning_text_is_present(): void
-    {
-        $admin = $this->createAdmin();
-
-        $this->mockCatalog([$this->makeCatalogEntry('warn-mod', [
-            'trust_level' => 'community',
-        ])]);
-
-        $response = $this->actingAs($admin)
-            ->get(route('admin.settings.modules.index'));
-
-        $response->assertStatus(200);
-        $response->assertSee(__('modules.trust_community_install_warning'));
-    }
-
-    public function test_orphan_module_with_null_trust_level_shows_unknown_badge(): void
+    public function test_orphan_module_with_null_trust_level_shows_no_badge(): void
     {
         $admin = $this->createAdmin();
 
@@ -202,7 +174,6 @@ class ModuleTrustLevelUiTest extends TestCase
             ->get(route('admin.settings.modules.index'));
 
         $response->assertStatus(200);
-        $response->assertSee(__('modules.trust_unknown'));
-        $response->assertSee(__('modules.trust_unknown_tooltip'));
+        $response->assertDontSee(__('modules.trust_unknown'));
     }
 }

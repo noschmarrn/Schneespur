@@ -82,6 +82,11 @@ return [
     'trust_filter_all' => 'All',
     'trust_community_install_warning' => 'This module is from a third-party developer and has not been reviewed by the Schneespur team. Install anyway?',
 
+    'module_info' => 'Module info',
+    'module_info_tooltip' => 'Open the module info page (incl. virus scan result).',
+    'desc_more' => 'more',
+    'desc_less' => 'less',
+
     'api_tokens_title' => 'API Tokens',
     'api_tokens_description' => 'Manage API tokens for the ":name" module.',
     'no_tokens' => 'No API tokens created yet.',

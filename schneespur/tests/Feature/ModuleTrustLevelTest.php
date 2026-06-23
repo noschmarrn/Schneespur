@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Module;
 use App\Services\SchneespurModuleClient;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
-use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class ModuleTrustLevelTest extends TestCase
@@ -48,15 +47,8 @@ class ModuleTrustLevelTest extends TestCase
         $this->assertSame('official', $result['trust_level']);
     }
 
-    public function test_normalize_module_defaults_trust_level_to_community_when_missing(): void
+    public function test_normalize_module_leaves_trust_level_null_when_missing(): void
     {
-        Log::shouldReceive('info')
-            ->once()
-            ->withArgs(function (string $message, array $context) {
-                return str_contains($message, 'trust_level missing')
-                    && $context['slug'] === 'no-trust';
-            });
-
         $client = app(SchneespurModuleClient::class);
         $method = new \ReflectionMethod($client, 'normalizeModule');
 
@@ -69,7 +61,9 @@ class ModuleTrustLevelTest extends TestCase
 
         $result = $method->invoke($client, $raw);
 
-        $this->assertSame('community', $result['trust_level']);
+        // The catalog carries no trust_level; we must not force a misleading
+        // "community" classification.
+        $this->assertNull($result['trust_level']);
     }
 
     public function test_trust_level_is_fillable_on_module_model(): void

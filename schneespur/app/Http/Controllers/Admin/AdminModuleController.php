@@ -60,7 +60,6 @@ class AdminModuleController extends Controller
             }
 
             $local = $installed->get($slug);
-            $catalogSigned = ! empty($catModule['signature']) && ! empty($catModule['key_id']);
 
             $modules[$slug] = [
                 'slug' => $slug,
@@ -78,8 +77,8 @@ class AdminModuleController extends Controller
                 'sha256' => $catModule['sha256'] ?? null,
                 'size_bytes' => $catModule['size_bytes'] ?? null,
                 'requires_permissions' => $catModule['requires_permissions'] ?? [],
-                'signature_status' => $local !== null ? $local->signature_status : ($catalogSigned ? 'signed' : 'unsigned'),
-                'trust_level' => $catModule['trust_level'] ?? 'community',
+                'info_url' => $this->safeHttpUrl($catModule['info_url'] ?? null),
+                'trust_level' => $catModule['trust_level'] ?? null,
             ];
         }
 
@@ -103,7 +102,7 @@ class AdminModuleController extends Controller
                 'sha256' => null,
                 'size_bytes' => null,
                 'requires_permissions' => $this->resolveLocalPermissions($slug),
-                'signature_status' => $local->signature_status,
+                'info_url' => null,
                 'trust_level' => $local->trust_level,
             ];
         }
@@ -146,10 +145,6 @@ class AdminModuleController extends Controller
         if (! $moduleData) {
             return redirect()->route('admin.settings.modules.index')
                 ->with('error', __('modules.not_found_in_catalog', ['slug' => $slug]));
-        }
-
-        if (($moduleData['trust_level'] ?? 'community') === 'community') {
-            Log::warning('schneespur-modules: community module install attempted', ['slug' => $slug]);
         }
 
         try {
@@ -217,7 +212,7 @@ class AdminModuleController extends Controller
                 'enabled' => true,
                 'manifest_json' => $moduleData,
                 'signature_status' => $sigResult->status,
-                'trust_level' => $moduleData['trust_level'] ?? 'community',
+                'trust_level' => $moduleData['trust_level'] ?? null,
                 'installed_at' => now(),
             ],
         );
@@ -360,7 +355,7 @@ class AdminModuleController extends Controller
             'version' => $moduleData['version'] ?? '0.0.0',
             'manifest_json' => $moduleData,
             'signature_status' => $sigResult->status,
-            'trust_level' => $moduleData['trust_level'] ?? 'community',
+            'trust_level' => $moduleData['trust_level'] ?? null,
         ]);
 
         if ($sigResult->status === 'unsigned') {
@@ -585,6 +580,22 @@ class AdminModuleController extends Controller
             '--force' => true,
             '--step' => 999,
         ]);
+    }
+
+    /**
+     * Only allow http(s) URLs to reach an href in the view. The catalog is an
+     * external source, so a hostile entry could otherwise smuggle a
+     * javascript:/data: scheme into the module info link (stored XSS).
+     */
+    private function safeHttpUrl(?string $url): ?string
+    {
+        if (! is_string($url) || $url === '') {
+            return null;
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+
+        return in_array($scheme, ['http', 'https'], true) ? $url : null;
     }
 
     private function resolveLocalPermissions(string $slug): array

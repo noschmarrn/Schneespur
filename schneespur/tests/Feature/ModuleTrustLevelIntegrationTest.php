@@ -240,9 +240,9 @@ class ModuleTrustLevelIntegrationTest extends TestCase
         $this->assertSame('unsigned', $module->signature_status);
     }
 
-    // ── Test 3: Missing trust_level defaults to community ──
+    // ── Test 3: Missing trust_level stays null (no forced community) ──
 
-    public function test_missing_trust_level_defaults_to_community(): void
+    public function test_missing_trust_level_defaults_to_null(): void
     {
         $slug = 'trust-missing-mod';
         $zipPath = $this->createTestZip($slug);
@@ -253,7 +253,8 @@ class ModuleTrustLevelIntegrationTest extends TestCase
             'sha256' => $zipSha,
             'size_bytes' => $zipSize,
         ]);
-        // No trust_level key at all — normalizeModule should default to 'community'
+        // No trust_level key at all — normalizeModule must NOT force a misleading
+        // "community" classification; trust_level stays null.
         unset($entry['trust_level']);
 
         $signed = $this->signModuleEntry($entry);
@@ -274,7 +275,7 @@ class ModuleTrustLevelIntegrationTest extends TestCase
 
         $module = Module::where('slug', $slug)->first();
         $this->assertNotNull($module);
-        $this->assertSame('community', $module->trust_level);
+        $this->assertNull($module->trust_level);
     }
 
     // ── Test 4: Module update changes trust_level ──

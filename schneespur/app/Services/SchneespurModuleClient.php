@@ -122,16 +122,16 @@ class SchneespurModuleClient
             'sha256'               => $raw['sha256'] ?? null,
             'size_bytes'           => $raw['size_bytes'] ?? null,
             'requires_permissions' => $raw['requires_permissions'] ?? [],
+            'info_url'             => $raw['info_url'] ?? null,
             'primary_locale'       => $primary,
         ];
 
+        // The catalog does not carry a trust_level; leave it unset rather than
+        // forcing a misleading "community" classification on official modules.
         if (isset($raw['trust_level'])) {
             $normalized['trust_level'] = $raw['trust_level'];
         } else {
-            $normalized['trust_level'] = 'community';
-            Log::info('schneespur-modules: trust_level missing, defaulting to community', [
-                'slug' => $raw['slug'] ?? 'unknown',
-            ]);
+            $normalized['trust_level'] = null;
         }
 
         if (isset($raw['signature'])) {

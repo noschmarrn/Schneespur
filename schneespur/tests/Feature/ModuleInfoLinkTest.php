@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
-class ModuleSigningUiTest extends TestCase
+class ModuleInfoLinkTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
@@ -35,7 +35,7 @@ class ModuleSigningUiTest extends TestCase
     {
         $user = User::create([
             'name' => 'Admin User',
-            'email' => 'ui-sig-admin@test.local',
+            'email' => 'info-link-admin@test.local',
             'password' => Hash::make('password'),
         ]);
         $user->role = UserRole::Admin;
@@ -60,129 +60,102 @@ class ModuleSigningUiTest extends TestCase
             'download_url' => "https://example.com/{$slug}.zip",
             'sha256' => hash('sha256', $slug),
             'size_bytes' => 100,
+            'info_url' => "https://jenni.noschmarrn.dev/{$slug}/info",
         ], $overrides);
     }
 
-    public function test_installed_verified_module_shows_signed_badge(): void
+    public function test_available_module_shows_info_link(): void
     {
         $admin = $this->createAdmin();
 
-        Module::create([
-            'slug' => 'verified-mod',
-            'version' => '1.0.0',
-            'enabled' => true,
-            'manifest_json' => ['name' => ['de' => 'Verifiziert']],
-            'signature_status' => 'verified',
-            'installed_at' => now(),
-        ]);
-
-        $this->mockCatalog([$this->makeCatalogEntry('verified-mod', [
-            'signature' => 'abc123',
-            'key_id' => 'key-1',
-        ])]);
+        $this->mockCatalog([$this->makeCatalogEntry('new-mod')]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.settings.modules.index'));
 
         $response->assertStatus(200);
-        $response->assertSee(__('modules.signature_verified'));
+        $response->assertSee('https://jenni.noschmarrn.dev/new-mod/info', false);
+        $response->assertSee(__('modules.module_info'));
     }
 
-    public function test_installed_unsigned_module_shows_unsigned_badge(): void
+    public function test_installed_module_shows_info_link(): void
     {
         $admin = $this->createAdmin();
 
         Module::create([
-            'slug' => 'unsigned-mod',
+            'slug' => 'inst-mod',
             'version' => '1.0.0',
             'enabled' => true,
-            'manifest_json' => ['name' => ['de' => 'Unsigniert']],
+            'manifest_json' => ['name' => ['de' => 'Installiert']],
+            'installed_at' => now(),
+        ]);
+
+        $this->mockCatalog([$this->makeCatalogEntry('inst-mod')]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.settings.modules.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('https://jenni.noschmarrn.dev/inst-mod/info', false);
+    }
+
+    public function test_no_signature_badge_is_rendered(): void
+    {
+        $admin = $this->createAdmin();
+
+        Module::create([
+            'slug' => 'sig-mod',
+            'version' => '1.0.0',
+            'enabled' => true,
+            'manifest_json' => ['name' => ['de' => 'Sig']],
             'signature_status' => 'unsigned',
             'installed_at' => now(),
         ]);
 
-        $this->mockCatalog([$this->makeCatalogEntry('unsigned-mod')]);
+        $this->mockCatalog([$this->makeCatalogEntry('sig-mod')]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.settings.modules.index'));
 
         $response->assertStatus(200);
-        $response->assertSee(__('modules.signature_unsigned'));
-        $response->assertSee(__('modules.signature_unsigned_tooltip'));
-    }
-
-    public function test_installed_failed_module_shows_failed_badge(): void
-    {
-        $admin = $this->createAdmin();
-
-        Module::create([
-            'slug' => 'failed-mod',
-            'version' => '1.0.0',
-            'enabled' => true,
-            'manifest_json' => ['name' => ['de' => 'Fehlerhaft']],
-            'signature_status' => 'failed',
-            'installed_at' => now(),
-        ]);
-
-        $this->mockCatalog([$this->makeCatalogEntry('failed-mod')]);
-
-        $response = $this->actingAs($admin)
-            ->get(route('admin.settings.modules.index'));
-
-        $response->assertStatus(200);
-        $response->assertSee(__('modules.signature_failed_badge'));
-    }
-
-    public function test_installed_module_with_null_status_shows_no_badge(): void
-    {
-        $admin = $this->createAdmin();
-
-        Module::create([
-            'slug' => 'legacy-mod',
-            'version' => '1.0.0',
-            'enabled' => true,
-            'manifest_json' => ['name' => ['de' => 'Legacy']],
-            'signature_status' => null,
-            'installed_at' => now(),
-        ]);
-
-        $this->mockCatalog([$this->makeCatalogEntry('legacy-mod')]);
-
-        $response = $this->actingAs($admin)
-            ->get(route('admin.settings.modules.index'));
-
-        $response->assertStatus(200);
-        $response->assertDontSee(__('modules.signature_verified'));
         $response->assertDontSee(__('modules.signature_unsigned'));
-        $response->assertDontSee(__('modules.signature_failed_badge'));
+        $response->assertDontSee(__('modules.signature_verified'));
     }
 
-    public function test_available_signed_catalog_module_shows_signed_badge(): void
+    public function test_non_http_info_url_scheme_is_dropped(): void
     {
         $admin = $this->createAdmin();
 
-        $this->mockCatalog([$this->makeCatalogEntry('new-signed', [
-            'signature' => 'sig-bytes',
-            'key_id' => 'key-2',
+        $this->mockCatalog([$this->makeCatalogEntry('evil-mod', [
+            'info_url' => 'javascript:alert(document.cookie)',
         ])]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.settings.modules.index'));
 
         $response->assertStatus(200);
-        $response->assertSee(__('modules.signature_verified'));
+        $response->assertDontSee('javascript:alert', false);
+        $response->assertDontSee(__('modules.module_info'));
     }
 
-    public function test_available_unsigned_catalog_module_shows_unsigned_badge(): void
+    public function test_orphan_module_without_catalog_has_no_info_link(): void
     {
         $admin = $this->createAdmin();
 
-        $this->mockCatalog([$this->makeCatalogEntry('new-unsigned')]);
+        Module::create([
+            'slug' => 'orphan-mod',
+            'version' => '1.0.0',
+            'enabled' => true,
+            'manifest_json' => ['name' => ['de' => 'Orphan']],
+            'installed_at' => now(),
+        ]);
+
+        $this->mockCatalog([]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.settings.modules.index'));
 
         $response->assertStatus(200);
-        $response->assertSee(__('modules.signature_unsigned'));
+        $response->assertDontSee('/orphan-mod/info', false);
     }
 }
