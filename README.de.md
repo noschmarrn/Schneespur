@@ -73,7 +73,7 @@ Schneespur wird als schlanker Kern ausgeliefert und wächst über installierbare
 | **Diagnose** | Sendet technische Fehler an den Betreiber zur Behebung — keine persönlichen Daten |
 | **Sprachpakete** | Weitere Oberflächensprachen nachrüsten (Tschechisch, Französisch, …) ohne Kern-Eingriff |
 
-Jedes Modul wird beim Download per **SHA256 integritätsgeprüft** und **auf Viren gescannt**; jeder Katalog-Eintrag verlinkt sein Scan-Ergebnis — Sie sehen genau, was Sie installieren. Module können Navigation und Dashboards erweitern, Rollen mitbringen, Wetter-Provider registrieren, Storage-/Backup-/PDF-Backends austauschen und an über 13 Lifecycle-Events andocken. Für Entwickler: Die Modul-Doku (`moduldoku.md`) zeigt, wie man eigene Module baut.
+Jedes Modul wird beim Download per **SHA256 integritätsgeprüft** und **auf Viren gescannt**; jeder Katalog-Eintrag verlinkt sein Scan-Ergebnis — Sie sehen genau, was Sie installieren. Module können Navigation und Dashboards erweitern, Rollen mitbringen, Wetter-Provider registrieren, Storage-/Backup-/PDF-Backends austauschen und an über 13 Lifecycle-Events andocken.
 
 ## Warum selbst gehostet & Open Source?
 

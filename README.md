@@ -73,7 +73,7 @@ Wintertrace ships as a lean core and grows through installable modules from the 
 | **Diagnostics** | Forwards technical errors to the maintainer so they can be fixed — no personal data |
 | **Language Packs** | Add interface languages (Czech, French, … ) without touching core |
 
-Every module is **integrity-checked (SHA256)** on download and **virus-scanned**; each catalog entry links its scan report, so you can see exactly what you are installing. Modules can extend navigation and dashboards, add roles, register weather providers, swap storage/backup/PDF backends, and hook into 13+ lifecycle events. Developers: see the module system docs (`moduldoku.md`) to build your own.
+Every module is **integrity-checked (SHA256)** on download and **virus-scanned**; each catalog entry links its scan report, so you can see exactly what you are installing. Modules can extend navigation and dashboards, add roles, register weather providers, swap storage/backup/PDF backends, and hook into 13+ lifecycle events.
 
 ## Why self-hosted & open source?
 
