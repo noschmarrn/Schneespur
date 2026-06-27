@@ -19,6 +19,7 @@ use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\LocaleRegistry;
 use App\Services\Extension\PortalNavigationRegistry;
+use App\Services\Extension\PublicHomepageRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\SlotRegistry;
@@ -83,6 +84,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(FilterRegistry::class);
         $this->app->singleton(NavigationRegistry::class);
         $this->app->singleton(PortalNavigationRegistry::class);
+        $this->app->singleton(PublicHomepageRegistry::class);
         $this->app->singleton(LocaleRegistry::class);
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RoleTemplateRegistry::class);

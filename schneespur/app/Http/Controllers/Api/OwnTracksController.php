@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\GpsPointReceived;
 use App\Http\Controllers\Controller;
 use App\Models\GpsPoint;
 use App\Services\JobLifecycleService;
@@ -27,6 +28,18 @@ class OwnTracksController extends Controller
         ]);
 
         $activeJob = app(JobLifecycleService::class)->findActiveJob($request->user());
+
+        // Notify modules (e.g. geofencing) of every ping, including idle ones
+        // where no job is active yet — this is the only point at which a module
+        // can observe driver position before a job exists.
+        GpsPointReceived::dispatch(
+            $request->user(),
+            (float) $validated['lat'],
+            (float) $validated['lon'],
+            (int) $validated['tst'],
+            isset($validated['acc']) ? (int) $validated['acc'] : null,
+            $activeJob,
+        );
 
         if ($activeJob === null) {
             return response()->json([], 200);

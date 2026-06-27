@@ -60,6 +60,14 @@ Route::get('/', function () {
         return redirect()->route('install.welcome');
     }
 
+    // A module may serve a public homepage at the root URL. Decided here at
+    // request time (the registry is populated during module boot on every
+    // request), so it stays correct even when routes are cached.
+    $homepage = app(\App\Services\Extension\PublicHomepageRegistry::class);
+    if ($homepage->has()) {
+        return $homepage->render();
+    }
+
     return redirect()->route('login');
 });
 
