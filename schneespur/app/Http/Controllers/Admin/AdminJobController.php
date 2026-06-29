@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Enums\JobType;
 use App\Models\Customer;
 use App\Models\CustomerObject;
 use App\Models\Job;
@@ -39,7 +38,7 @@ class AdminJobController extends Controller
 
         $drivers = User::drivers()->orderBy('name')->get();
         $customers = Customer::orderBy('name')->get();
-        $jobTypes = JobType::cases();
+        $jobTypes = app(\App\Services\Extension\JobTypeRegistry::class)->types();
         $objects = $request->customer_id
             ? CustomerObject::where('customer_id', $request->customer_id)->orderBy('name')->get()
             : collect();

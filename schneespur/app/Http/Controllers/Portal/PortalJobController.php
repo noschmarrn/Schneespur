@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Portal;
 
-use App\Enums\JobType;
 use App\Http\Controllers\Controller;
 use App\Models\Job;
 use App\Services\GpsSmoothingService;
@@ -28,7 +27,7 @@ class PortalJobController extends Controller
             ->withQueryString();
 
         $objects = $customer->objects()->orderBy('name')->get();
-        $jobTypes = JobType::cases();
+        $jobTypes = app(\App\Services\Extension\JobTypeRegistry::class)->types();
 
         return view('portal.jobs.index', compact('jobs', 'objects', 'jobTypes', 'customer'));
     }

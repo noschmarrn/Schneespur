@@ -121,7 +121,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('driver.dash_select_type') }}</label>
                     <div class="grid grid-cols-2 gap-3">
-                        @foreach(\App\Enums\JobType::cases() as $type)
+                        @foreach(app(\App\Services\Extension\JobTypeRegistry::class)->types() as $type)
                             <button
                                 type="button"
                                 @click="selectedJobType = '{{ $type->value }}'"

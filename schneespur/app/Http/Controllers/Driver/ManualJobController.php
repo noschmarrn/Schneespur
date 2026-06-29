@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Driver;
 
-use App\Enums\JobType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Driver\StoreManualJobRequest;
 use App\Models\Customer;
@@ -24,7 +23,7 @@ class ManualJobController extends Controller
         return view('driver.jobs.manual.create', [
             'customers' => Customer::with('objects')->orderBy('name')->get(),
             'vehicles' => Vehicle::all(),
-            'jobTypes' => JobType::cases(),
+            'jobTypes' => app(\App\Services\Extension\JobTypeRegistry::class)->types(),
         ]);
     }
 
