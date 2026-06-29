@@ -229,6 +229,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerCoreNavigation();
         $this->registerCorePortalNavigation();
         $this->registerCoreDashboardWidgets();
+        $this->registerCoreJobTypes();
 
         $this->app->booted(function () {
             app(ModuleManager::class)->boot();
@@ -533,6 +534,19 @@ class AppServiceProvider extends ServiceProvider
         $nav->addItem('reports', 'portal.nav_reports', 'portal.reports.index', 30, 'portal.reports.*');
         $nav->addItem('notifications', 'portal.nav_notifications', 'portal.notifications.index', 40, 'portal.notifications.*');
         $nav->addItem('profile', 'portal.nav_profile', 'portal.profile.edit', 50, 'portal.profile.*');
+    }
+
+    private function registerCoreJobTypes(): void
+    {
+        $registry = $this->app->make(JobTypeRegistry::class);
+
+        foreach (\App\Enums\JobType::cases() as $index => $case) {
+            $registry->registerType(
+                $case->value,
+                'job.type_' . $case->value,
+                order: ($index + 1) * 10,
+            );
+        }
     }
 
     private function registerPermissionGates(): void
