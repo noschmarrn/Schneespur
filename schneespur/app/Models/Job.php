@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\JobType;
 use Database\Factories\JobFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,7 +33,7 @@ class Job extends Model
     protected function casts(): array
     {
         return [
-            'type' => JobType::class,
+            'type' => \App\Casts\JobTypeCast::class,
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
             'is_manual' => 'boolean',
