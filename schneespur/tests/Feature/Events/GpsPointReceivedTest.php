@@ -118,7 +118,7 @@ class GpsPointReceivedTest extends TestCase
 
         $service = app(JobLifecycleService::class);
         $service->startShift($driver);
-        $job = $service->startJob($driver, $object, JobType::Raumen);
+        $job = $service->startJob($driver, $object, JobType::Raumen->value);
 
         $response = $this->postLocation('driver-ot', 'secret');
 

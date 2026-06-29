@@ -109,7 +109,7 @@ class LifecycleEventsTest extends TestCase
         $service->createManualJob(
             $driver,
             $object,
-            JobType::Raumen,
+            JobType::Raumen->value,
             Carbon::now()->subHour(),
             Carbon::now(),
         );
@@ -147,7 +147,7 @@ class LifecycleEventsTest extends TestCase
         $service->createManualJob(
             $driver,
             $object,
-            JobType::Raumen,
+            JobType::Raumen->value,
             Carbon::now()->subHour(),
             Carbon::now(),
         );

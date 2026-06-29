@@ -32,7 +32,7 @@ class DriverJobController extends Controller
             app(JobLifecycleService::class)->startJob(
                 $request->user(),
                 $customerObject,
-                JobType::from($validated['type']),
+                $validated['type'],
                 $vehicle,
             );
         } catch (JobLifecycleException $e) {

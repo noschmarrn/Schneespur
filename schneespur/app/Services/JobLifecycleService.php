@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\JobType;
 use App\Enums\WeatherMoment;
 use App\Events\JobCompleted;
 use App\Events\JobStarted;
@@ -57,7 +56,7 @@ class JobLifecycleService
         return $shift;
     }
 
-    public function startJob(User $user, CustomerObject $customerObject, JobType $type, ?Vehicle $vehicle = null): Job
+    public function startJob(User $user, CustomerObject $customerObject, string $type, ?Vehicle $vehicle = null): Job
     {
         $shift = $this->findActiveShift($user);
 
@@ -135,7 +134,7 @@ class JobLifecycleService
     public function createManualJob(
         User $driver,
         CustomerObject $customerObject,
-        JobType $type,
+        string $type,
         Carbon $startedAt,
         Carbon $endedAt,
         ?string $notes = null,

@@ -38,7 +38,7 @@ class ManualJobController extends Controller
         $this->service->createManualJob(
             driver: $request->user(),
             customerObject: $customerObject,
-            type: JobType::from($validated['type']),
+            type: $validated['type'],
             startedAt: Carbon::parse($validated['started_at']),
             endedAt: Carbon::parse($validated['ended_at']),
             notes: $validated['notes'] ?? null,
