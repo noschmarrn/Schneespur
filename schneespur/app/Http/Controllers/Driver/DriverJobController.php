@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Driver;
 
-use App\Enums\JobType;
+use App\Services\Extension\JobTypeRegistry;
 use App\Exceptions\JobLifecycleException;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerObject;
@@ -21,7 +21,7 @@ class DriverJobController extends Controller
     {
         $validated = $request->validate([
             'customer_object_id' => ['required', 'exists:customer_objects,id'],
-            'type' => ['required', Rule::enum(JobType::class)],
+            'type' => ['required', Rule::in(app(JobTypeRegistry::class)->values())],
             'vehicle_id' => ['nullable', 'exists:vehicles,id'],
         ]);
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Driver;
 
-use App\Enums\JobType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -21,7 +20,7 @@ class StoreManualJobRequest extends FormRequest
     {
         return [
             'customer_object_id' => ['required', 'exists:customer_objects,id'],
-            'type' => ['required', Rule::enum(JobType::class)],
+            'type' => ['required', Rule::in(app(\App\Services\Extension\JobTypeRegistry::class)->values())],
             'started_at' => ['required', 'date', 'before_or_equal:now'],
             'ended_at' => ['required', 'date', 'after:started_at', 'before_or_equal:now'],
             'notes' => ['nullable', 'string', 'max:1000'],
