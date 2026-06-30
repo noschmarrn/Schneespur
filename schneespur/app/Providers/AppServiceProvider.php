@@ -23,6 +23,7 @@ use App\Services\Extension\PortalNavigationRegistry;
 use App\Services\Extension\PublicHomepageRegistry;
 use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
+use App\Services\Extension\LifecycleFieldRegistry;
 use App\Services\Extension\SlotRegistry;
 use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\ModuleAssetRegistry;
@@ -91,6 +92,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PermissionRegistry::class);
         $this->app->singleton(RoleTemplateRegistry::class);
         $this->app->singleton(SlotRegistry::class);
+        $this->app->singleton(LifecycleFieldRegistry::class);
         $this->app->singleton(TwoFactorMethodRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
@@ -213,6 +215,8 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Blade::directive('extensionSlot', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\SlotRegistry::class)->render({$expression}, auth()->user()); ?>");
+
+        Blade::directive('lifecycleFields', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\LifecycleFieldRegistry::class)->render(\\App\\Enums\\LifecyclePoint::from({$expression}), auth()->user()); ?>");
 
         Blade::directive('moduleAssets', fn () => "<?php
             \$__mar = app(\\App\\Services\\Extension\\ModuleAssetRegistry::class);
