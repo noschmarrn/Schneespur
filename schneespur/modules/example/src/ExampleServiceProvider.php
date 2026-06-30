@@ -11,6 +11,7 @@ use App\Models\Setting;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\DispatchStrategyRegistry;
 use App\Services\Extension\FilterRegistry;
+use App\Services\Extension\JobTypeRegistry;
 use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\SlotRegistry;
@@ -40,6 +41,7 @@ class ExampleServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'example-module');
 
         $this->registerSettings();
+        $this->registerJobTypes();
         $this->registerNavigation();
         $this->registerWidget();
         $this->registerFilters();
@@ -67,6 +69,16 @@ class ExampleServiceProvider extends ServiceProvider
             'greeting' => 'Hello from Example Module',
             'enabled_features' => 'all',
         ]);
+    }
+
+    protected function registerJobTypes(): void
+    {
+        $this->app->make(JobTypeRegistry::class)->registerType(
+            'gruenpflege',
+            'example::messages.job_type_gruenpflege',
+            order: 500,
+            module: 'example',
+        );
     }
 
     protected function registerNavigation(): void
