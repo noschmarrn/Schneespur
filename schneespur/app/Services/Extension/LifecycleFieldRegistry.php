@@ -14,6 +14,25 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 
+/**
+ * Registry for module-contributed lifecycle fields.
+ *
+ * Module authors — three things to know:
+ *
+ * 1. Permission gating applies to persist too.
+ *    If your contribution carries a `permission` key, the `persist` handler
+ *    runs only for users who pass that Gate check — consistent with
+ *    render() and rules().  Omit `permission` for fields visible to all.
+ *
+ * 2. Namespace your field keys.
+ *    Contribution rules are merged via array_merge (last-wins) and extracted
+ *    back out via fieldKeys().  Use module-prefixed keys (e.g. `lager_salt_used`)
+ *    to avoid collisions with core fields such as `notes` or `type`.
+ *
+ * 3. Manual jobs bypass lifecycle hooks.
+ *    createManualJob does not render @lifecycleFields or call persist();
+ *    lifecycle fields are only captured on the driver shift/job-start/job-end flows.
+ */
 class LifecycleFieldRegistry extends ExtensionRegistry
 {
     public function registerField(LifecyclePoint $point, string $slug, array $contribution): void
@@ -87,7 +106,7 @@ class LifecycleFieldRegistry extends ExtensionRegistry
 
     public function persist(LifecyclePoint $point, Model $entity, array $validated, User $user): void
     {
-        foreach ($this->contributions($point) as $entry) {
+        foreach ($this->contributions($point, $user) as $entry) {
             $handler = $entry['persist'];
 
             if ($handler === null) {
