@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\LifecyclePoint;
 use App\Enums\WeatherMoment;
 use App\Events\JobCompleted;
 use App\Events\JobStarted;
@@ -16,27 +17,35 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\WeatherSnapshot;
 use App\Models\WorkShift;
+use App\Services\Extension\LifecycleFieldRegistry;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class JobLifecycleService
 {
-    public function startShift(User $user): WorkShift
+    public function startShift(User $user, array $extra = []): WorkShift
     {
         if ($this->findActiveShift($user)) {
             throw JobLifecycleException::shiftAlreadyActive();
         }
 
-        $shift = WorkShift::create([
-            'user_id' => $user->id,
-            'started_at' => now(),
-        ]);
+        $shift = DB::transaction(function () use ($user, $extra) {
+            $shift = WorkShift::create([
+                'user_id' => $user->id,
+                'started_at' => now(),
+            ]);
+
+            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::ShiftStart, $shift, $extra, $user);
+
+            return $shift;
+        });
 
         WorkShiftStarted::dispatch($shift, $user);
 
         return $shift;
     }
 
-    public function endShift(User $user): WorkShift
+    public function endShift(User $user, array $extra = []): WorkShift
     {
         $shift = $this->findActiveShift($user);
 
@@ -48,15 +57,19 @@ class JobLifecycleService
             throw JobLifecycleException::activeJobMustEndFirst();
         }
 
-        $shift->ended_at = now();
-        $shift->save();
+        DB::transaction(function () use ($shift, $extra, $user) {
+            $shift->ended_at = now();
+            $shift->save();
+
+            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::ShiftEnd, $shift, $extra, $user);
+        });
 
         WorkShiftEnded::dispatch($shift, $user);
 
         return $shift;
     }
 
-    public function startJob(User $user, CustomerObject $customerObject, string $type, ?Vehicle $vehicle = null): Job
+    public function startJob(User $user, CustomerObject $customerObject, string $type, ?Vehicle $vehicle = null, array $extra = []): Job
     {
         $shift = $this->findActiveShift($user);
 
@@ -68,16 +81,22 @@ class JobLifecycleService
             throw JobLifecycleException::jobAlreadyActive();
         }
 
-        $job = Job::create([
-            'work_shift_id' => $shift->id,
-            'customer_id' => $customerObject->customer_id,
-            'customer_object_id' => $customerObject->id,
-            'user_id' => $user->id,
-            'vehicle_id' => $vehicle?->id,
-            'type' => $type,
-            'started_at' => now(),
-            'is_manual' => false,
-        ]);
+        $job = DB::transaction(function () use ($shift, $customerObject, $user, $vehicle, $type, $extra) {
+            $job = Job::create([
+                'work_shift_id' => $shift->id,
+                'customer_id' => $customerObject->customer_id,
+                'customer_object_id' => $customerObject->id,
+                'user_id' => $user->id,
+                'vehicle_id' => $vehicle?->id,
+                'type' => $type,
+                'started_at' => now(),
+                'is_manual' => false,
+            ]);
+
+            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::JobStart, $job, $extra, $user);
+
+            return $job;
+        });
 
         JobStarted::dispatch($job);
 
@@ -88,7 +107,7 @@ class JobLifecycleService
         return $job;
     }
 
-    public function endJob(User $user, ?string $notes = null): Job
+    public function endJob(User $user, ?string $notes = null, array $extra = []): Job
     {
         $job = $this->findActiveJob($user);
 
@@ -96,13 +115,17 @@ class JobLifecycleService
             throw JobLifecycleException::noActiveJob();
         }
 
-        $job->ended_at = now();
+        DB::transaction(function () use ($job, $notes, $extra, $user) {
+            $job->ended_at = now();
 
-        if ($notes !== null) {
-            $job->notes = $notes;
-        }
+            if ($notes !== null) {
+                $job->notes = $notes;
+            }
 
-        $job->save();
+            $job->save();
+
+            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::JobEnd, $job, $extra, $user);
+        });
 
         $lat = null;
         $lon = null;
