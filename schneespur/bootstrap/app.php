@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureDriver;
 use App\Http\Middleware\EnsureDsgvoInformed;
 use App\Http\Middleware\InstallerGuard;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetInstallerLocale;
 use App\Http\Middleware\SetUserLocale;
 use App\Services\Diagnostic\DiagnosticManager;
@@ -36,7 +37,29 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        TrustProxies::at('*');
+        // Trust proxies only when an operator explicitly opts in via
+        // TRUSTED_PROXIES. Distributed installs on stock web hosting have no
+        // known proxy in front, so the default trusts none: a client-supplied
+        // X-Forwarded-For is ignored and the real peer IP is used (prevents
+        // login-throttle bypass via header spoofing). Set TRUSTED_PROXIES=* or
+        // a comma-separated CIDR list when behind a trusted CDN/load balancer.
+        $trustedProxies = env('TRUSTED_PROXIES');
+        TrustProxies::at(
+            $trustedProxies === '*'
+                ? '*'
+                : array_values(array_filter(array_map('trim', explode(',', (string) $trustedProxies))))
+        );
+        TrustProxies::withHeaders(
+            Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PROTO
+            | Request::HEADER_X_FORWARDED_PORT
+        );
+
+        // Reject Host-header injection by trusting only the APP_URL host (and
+        // its subdomains). Laravel enforces this only outside local/testing and
+        // skips it when APP_URL has no host, so it is safe on stock installs.
+        $middleware->trustHosts();
 
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('portal', 'portal/*')) {
@@ -61,6 +84,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // after StartSession/auth has resolved the user. Overrides the boot-time
         // default_locale so the admin/users locale picker takes effect app-wide.
         $middleware->appendToGroup('web', SetUserLocale::class);
+
+        // Baseline browser-hardening headers on every web response.
+        $middleware->appendToGroup('web', SecurityHeaders::class);
 
         $middleware->group('installer', [
             TrustProxies::class,

@@ -156,6 +156,18 @@ class SchneespurModuleClient
             throw new RuntimeException("Download-URL muss HTTPS sein: {$url}");
         }
 
+        // Pin the download host to the configured module server. The catalog
+        // response (and thus download_url) is not cryptographically bound to
+        // the server, so an off-host URL would be a blind-SSRF / arbitrary-fetch
+        // primitive. All legitimate downloads live on the module server host.
+        $urlHost = parse_url($url, PHP_URL_HOST);
+        $expectedHost = parse_url($this->serverUrl, PHP_URL_HOST);
+        if (! is_string($urlHost) || strcasecmp($urlHost, (string) $expectedHost) !== 0) {
+            throw new RuntimeException(
+                "Download-URL-Host nicht erlaubt: {$urlHost} (erwartet {$expectedHost})"
+            );
+        }
+
         Log::info('schneespur-modules: download started', ['slug' => $slug]);
 
         $tmp = tempnam(sys_get_temp_dir(), 'schneespur-mod-');

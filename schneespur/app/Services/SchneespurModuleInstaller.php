@@ -230,7 +230,10 @@ class SchneespurModuleInstaller
                 continue;
             }
 
-            if (str_contains($entry, '..') || str_starts_with($entry, '/')) {
+            if (str_contains($entry, '..')
+                || str_starts_with($entry, '/')
+                || preg_match('/^[A-Za-z]:/', $entry) === 1
+            ) {
                 Log::error('schneespur-modules: path traversal detected in ZIP', [
                     'slug'  => $slug,
                     'entry' => $entry,

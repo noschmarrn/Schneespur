@@ -68,8 +68,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
-use Illuminate\Http\Middleware\TrustProxies;
-use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -185,11 +183,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        TrustProxies::at('*');
-        TrustProxies::withHeaders(
-            Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST
-        );
-
         if (str_starts_with(config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }

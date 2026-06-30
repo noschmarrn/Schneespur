@@ -540,6 +540,12 @@ class AdminModuleController extends Controller
 
     private function moduleMigrationPath(string $slug): ?string
     {
+        // Defense in depth: never interpolate a non-canonical slug into a
+        // filesystem path (the installer validates the same shape on write).
+        if (! preg_match('/^[a-z0-9_-]+$/', $slug)) {
+            return null;
+        }
+
         $path = base_path("modules/{$slug}/database/migrations");
 
         if (! File::isDirectory($path)) {
