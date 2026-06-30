@@ -6,6 +6,30 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [1.1.6] — 2026-06-30 — Security hardening & indexable public pages
+
+### Added
+- **Public pages can now be indexed by search engines — selectively.** Since 1.1.2 the whole installation was hidden from search engines to protect customer data. A future **frontpage module** lets a small winter-service business use its installation as a public website; for that, its public pages must be findable. Indexing is now decided per page: everything stays private by default, and only the pages a frontpage module explicitly publishes (the homepage and any extra pages it declares) are exposed to Google — admin, customer portal, driver app and installer always remain private.
+
+### Security
+- **Baseline browser-hardening headers** on every response (clickjacking, MIME-sniffing, referrer policy, and HSTS on HTTPS).
+- **Host-header injection rejected** — only the configured app host (and its subdomains) is trusted.
+- **Proxies are no longer trusted by default**, so a spoofed `X-Forwarded-For` can no longer bypass the login throttle. Operators behind a real CDN/load balancer opt in via `TRUSTED_PROXIES`.
+- **Session cookie defaults to `Secure` on HTTPS.**
+- **Module supply-chain checks tightened:** downloads are pinned to the configured catalog host, the module slug is validated before any path is built, and ZIP entries with Windows-absolute, backslash, or traversal paths are rejected.
+- **Output escaping fixes** — customer names and confirm-dialog messages are escaped in the UI (XSS); confirm dialogs escape their message by default.
+- The misleading **SVG option was removed from logo upload** (SVGs can carry scripts).
+- The **log mailer is no longer the shipped default** mail transport.
+- **Dependencies updated** to clear 19 audit advisories.
+
+### Internal (for module developers)
+- New, additive **core extension hooks** prepared for upcoming modules — dormant until a module uses them, so existing installs behave exactly as before:
+  - `PublicHomepageRegistry` — serve a public homepage at `/` and control which pages are indexable (frontpage module).
+  - `GpsPointReceived` event — observe every driver location ping, even when no job is active (geofencing module).
+  - `JobTypeRegistry` — add custom job/activity types without core changes; monthly statistics now aggregate per type via a JSON column (green-care module).
+  - `LifecycleFieldRegistry` + the `@lifecycleFields` Blade directive — inject fields with validation and persistence into the four driver lifecycle moments (inventory/green-care modules).
+- Module developer documentation updated for all of the above.
+
 ## [1.1.5] — 2026-06-23 — Instant module updates & per-user language
 
 ### Added
@@ -143,6 +167,7 @@ Five extensibility waves (**M013–M017**) turn the product from a closed system
 - Module system for extensions
 - Auto-update mechanism
 
+[1.1.6]: https://github.com/noschmarrn/Schneespur/releases/tag/v1.1.6
 [1.1.5]: https://github.com/noschmarrn/Schneespur/releases/tag/v1.1.5
 [1.1.4]: https://github.com/noschmarrn/Schneespur/releases/tag/v1.1.4
 [1.1.3]: https://github.com/noschmarrn/Schneespur/releases/tag/v1.1.3
