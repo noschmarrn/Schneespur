@@ -56,6 +56,11 @@ return Application::configure(basePath: dirname(__DIR__))
             | Request::HEADER_X_FORWARDED_PORT
         );
 
+        // Reject Host-header injection by trusting only the APP_URL host (and
+        // its subdomains). Laravel enforces this only outside local/testing and
+        // skips it when APP_URL has no host, so it is safe on stock installs.
+        $middleware->trustHosts();
+
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('portal', 'portal/*')) {
                 return route('portal.login');
