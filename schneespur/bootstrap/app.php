@@ -36,7 +36,24 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        TrustProxies::at('*');
+        // Trust proxies only when an operator explicitly opts in via
+        // TRUSTED_PROXIES. Distributed installs on stock web hosting have no
+        // known proxy in front, so the default trusts none: a client-supplied
+        // X-Forwarded-For is ignored and the real peer IP is used (prevents
+        // login-throttle bypass via header spoofing). Set TRUSTED_PROXIES=* or
+        // a comma-separated CIDR list when behind a trusted CDN/load balancer.
+        $trustedProxies = env('TRUSTED_PROXIES');
+        TrustProxies::at(
+            $trustedProxies === '*'
+                ? '*'
+                : array_values(array_filter(array_map('trim', explode(',', (string) $trustedProxies))))
+        );
+        TrustProxies::withHeaders(
+            Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PROTO
+            | Request::HEADER_X_FORWARDED_PORT
+        );
 
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('portal', 'portal/*')) {
