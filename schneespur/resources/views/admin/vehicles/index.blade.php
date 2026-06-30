@@ -41,7 +41,7 @@
                                         <x-confirm-dialog
                                             :name="'delete-vehicle-' . $vehicle->id"
                                             :title="__('vehicle.modal_delete_title')"
-                                            :message="__('vehicle.modal_delete_body1', ['name' => e($vehicle->name)])"
+                                            :message="__('vehicle.modal_delete_body1', ['name' => $vehicle->name])"
                                         >
                                             <x-slot name="action">
                                                 <form method="POST" action="{{ route('admin.vehicles.destroy', $vehicle) }}">

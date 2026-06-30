@@ -73,8 +73,8 @@
             <x-confirm-dialog name="send-report-email"
                 :title="__('overview.customer_report_email_modal_title')"
                 :message="__('overview.customer_report_email_modal_message', [
-                    'name' => e($selectedCustomer->name),
-                    'email' => e($selectedCustomer->notification_email ?? $selectedCustomer->email),
+                    'name' => $selectedCustomer->name,
+                    'email' => $selectedCustomer->notification_email ?? $selectedCustomer->email,
                     'from' => $from->format('d.m.Y'),
                     'to' => $to->format('d.m.Y'),
                     'count' => $totalJobs,

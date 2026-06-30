@@ -47,7 +47,7 @@
                                         <x-confirm-dialog
                                             :name="'delete-user-' . $user->id"
                                             :title="__('user.confirm_delete_title')"
-                                            :message="__('user.confirm_delete_body', ['name' => e($user->name)])"
+                                            :message="__('user.confirm_delete_body', ['name' => $user->name])"
                                         >
                                             <x-slot name="action">
                                                 <form method="POST" action="{{ route('admin.users.destroy', $user) }}">

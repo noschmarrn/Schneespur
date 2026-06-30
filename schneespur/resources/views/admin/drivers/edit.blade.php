@@ -43,7 +43,7 @@
             <x-confirm-dialog
                 :name="'rotate-credentials-' . $driver->id"
                 :title="__('driver.modal_rotate_title')"
-                :message="__('driver.modal_rotate_body1', ['name' => e($driver->name)]) . ' ' . __('driver.modal_rotate_body2')"
+                :message="__('driver.modal_rotate_body1', ['name' => $driver->name]) . ' ' . __('driver.modal_rotate_body2')"
             >
                 <x-slot name="action">
                     <form method="POST" action="{{ route('admin.drivers.rotate-credentials', $driver) }}">

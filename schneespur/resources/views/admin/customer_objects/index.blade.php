@@ -58,7 +58,7 @@
                                         <x-confirm-dialog
                                             :name="'delete-object-' . $object->id"
                                             :title="__('customer_object.modal_delete_title')"
-                                            :message="__('customer_object.modal_delete_body1', ['name' => e($object->name)])"
+                                            :message="__('customer_object.modal_delete_body1', ['name' => $object->name])"
                                         >
                                             <x-slot name="action">
                                                 <form method="POST" action="{{ route('admin.customers.objects.destroy', [$customer, $object]) }}">
