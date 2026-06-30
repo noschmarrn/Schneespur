@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\JobType;
 use App\Models\GpsPoint;
 use App\Models\Job;
 use App\Models\MonthlyStatistic;
@@ -53,12 +52,11 @@ class RetentionService
 
     public function aggregateForMonth(int $year, int $month, Collection $jobs): void
     {
-        $typeCounts = [
-            'raumen_count' => $jobs->where('type', JobType::Raumen)->count(),
-            'streuen_count' => $jobs->where('type', JobType::Streuen)->count(),
-            'kontrolle_count' => $jobs->where('type', JobType::Kontrolle)->count(),
-            'raumen_streuen_count' => $jobs->where('type', JobType::RaumenStreuen)->count(),
-        ];
+        $counts = $jobs
+            ->groupBy(fn (Job $job) => $job->type?->value)
+            ->reject(fn ($group, $key) => $key === null || $key === '')
+            ->map(fn ($group) => $group->count())
+            ->toArray();
 
         $totalGpsPoints = $jobs->sum(fn (Job $job) => $job->gpsPoints()->count());
         $totalPhotos = $jobs->sum(fn (Job $job) => $job->jobPhotos()->count());
@@ -86,12 +84,14 @@ class RetentionService
         $existing = MonthlyStatistic::where('year', $year)->where('month', $month)->first();
 
         if ($existing) {
+            $mergedCounts = $existing->counts ?? [];
+            foreach ($counts as $type => $n) {
+                $mergedCounts[$type] = ($mergedCounts[$type] ?? 0) + $n;
+            }
+
             $existing->update([
                 'total_jobs' => $existing->total_jobs + $jobs->count(),
-                'raumen_count' => $existing->raumen_count + $typeCounts['raumen_count'],
-                'streuen_count' => $existing->streuen_count + $typeCounts['streuen_count'],
-                'kontrolle_count' => $existing->kontrolle_count + $typeCounts['kontrolle_count'],
-                'raumen_streuen_count' => $existing->raumen_streuen_count + $typeCounts['raumen_streuen_count'],
+                'counts' => $mergedCounts,
                 'manual_count' => $existing->manual_count + $manualCount,
                 'total_gps_points' => $existing->total_gps_points + $totalGpsPoints,
                 'total_photos' => $existing->total_photos + $totalPhotos,
@@ -109,10 +109,7 @@ class RetentionService
                 'year' => $year,
                 'month' => $month,
                 'total_jobs' => $jobs->count(),
-                'raumen_count' => $typeCounts['raumen_count'],
-                'streuen_count' => $typeCounts['streuen_count'],
-                'kontrolle_count' => $typeCounts['kontrolle_count'],
-                'raumen_streuen_count' => $typeCounts['raumen_streuen_count'],
+                'counts' => $counts,
                 'manual_count' => $manualCount,
                 'total_gps_points' => $totalGpsPoints,
                 'total_photos' => $totalPhotos,
