@@ -40,6 +40,7 @@
 
                 <form method="POST" action="{{ route('driver.shift.start') }}">
                     @csrf
+                    @lifecycleFields('shift.start')
                     <button
                         type="submit"
                         class="min-h-[56px] min-w-[220px] px-8 py-4 bg-green-600 hover:bg-green-500 active:bg-green-700 text-white text-lg font-semibold rounded-xl shadow-lg transition focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-gray-900"
@@ -176,6 +177,7 @@
                     <input type="hidden" name="customer_object_id" :value="selectedObjectId">
                     <input type="hidden" name="type" :value="selectedJobType">
                     <input type="hidden" name="vehicle_id" :value="selectedVehicleId">
+                    @lifecycleFields('job.start')
                     <button
                         type="submit"
                         :disabled="!selectedObjectId || !selectedJobType"
@@ -191,6 +193,7 @@
                 {{-- End shift (secondary) --}}
                 <form method="POST" action="{{ route('driver.shift.end') }}">
                     @csrf
+                    @lifecycleFields('shift.end')
                     <button
                         type="submit"
                         class="w-full min-h-[56px] px-6 py-3 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 text-gray-300 text-base font-medium rounded-xl border border-gray-600 transition focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 focus:ring-offset-gray-900"
@@ -307,6 +310,8 @@
                             class="w-full min-h-[56px] rounded-xl bg-gray-800 border border-gray-600 text-gray-100 placeholder-gray-500 px-4 py-3 text-base focus:ring-2 focus:ring-red-400 focus:border-transparent transition resize-none"
                         ></textarea>
                     </div>
+
+                    @lifecycleFields('job.end')
 
                     <button
                         type="submit"
