@@ -15,10 +15,7 @@ class MonthlyStatistic extends Model
         'year',
         'month',
         'total_jobs',
-        'raumen_count',
-        'streuen_count',
-        'kontrolle_count',
-        'raumen_streuen_count',
+        'counts',
         'manual_count',
         'total_gps_points',
         'total_photos',
@@ -33,6 +30,7 @@ class MonthlyStatistic extends Model
         return [
             'year' => 'integer',
             'month' => 'integer',
+            'counts' => 'array',
             'avg_temperature' => 'decimal:2',
         ];
     }
