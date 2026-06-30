@@ -26,7 +26,11 @@ class BrandingController extends Controller
         Gate::authorize('settings.edit');
 
         $request->validate([
-            'company_logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,svg', 'max:2048'],
+            // Raster only. SVG is an active document type (script/onload XSS);
+            // Laravel's `image` rule already rejects it unless `allow_svg` is
+            // set, so listing svg here was dead/misleading config. If SVG logos
+            // are ever wanted, sanitize on upload before re-enabling.
+            'company_logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ]);
 
         if ($request->hasFile('company_logo')) {
