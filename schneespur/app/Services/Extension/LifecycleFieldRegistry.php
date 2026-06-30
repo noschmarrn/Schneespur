@@ -2,9 +2,16 @@
 
 namespace App\Services\Extension;
 
+use App\Contracts\LifecycleFieldHandler;
 use App\Enums\LifecyclePoint;
+use App\Models\User;
+use App\Services\Diagnostic\DiagnosticManager;
+use Closure;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\View;
 
 class LifecycleFieldRegistry extends ExtensionRegistry
@@ -76,5 +83,51 @@ class LifecycleFieldRegistry extends ExtensionRegistry
         }
 
         return $html;
+    }
+
+    public function persist(LifecyclePoint $point, Model $entity, array $validated, User $user): void
+    {
+        foreach ($this->contributions($point) as $entry) {
+            $handler = $entry['persist'];
+
+            if ($handler === null) {
+                continue;
+            }
+
+            try {
+                DB::transaction(function () use ($handler, $entity, $validated, $user) {
+                    if ($handler instanceof Closure) {
+                        $handler($entity, $validated, $user);
+
+                        return;
+                    }
+
+                    $instance = is_string($handler) ? app($handler) : $handler;
+
+                    if ($instance instanceof LifecycleFieldHandler) {
+                        $instance->handle($entity, $validated, $user);
+
+                        return;
+                    }
+
+                    $instance->handle($entity, $validated, $user);
+                });
+            } catch (\Throwable $e) {
+                try {
+                    app(DiagnosticManager::class)->report('lifecycle_field_persist_failed', [
+                        'error' => $e->getMessage(),
+                        'exception_class' => get_class($e),
+                    ], [
+                        'source' => 'LifecycleFieldRegistry',
+                        'slug' => $entry['slug'],
+                        'point' => $point->value,
+                    ]);
+                } catch (\Throwable) {
+                    // Never let diagnostic reporting break the original flow
+                }
+
+                Log::warning("LifecycleFieldRegistry: persist handler '{$entry['slug']}' failed at {$point->value}: {$e->getMessage()}");
+            }
+        }
     }
 }
