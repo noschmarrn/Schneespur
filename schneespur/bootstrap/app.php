@@ -8,6 +8,7 @@ use App\Http\Middleware\EnsureDriver;
 use App\Http\Middleware\EnsureDsgvoInformed;
 use App\Http\Middleware\InstallerGuard;
 use App\Http\Middleware\RedirectToInstaller;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetInstallerLocale;
 use App\Http\Middleware\SetUserLocale;
 use App\Services\Diagnostic\DiagnosticManager;
@@ -78,6 +79,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // after StartSession/auth has resolved the user. Overrides the boot-time
         // default_locale so the admin/users locale picker takes effect app-wide.
         $middleware->appendToGroup('web', SetUserLocale::class);
+
+        // Baseline browser-hardening headers on every web response.
+        $middleware->appendToGroup('web', SecurityHeaders::class);
 
         $middleware->group('installer', [
             TrustProxies::class,
