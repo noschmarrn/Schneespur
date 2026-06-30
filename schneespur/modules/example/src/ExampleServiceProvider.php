@@ -2,6 +2,7 @@
 
 namespace Schneespur\Module\Example;
 
+use App\Enums\LifecyclePoint;
 use App\Events\Customer\CustomerUpdated;
 use App\Events\JobCompleted;
 use App\Events\Module\ModuleEnabled;
@@ -12,6 +13,7 @@ use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\DispatchStrategyRegistry;
 use App\Services\Extension\FilterRegistry;
 use App\Services\Extension\JobTypeRegistry;
+use App\Services\Extension\LifecycleFieldRegistry;
 use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\SlotRegistry;
@@ -42,6 +44,7 @@ class ExampleServiceProvider extends ServiceProvider
 
         $this->registerSettings();
         $this->registerJobTypes();
+        $this->registerLifecycleFields();
         $this->registerNavigation();
         $this->registerWidget();
         $this->registerFilters();
@@ -78,6 +81,26 @@ class ExampleServiceProvider extends ServiceProvider
             'example::messages.job_type_gruenpflege',
             order: 500,
             module: 'example',
+        );
+    }
+
+    protected function registerLifecycleFields(): void
+    {
+        $this->app->make(LifecycleFieldRegistry::class)->registerField(
+            LifecyclePoint::JobEnd,
+            'example.demo_field',
+            [
+                'view' => 'example-module::driver.fields.demo',
+                'rules' => ['example_demo_field' => ['nullable', 'numeric', 'min:0']],
+                'persist' => function ($job, array $validated): void {
+                    // Demo only — a real module (e.g. inventory) writes its own table here.
+                    Log::info('example module demo_field', [
+                        'job_id' => $job->id,
+                        'value' => $validated['example_demo_field'] ?? null,
+                    ]);
+                },
+                'order' => 100,
+            ],
         );
     }
 
