@@ -21,7 +21,9 @@ class RedirectToInstaller
             'database.default' => 'sqlite',
         ]);
 
-        if (! $request->is('install', 'install/*')) {
+        // robots.txt must stay reachable even before setup so crawlers get a
+        // valid default-deny instead of a redirect to the installer.
+        if (! $request->is('install', 'install/*', 'robots.txt')) {
             return redirect('/install');
         }
 

@@ -1,6 +1,7 @@
-<IfModule mod_headers.c>
-    Header set X-Robots-Tag "noindex, nofollow"
-</IfModule>
+# Search-engine exposure is controlled by the application (SecurityHeaders
+# middleware sets X-Robots-Tag per request), not by a blanket .htaccess header,
+# so a frontpage module can make its public pages indexable while everything
+# else stays private. Do not re-add an unconditional X-Robots-Tag here.
 
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>

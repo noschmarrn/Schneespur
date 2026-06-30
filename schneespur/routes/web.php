@@ -71,6 +71,38 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Dynamic robots.txt, decided at request time from the PublicHomepageRegistry
+// (populated during module boot). Default-deny keeps the whole installation out
+// of search engines; when a frontpage module is active we allow its public
+// paths plus the assets Google needs to render them. Served by PHP, so the
+// static public/robots.txt was removed to let this route take effect.
+Route::get('/robots.txt', function () {
+    $homepage = app(\App\Services\Extension\PublicHomepageRegistry::class);
+
+    $lines = ['User-agent: *', 'Disallow: /'];
+
+    if ($homepage->has()) {
+        foreach ($homepage->crawlablePaths() as $path) {
+            // Anchor the root so only "/" itself is crawlable, not /login etc.;
+            // section paths stay unanchored so their sub-pages are covered too.
+            $lines[] = 'Allow: '.($path === '/' ? '/$' : $path);
+        }
+
+        // Assets Google must fetch to render the public pages correctly.
+        $lines[] = 'Allow: /build/';
+        $lines[] = 'Allow: /favicon.ico';
+        $lines[] = 'Allow: /favicon.svg';
+
+        if ($sitemap = $homepage->sitemapUrl()) {
+            $lines[] = '';
+            $lines[] = 'Sitemap: '.$sitemap;
+        }
+    }
+
+    return response(implode("\n", $lines)."\n")
+        ->header('Content-Type', 'text/plain; charset=UTF-8');
+});
+
 if (! is_link(public_path('storage'))) {
     Route::get('/storage/{path}', \App\Http\Controllers\StorageFallbackController::class)
         ->where('path', '.*')
