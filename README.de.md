@@ -19,6 +19,8 @@
   <a href="README.md">🇬🇧 English</a> &middot;
   <a href="#funktionen">Funktionen</a> &middot;
   <a href="#module">Module</a> &middot;
+  <a href="https://schneespur.de/demo/">Live-Demo</a> &middot;
+  <a href="https://schneespur.de/docs/">Entwickler-Docs</a> &middot;
   <a href="INSTALL.de.md">Installation</a> &middot;
   <a href="https://schneespur.de/download/">Download</a> &middot;
   <a href="CHANGELOG.md">Changelog</a>
@@ -42,6 +44,8 @@ Schneespur läuft auf günstigem, normalem **Shared-Webhosting** (Strato, IONOS,
 > **Das Kernversprechen:** Wenn ein Passant auf einer von Ihnen gestreuten Fläche ausrutscht und Sie nachweisen müssen, dass Sie Ihrer **Verkehrssicherungspflicht** (Räum- und Streupflicht) nachgekommen sind, liefert Schneespur den Beleg — mit **GPS-Track**, **Wetterlage zum Einsatzzeitpunkt**, Fotos und Zeitstempeln. Das ist der Unterschied zwischen einer abgewiesenen und einer bezahlten Forderung.
 
 International heißt dieselbe Software **Wintertrace**. Welche Marke eine Installation trägt, entscheidet sich einmalig bei der Installation anhand der gewählten Sprache: Deutsche Installs werden zu **Schneespur**, alle anderen Sprachen zu **Wintertrace**. Gleicher Code, gleiche Datenbank, gleiche Module.
+
+> **Live ausprobieren:** eine voll befüllte Instanz — ohne Installation — unter **[schneespur.de/demo](https://schneespur.de/demo/)** (oder **[wintertrace.com/demo](https://wintertrace.com/demo/)** für die internationale Ausgabe).
 
 <a id="funktionen"></a>
 
@@ -74,6 +78,8 @@ Schneespur wird als schlanker Kern ausgeliefert und wächst über installierbare
 | **Sprachpakete** | Weitere Oberflächensprachen nachrüsten (Tschechisch, Französisch, …) ohne Kern-Eingriff |
 
 Jedes Modul wird beim Download per **SHA256 integritätsgeprüft** und **auf Viren gescannt**; jeder Katalog-Eintrag verlinkt sein Scan-Ergebnis — Sie sehen genau, was Sie installieren. Module können Navigation und Dashboards erweitern, Rollen mitbringen, Wetter-Provider registrieren, Storage-/Backup-/PDF-Backends austauschen und an über 13 Lifecycle-Events andocken.
+
+Sie möchten ein eigenes Modul bauen? Die **[Entwickler-Docs](https://schneespur.de/docs/)** beschreiben die Modul-API, die Registries und die Lifecycle-Hooks.
 
 ## Warum selbst gehostet & Open Source?
 
@@ -119,6 +125,8 @@ Bewusst abhängigkeitsarm, damit es auf Shared-Hosting läuft: RBAC, Update-Sign
 ## Dokumentation & Links
 
 - **Webseiten:** [schneespur.de](https://schneespur.de) (Deutschland) · [wintertrace.com](https://wintertrace.com) (international) · [schneespur.cz](https://schneespur.cz) (Tschechien)
+- **Live-Demo:** [schneespur.de/demo](https://schneespur.de/demo/) · [wintertrace.com/demo](https://wintertrace.com/demo/)
+- **Entwickler-Docs:** [schneespur.de/docs](https://schneespur.de/docs/) · [wintertrace.com/docs](https://wintertrace.com/docs/)
 - **Module:** [schneespur.de/module](https://schneespur.de/module)
 - **Installationsanleitung:** [Deutsch](INSTALL.de.md) · [English](INSTALL.en.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md) · [GitHub Releases](https://github.com/noschmarrn/Schneespur/releases)

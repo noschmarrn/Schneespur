@@ -19,6 +19,8 @@
   <a href="README.de.md">🇩🇪 Deutsch</a> &middot;
   <a href="#features">Features</a> &middot;
   <a href="#modules">Modules</a> &middot;
+  <a href="https://wintertrace.com/demo/">Live Demo</a> &middot;
+  <a href="https://wintertrace.com/docs/">Developer Docs</a> &middot;
   <a href="INSTALL.en.md">Installation</a> &middot;
   <a href="https://wintertrace.com/download/">Download</a> &middot;
   <a href="CHANGELOG.md">Changelog</a>
@@ -42,6 +44,8 @@ It runs on cheap standard **shared web hosting** (Strato, IONOS, All-Inkl, OVH, 
 > **The core promise:** when a pedestrian slips on a surface you cleared and you have to prove you met your **duty of care**, Wintertrace produces the evidence — a **GPS track**, the **weather conditions at the time of service**, photos, and timestamps. That is the difference between a dismissed claim and a paid one.
 
 Which brand a given installation uses is decided once, at install time, from the chosen language: German installs become **Schneespur**, every other language becomes **Wintertrace**. Same code, same database, same modules.
+
+> **Try it live:** explore a fully populated instance — no install required — at **[wintertrace.com/demo](https://wintertrace.com/demo/)** (or **[schneespur.de/demo](https://schneespur.de/demo/)** for the German edition).
 
 <a id="features"></a>
 
@@ -74,6 +78,8 @@ Wintertrace ships as a lean core and grows through installable modules from the 
 | **Language Packs** | Add interface languages (Czech, French, … ) without touching core |
 
 Every module is **integrity-checked (SHA256)** on download and **virus-scanned**; each catalog entry links its scan report, so you can see exactly what you are installing. Modules can extend navigation and dashboards, add roles, register weather providers, swap storage/backup/PDF backends, and hook into 13+ lifecycle events.
+
+Building your own module? The **[developer docs](https://wintertrace.com/docs/)** cover the module API, registries, and lifecycle hooks.
 
 ## Why self-hosted & open source?
 
@@ -119,6 +125,8 @@ Deliberately dependency-light so it runs on shared hosting: RBAC, update signing
 ## Documentation & links
 
 - **Websites:** [wintertrace.com](https://wintertrace.com) (international) · [schneespur.de](https://schneespur.de) (Germany) · [schneespur.cz](https://schneespur.cz) (Czech Republic)
+- **Live demo:** [wintertrace.com/demo](https://wintertrace.com/demo/) · [schneespur.de/demo](https://schneespur.de/demo/)
+- **Developer docs:** [wintertrace.com/docs](https://wintertrace.com/docs/) · [schneespur.de/docs](https://schneespur.de/docs/)
 - **Modules:** [wintertrace.com/modules](https://wintertrace.com/modules)
 - **Install guide:** [English](INSTALL.en.md) · [Deutsch](INSTALL.de.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md) · [GitHub Releases](https://github.com/noschmarrn/Schneespur/releases)
