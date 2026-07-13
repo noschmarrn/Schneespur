@@ -171,6 +171,8 @@
         </table>
     </div>
 
+    @pdfExtensionSlot('schneespur.pdf.job.after_details', [], $job)
+
     {{-- Notes --}}
     @if ($job->notes)
         <div class="section">
@@ -207,6 +209,8 @@
             </table>
         </div>
     @endif
+
+    @pdfExtensionSlot('schneespur.pdf.job.after_weather', [], $job)
 
     {{-- GPS Track --}}
     @if ($job->gpsPoints->isNotEmpty() && $svgTrack)
@@ -277,5 +281,7 @@
             </table>
         </div>
     @endif
+
+    @pdfExtensionSlot('schneespur.pdf.job.end', [], $job)
 </body>
 </html>
