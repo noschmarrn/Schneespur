@@ -209,6 +209,8 @@ class AppServiceProvider extends ServiceProvider
 
         Blade::directive('extensionSlot', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\SlotRegistry::class)->render({$expression}, auth()->user()); ?>");
 
+        Blade::directive('pdfExtensionSlot', fn ($expression) => "<?php echo implode('', (array) app(\\App\\Services\\Extension\\FilterRegistry::class)->apply({$expression})); ?>");
+
         Blade::directive('lifecycleFields', fn ($expression) => "<?php echo app(\\App\\Services\\Extension\\LifecycleFieldRegistry::class)->render(\\App\\Enums\\LifecyclePoint::from({$expression}), auth()->user()); ?>");
 
         Blade::directive('moduleAssets', fn () => "<?php
