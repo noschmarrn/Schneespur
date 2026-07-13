@@ -230,6 +230,8 @@
                 </tbody>
             </table>
         </div>
+
+        @pdfExtensionSlot('schneespur.pdf.collective.cover_end', [], $customer, $jobs, $from, $to)
     @endif
 
     {{-- Individual job pages --}}
