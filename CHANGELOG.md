@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [1.1.7] — 2026-07-13 — Module sections in PDF reports
+
+### Internal (for module developers)
+- **Modules can now add their own sections to the generated PDF reports** — the einsatznachweis (job report) and the customer/object collective reports — without touching core. A new `@pdfExtensionSlot` Blade directive over the existing `FilterRegistry` lets a module register a callback that returns HTML; it is inserted at defined points in the PDF. The seam is **dormant until a module uses it**, so existing installs render exactly as before.
+  - Per-job hooks `schneespur.pdf.job.after_details`, `schneespur.pdf.job.after_weather`, `schneespur.pdf.job.end` (context: the `Job`) render once in the standalone job report and once per job page in the collective reports.
+  - `schneespur.pdf.collective.cover_end` (context: `Customer`, the jobs collection, and the date range) renders once on the collective report cover.
+  - Contributions are per-callback error-isolated: a failing module section is logged and skipped, so a broken module can never break the customer-facing PDF.
+- Module developer documentation updated (filter hooks and PDF reports).
+
 ## [1.1.6] — 2026-06-30 — Security hardening & indexable public pages
 
 ### Added
