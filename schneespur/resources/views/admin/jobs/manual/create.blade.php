@@ -63,7 +63,7 @@
                         {{-- Object --}}
                         <div x-show="selectedCustomerId && objects.length > 1" x-transition class="sm:col-span-2">
                             <x-input-label for="customer_object_id" :value="__('job.field_object')" :required="true" />
-                            <select id="customer_object_id" name="customer_object_id" x-model.number="selectedObjectId" required class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                            <select id="customer_object_id" name="customer_object_id" x-model.number="selectedObjectId" x-bind:required="objects.length > 1" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                                 <option value="">— {{ __('job.field_object') }} —</option>
                                 <template x-for="obj in objects" :key="obj.id">
                                     <option :value="obj.id" x-text="obj.name + (obj.street ? ' (' + obj.street + ')' : '')"></option>
@@ -75,6 +75,13 @@
                         {{-- Hidden object_id for single-object customers --}}
                         <template x-if="objects.length === 1">
                             <input type="hidden" name="customer_object_id" :value="selectedObjectId">
+                        </template>
+
+                        {{-- Customer has no objects — block submit with a visible reason --}}
+                        <template x-if="selectedCustomerId && objects.length === 0">
+                            <div class="sm:col-span-2 rounded-md bg-amber-50 border border-amber-200 p-3">
+                                <p class="text-sm text-amber-800">{{ __('job.manual_no_objects') }}</p>
+                            </div>
                         </template>
 
                         {{-- Job type --}}
@@ -126,7 +133,7 @@
             </div>
 
             <div class="mt-6 flex items-center gap-4">
-                <x-primary-button>{{ __('ui.button_create') }}</x-primary-button>
+                <x-primary-button x-bind:disabled="selectedCustomerId && objects.length === 0">{{ __('ui.button_create') }}</x-primary-button>
                 <a href="{{ route('admin.jobs.index') }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('ui.button_cancel') }}</a>
             </div>
         </form>

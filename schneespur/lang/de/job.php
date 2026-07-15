@@ -12,6 +12,7 @@ return [
     'manual_create_title' => 'Einsatz manuell erfassen',
     'manual_created' => 'Einsatz wurde manuell erfasst.',
     'manual_label' => 'Manuell erfasst',
+    'manual_no_objects' => 'Dieser Kunde hat noch kein Objekt. Legen Sie zuerst ein Objekt beim Kunden an, bevor Sie einen Einsatz manuell erstellen.',
     'field_started_at' => 'Beginn',
     'field_ended_at' => 'Ende',
     'field_notes' => 'Notizen',

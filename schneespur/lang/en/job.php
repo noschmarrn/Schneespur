@@ -12,6 +12,7 @@ return [
     'manual_create_title' => 'Create job manually',
     'manual_created' => 'Job was created manually.',
     'manual_label' => 'Manually created',
+    'manual_no_objects' => 'This customer has no objects yet. Add an object to the customer before creating a manual job.',
     'field_started_at' => 'Start',
     'field_ended_at' => 'End',
     'field_notes' => 'Notes',
