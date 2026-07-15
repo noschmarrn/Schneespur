@@ -280,4 +280,6 @@
             @endif
         </div>
     @endcan
+
+    @filterSlot('schneespur.admin.job.detail.after', [], $job)
 </x-admin-layout>
