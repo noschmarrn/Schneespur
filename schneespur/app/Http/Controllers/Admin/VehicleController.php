@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\Vehicle\VehicleCreated;
+use App\Events\Vehicle\VehicleDeleted;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreVehicleRequest;
 use App\Http\Requests\Admin\UpdateVehicleRequest;
@@ -41,6 +43,8 @@ class VehicleController extends Controller
 
         $vehicle = Vehicle::create($request->validated());
 
+        VehicleCreated::dispatch($vehicle);
+
         return redirect()
             ->route('admin.vehicles.index')
             ->with('success', __('vehicle.flash_created', ['name' => $vehicle->name]));
@@ -69,6 +73,9 @@ class VehicleController extends Controller
         Gate::authorize('vehicles.delete');
 
         $name = $vehicle->name;
+
+        VehicleDeleted::dispatch($vehicle);
+
         $vehicle->delete();
 
         return redirect()
