@@ -15,8 +15,14 @@
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col items-center pt-6 sm:pt-10 bg-gray-100">
-            <div class="mb-6">
+            <div class="mb-6 flex flex-col items-center gap-2">
                 <span class="text-2xl font-bold tracking-wide text-gray-800">{{ brand() }}</span>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="text-sm text-gray-500 hover:text-gray-700 underline">
+                        {{ __('driver.nav_logout') }}
+                    </button>
+                </form>
             </div>
 
             <div class="w-full max-w-3xl mx-4 sm:mx-auto mb-10 bg-white shadow-md overflow-hidden sm:rounded-lg">
