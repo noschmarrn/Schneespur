@@ -16,6 +16,7 @@ use App\Services\Diagnostic\DiagnosticPayloadSanitizer;
 use App\Services\Diagnostic\DiagnosticReporterRegistry;
 use App\Services\Extension\DashboardWidgetRegistry;
 use App\Services\Extension\FilterRegistry;
+use App\Services\Extension\HelpTopicRegistry;
 use App\Services\Extension\JobTypeRegistry;
 use App\Services\Extension\NavigationRegistry;
 use App\Services\Extension\LocaleRegistry;
@@ -84,6 +85,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(FilterRegistry::class);
         $this->app->singleton(JobTypeRegistry::class);
         $this->app->singleton(NavigationRegistry::class);
+        $this->app->singleton(HelpTopicRegistry::class);
         $this->app->singleton(PortalNavigationRegistry::class);
         $this->app->singleton(PublicHomepageRegistry::class);
         $this->app->singleton(LocaleRegistry::class);
