@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Extension\HelpTopicRegistry;
 use Illuminate\Support\Facades\Gate;
 
 class HelpController extends Controller
@@ -58,27 +59,48 @@ class HelpController extends Controller
         ],
     ];
 
-    public function index()
+    public function index(HelpTopicRegistry $registry)
     {
         Gate::authorize('help.view');
 
         return view('admin.help.index', [
-            'topics' => self::TOPICS,
+            'topics' => $this->mergedTopics($registry),
         ]);
     }
 
-    public function show(string $topic)
+    public function show(string $topic, HelpTopicRegistry $registry)
     {
         Gate::authorize('help.view');
 
-        if (! array_key_exists($topic, self::TOPICS)) {
+        $topics = $this->mergedTopics($registry);
+
+        if (! array_key_exists($topic, $topics)) {
             abort(404);
         }
 
         return view('admin.help.show', [
-            'topic'    => $topic,
-            'topics'   => self::TOPICS,
-            'langKey'  => self::TOPICS[$topic]['lang'],
+            'topic'  => $topic,
+            'topics' => $topics,
+            'title'  => $topics[$topic]['title'],
+            'view'   => $topics[$topic]['view'],
         ]);
+    }
+
+    /**
+     * @return array<string, array{title:string,description:string,icon:string,view:string}>
+     */
+    private function mergedTopics(HelpTopicRegistry $registry): array
+    {
+        $core = [];
+        foreach (self::TOPICS as $slug => $meta) {
+            $core[$slug] = [
+                'title'       => __($meta['lang']),
+                'description' => __($meta['lang'] . '_desc', ['app_name' => brand()]),
+                'icon'        => $meta['icon'],
+                'view'        => 'admin.help.topics.' . $slug,
+            ];
+        }
+
+        return array_merge($core, $registry->getTopics(auth()->user()));
     }
 }

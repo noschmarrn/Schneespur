@@ -1,5 +1,5 @@
 <x-admin-layout>
-    <x-slot name="header">{{ __('admin.page_help') }} — {{ __($langKey) }}</x-slot>
+    <x-slot name="header">{{ __('admin.page_help') }} — {{ $title }}</x-slot>
 
     <div class="flex flex-col lg:flex-row gap-6">
         {{-- Sidebar --}}
@@ -15,7 +15,7 @@
 
         {{-- Content --}}
         <div class="flex-1 min-w-0 space-y-6">
-            @includeIf('admin.help.topics.' . $topic)
+            @includeIf($view)
         </div>
     </div>
 </x-admin-layout>

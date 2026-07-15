@@ -16,8 +16,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-sm font-medium text-gray-900">{{ __($meta['lang']) }}</h3>
-                    <p class="mt-1 text-sm text-gray-500">{{ __($meta['lang'] . '_desc', ['app_name' => brand()]) }}</p>
+                    <h3 class="text-sm font-medium text-gray-900">{{ $meta['title'] }}</h3>
+                    <p class="mt-1 text-sm text-gray-500">{{ $meta['description'] }}</p>
                 </div>
             </div>
         </a>
