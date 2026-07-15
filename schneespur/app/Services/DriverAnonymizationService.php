@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\User\UserAnonymized;
 use App\Models\User;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -34,5 +35,7 @@ class DriverAnonymizationService
 
             DB::table('sessions')->where('user_id', $driver->id)->delete();
         });
+
+        UserAnonymized::dispatch($driver, $reason);
     }
 }
