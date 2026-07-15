@@ -6,6 +6,20 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [1.1.8] — 2026-07-15 — Admin & help extension seams + fixes
+
+### Fixed
+- **Manual job creation no longer blocks silently** when the selected customer has no object yet. Previously the hidden "object" dropdown stayed required and the browser refused to submit without showing any message; now a clear notice explains that the customer needs an object first, and the submit button stays disabled until one exists.
+- **Drivers are no longer trapped on the onboarding privacy gate.** The DSGVO consent screen shown before the company data is filled in now offers a logout, so a driver who lands there can sign out instead of being stuck.
+- **Offline sync in the driver PWA no longer fails** with an IndexedDB error. Requests queued while offline are now stored and replayed correctly; any entries queued by an older version are migrated automatically on the first load after the update.
+
+### Internal (for module developers)
+- New, additive **core extension seams** — dormant until a module uses them, so existing installs behave exactly as before:
+  - A generic `@filterSlot` Blade directive plus the `schneespur.admin.job.detail.after` hook (context: the `Job`) lets a module inject an HTML section into the **admin** job-detail page — the counterpart to the PDF seams from 1.1.7. Contributions are per-callback error-isolated, so a broken module section can never break the admin page.
+  - `HelpTopicRegistry` lets a module contribute its own topic to the central `/admin/help`, with its own translations (title/description as a locale array or a translation key) and an optional permission gate.
+  - New domain events `UserAnonymized` (dispatched after the anonymization transaction commits), `VehicleCreated`, and `VehicleDeleted` (dispatched before the row is removed) give modules reliable lifecycle signals without polling. `UserCreated` is now dispatched after the driver's role is assigned, so listening to that event alone is enough to observe a fully-provisioned driver.
+- Module developer documentation updated (events and filter hooks).
+
 ## [1.1.7] — 2026-07-13 — Module sections in PDF reports
 
 ### Internal (for module developers)
