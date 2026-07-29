@@ -245,6 +245,16 @@ class AppServiceProvider extends ServiceProvider
             if ($locale && app(LocaleRegistry::class)->has($locale)) {
                 App::setLocale($locale);
             }
+
+            // The from-name must follow the brand when no operator-chosen name
+            // exists — config/mail.php would otherwise fall back to APP_NAME
+            // ("Schneespur"), so a Wintertrace install would send German-branded
+            // mail. Applied at runtime, never baked into a config cache.
+            try {
+                config(['mail.from.name' => brand_mail_from_name(config('mail.from.name'))]);
+            } catch (\Throwable) {
+                // Settings table unavailable (installer / early boot) — keep config value.
+            }
         });
     }
 

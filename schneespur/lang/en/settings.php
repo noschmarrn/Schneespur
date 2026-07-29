@@ -38,6 +38,8 @@ return [
     'locale_title'               => 'Language & Format',
     'locale_default'             => 'Default Language',
     'locale_help'                => 'Sets the display language and date format.',
+    'brand_label'                => 'Product name',
+    'brand_help'                 => 'The name this software appears under in the interface, the PWA and outgoing email. Derived from the install language (German → Schneespur, otherwise Wintertrace) and changeable here.',
 
     // Data retention
     'retention_title'            => 'Data Retention',

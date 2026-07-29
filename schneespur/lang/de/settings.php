@@ -38,6 +38,8 @@ return [
     'locale_title'               => 'Sprache & Format',
     'locale_default'             => 'Standard-Sprache',
     'locale_help'                => 'Legt die Anzeigesprache und das Datumsformat fest.',
+    'brand_label'                => 'Produktname',
+    'brand_help'                 => 'Name, unter dem die Software in Oberfläche, PWA und E-Mails erscheint. Wird bei der Installation aus der Sprache abgeleitet (Deutsch → Schneespur, sonst Wintertrace) und kann hier geändert werden.',
 
     // Datenaufbewahrung
     'retention_title'            => 'Datenaufbewahrung',

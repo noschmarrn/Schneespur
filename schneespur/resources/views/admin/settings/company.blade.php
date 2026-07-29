@@ -206,6 +206,20 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+
+                <div>
+                    <label for="app_brand" class="block text-sm font-medium text-gray-700">{{ __('settings.brand_label') }}</label>
+                    <select name="app_brand" id="app_brand"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        @foreach ($brands as $slug => $label)
+                            <option value="{{ $slug }}" @selected(old('app_brand', $app_brand) === $slug)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('settings.brand_help') }}</p>
+                    @error('app_brand')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <div class="flex items-center gap-4">
