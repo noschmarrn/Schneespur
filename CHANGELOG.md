@@ -6,6 +6,15 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [1.1.9] — 2026-07-29 — Correct product name on container deployments
+
+### Fixed
+- **Installations set up in English now actually run as Wintertrace.** Container deployments (Docker/Coolify) never run the web installer, and the brand was seeded as "Schneespur" regardless of the configured language — so an English installation showed the German product name everywhere: interface, PWA and outgoing email. The product name is now derived from the installation language during setup. Existing installations keep the name they have; it can be changed in the settings (see below).
+- **Outgoing email no longer goes out under the wrong product name.** With no sender name configured, mail now uses the installed product name instead of falling back to a fixed build constant. A sender name entered in the email settings still takes precedence.
+
+### Added
+- **The product name is now a setting.** Betrieb & Standort → Produktname lets an operator switch between Schneespur and Wintertrace at any time. It affects the interface, the PWA (name and home-screen title) and the email sender name.
+
 ## [1.1.8] — 2026-07-15 — Admin & help extension seams + fixes
 
 ### Fixed
