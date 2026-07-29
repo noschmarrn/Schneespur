@@ -16,12 +16,47 @@ function brand_slug(): string
     return app()->getLocale() === 'de' ? 'schneespur' : 'wintertrace';
 }
 
+/**
+ * Selectable brands: slug => display name.
+ *
+ * Single source of truth for the admin brand picker, the validation rule and
+ * brand() itself, so adding a brand never means editing three places.
+ */
+function brand_options(): array
+{
+    return [
+        'schneespur' => 'Schneespur',
+        'wintertrace' => 'Wintertrace',
+    ];
+}
+
 function brand(): string
 {
-    return match (brand_slug()) {
-        'wintertrace' => 'Wintertrace',
-        default => 'Schneespur',
-    };
+    return brand_options()[brand_slug()] ?? 'Schneespur';
+}
+
+/**
+ * Resolve the outgoing mail "from" name.
+ *
+ * config/mail.php falls back to APP_NAME, which ships as "Schneespur" in the
+ * stock .env — so a Wintertrace install would send mail under the German
+ * brand. An operator-chosen name always wins; an unset one follows the brand.
+ *
+ * @param  string|null  $configured  Current config('mail.from.name') value
+ */
+function brand_mail_from_name(?string $configured): string
+{
+    $configured = trim((string) $configured);
+
+    if ($configured === '') {
+        return brand();
+    }
+
+    // TODO(Michael): decide how to treat a from-name that is merely the stock
+    // .env default (MAIL_FROM_NAME="${APP_NAME}" => "Schneespur"/"Laravel")
+    // rather than a deliberate operator choice. See the note in the session.
+
+    return $configured;
 }
 
 /**
