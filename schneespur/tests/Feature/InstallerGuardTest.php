@@ -98,6 +98,17 @@ class InstallerGuardTest extends TestCase
             ->assertStatus(200);
     }
 
+    /** Nach der Abschlussseite ist der Wizard endgültig zu. */
+    public function test_done_page_clears_the_continuation_flag(): void
+    {
+        $this->markInstalledViaLockFile();
+
+        $this->withSession(['installer_post_install_access' => true])
+            ->get('/install/done')
+            ->assertStatus(200)
+            ->assertSessionMissing('installer_post_install_access');
+    }
+
     /** Nicht installiert: der Wizard läuft normal an. */
     public function test_welcome_is_reachable_when_not_installed(): void
     {

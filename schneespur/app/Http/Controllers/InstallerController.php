@@ -402,11 +402,14 @@ class InstallerController extends Controller
 
     // --- Done ---
 
-    public function showDone(): View
+    public function showDone(Request $request): View
     {
         if (! $this->lockManager->isLocked()) {
             return view('installer.step1-welcome', ['currentStep' => 1]);
         }
+
+        // The wizard is over; revoke the continuation grant.
+        $request->session()->forget('installer_post_install_access');
 
         $admin = User::admins()->first();
 
