@@ -57,4 +57,34 @@ class MarkdownSafeTest extends TestCase
         $this->assertStringContainsString('<h1>Titel</h1>', $html);
         $this->assertStringContainsString('<strong>fetter</strong>', $html);
     }
+
+    /**
+     * markdown_safe() is only a safeguard while it is the single way in. This
+     * fails the moment someone reaches for the raw renderer again.
+     */
+    public function test_no_direct_markdown_rendering_outside_the_helper(): void
+    {
+        $base = base_path();
+        $hits = [];
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($base . '/app', \FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($iterator as $file) {
+            if ($file->getExtension() !== 'php' || $file->getFilename() === 'helpers.php') {
+                continue;
+            }
+
+            if (str_contains((string) file_get_contents($file->getPathname()), 'Str::markdown')) {
+                $hits[] = str_replace($base . '/', '', $file->getPathname());
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $hits,
+            "Markdown must be rendered through markdown_safe(); direct Str::markdown() found in:\n" . implode("\n", $hits)
+        );
+    }
 }
