@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureCustomer;
 use App\Http\Middleware\EnsureDriver;
 use App\Http\Middleware\EnsureDsgvoInformed;
+use App\Http\Middleware\InstallerBootstrap;
 use App\Http\Middleware\InstallerGuard;
 use App\Http\Middleware\RedirectToInstaller;
 use App\Http\Middleware\SecurityHeaders;
@@ -90,10 +91,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->group('installer', [
             TrustProxies::class,
-            InstallerGuard::class,
+            // Writes .env/APP_KEY and forces the file session driver — must run
+            // before EncryptCookies and StartSession.
+            InstallerBootstrap::class,
             EncryptCookies::class,
             AddQueuedCookiesToResponse::class,
             StartSession::class,
+            // Reads the session, so it has to come after StartSession.
+            InstallerGuard::class,
             ShareErrorsFromSession::class,
             SetInstallerLocale::class,
             ValidateCsrfToken::class,

@@ -252,6 +252,10 @@ class InstallerController extends Controller
 
         $this->lockManager->lock();
 
+        // Grant this session — and only this session — the right to finish the
+        // remaining wizard steps, which now run in "installed" state.
+        $request->session()->put('installer_post_install_access', true);
+
         try {
             Setting::set('installed_at', now()->toIso8601String());
         } catch (\Exception) {
