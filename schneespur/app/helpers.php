@@ -106,3 +106,19 @@ function module_asset(string $slug, string $file): string
 {
     return '/modules/' . $slug . '/' . ltrim($file, '/');
 }
+
+/**
+ * Render Markdown to HTML with unsafe link schemes neutralised.
+ *
+ * This is the ONLY place in the application that turns Markdown into HTML.
+ * `html_input: strip` removes raw HTML, but on its own it leaves Markdown link
+ * targets untouched — CommonMark's `allow_unsafe_links` defaults to true, so
+ * `[x](javascript:…)` would render as a working anchor (M018/S02).
+ */
+function markdown_safe(string $markdown): string
+{
+    return \Illuminate\Support\Str::markdown($markdown, [
+        'html_input' => 'strip',
+        'allow_unsafe_links' => false,
+    ]);
+}
