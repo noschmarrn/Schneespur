@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ConfirmDsgvoRequest;
 use App\Models\DsgvoConfirmation;
 use App\Models\Setting;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,7 +16,7 @@ class DsgvoOnboardingController extends Controller
 
         $text = $this->replacePlaceholders($text);
 
-        $dsgvoHtml = Str::markdown($text, ['html_input' => 'strip']);
+        $dsgvoHtml = markdown_safe($text);
 
         $companyDataMissing = empty(Setting::get('company_name'));
 
