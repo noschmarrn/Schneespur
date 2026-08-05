@@ -118,6 +118,48 @@ class MediaAccessTest extends TestCase
         $this->get($this->signedUrlFor('probe/../../.env'))->assertStatus(403);
     }
 
+    public function test_an_svg_is_never_served_inline(): void
+    {
+        // finfo reads the *contents*, so an uploaded SVG would be announced as
+        // image/svg+xml and rendered in our own origin — stored XSS through the
+        // very route that is supposed to protect these files. Modules store
+        // arbitrary file types behind this route, so upload validation alone
+        // cannot be the guard.
+        Storage::disk('local')->put(
+            'probe/file.txt',
+            '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        );
+        $this->allowProbe();
+
+        $response = $this->get($this->signedUrlFor('probe/file.txt'));
+
+        $response->assertStatus(200);
+        $this->assertSame('application/octet-stream', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('attachment', (string) $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_a_real_image_is_still_served_inline(): void
+    {
+        // 1x1 GIF — the browser must still be able to render this in an <img>.
+        Storage::disk('local')->put('probe/file.txt', base64_decode('R0lGODlhAQABAAAAACw='));
+        $this->allowProbe();
+
+        $response = $this->get($this->signedUrlFor('probe/file.txt'));
+
+        $response->assertStatus(200);
+        $this->assertSame('image/gif', $response->headers->get('Content-Type'));
+        $this->assertNull($response->headers->get('Content-Disposition'));
+    }
+
+    public function test_served_files_carry_nosniff(): void
+    {
+        Storage::disk('local')->put('probe/file.txt', base64_decode('R0lGODlhAQABAAAAACw='));
+        $this->allowProbe();
+
+        $this->get($this->signedUrlFor('probe/file.txt'))
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+    }
+
     public function test_missing_file_is_a_404(): void
     {
         $this->allowProbe();

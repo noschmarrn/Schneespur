@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ServesStoredFiles;
 use App\Services\Storage\MediaAccessRegistry;
 use App\Services\Storage\StorageBackendRegistry;
 use Illuminate\Http\Request;
@@ -10,6 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class MediaController extends Controller
 {
+    use ServesStoredFiles;
+
     public function __invoke(
         Request $request,
         string $path,
@@ -45,13 +48,8 @@ class MediaController extends Controller
             abort(404);
         }
 
-        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($contents) ?: 'application/octet-stream';
-
-        return response($contents, 200, [
-            'Content-Type' => $mime,
-            // Private: a shared cache must never hold an authorised response.
-            'Cache-Control' => 'private, max-age=86400',
-        ]);
+        // Private: a shared cache must never hold an authorised response.
+        return $this->fileResponse($contents, $path, 'private, max-age=86400');
     }
 
     private function expiredPlaceholder(): Response
