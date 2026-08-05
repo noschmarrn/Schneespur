@@ -122,6 +122,29 @@ class ModuleKillSwitchTest extends TestCase
         $this->assertFalse($manager->isEnabled(self::SLUG));
     }
 
+    public function test_writing_the_db_flag_invalidates_the_cached_state(): void
+    {
+        $module = Module::create([
+            'slug' => self::SLUG,
+            'version' => '1.0.0',
+            'enabled' => true,
+            'manifest_json' => [],
+            'installed_at' => now(),
+        ]);
+
+        // The singleton is what boot() and every module listener sees.
+        $manager = app(ModuleManager::class);
+        $manager->discover();
+
+        $this->assertTrue($manager->isEnabled(self::SLUG));
+
+        // AdminModuleController writes the flag straight through the model,
+        // never via ModuleManager::disable(). The cache has to notice anyway.
+        $module->update(['enabled' => false]);
+
+        $this->assertFalse($manager->isEnabled(self::SLUG));
+    }
+
     public function test_missing_modules_table_resolves_to_default_deny(): void
     {
         Module::create([
