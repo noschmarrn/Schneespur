@@ -9,7 +9,9 @@ use App\Models\JobPhoto;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Policies\JobPhotoPolicy;
 use App\Policies\JobPolicy;
+use Illuminate\Contracts\Auth\Authenticatable;
 use App\Services\AlertService;
 use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Diagnostic\DiagnosticPayloadSanitizer;
@@ -235,6 +237,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerCorePortalNavigation();
         $this->registerCoreDashboardWidgets();
         $this->registerCoreJobTypes();
+        $this->registerCoreMediaAccess();
 
         $this->app->booted(function () {
             app(ModuleManager::class)->boot();
@@ -549,6 +552,36 @@ class AppServiceProvider extends ServiceProvider
         $nav->addItem('reports', 'portal.nav_reports', 'portal.reports.index', 30, 'portal.reports.*');
         $nav->addItem('notifications', 'portal.nav_notifications', 'portal.notifications.index', 40, 'portal.notifications.*');
         $nav->addItem('profile', 'portal.nav_profile', 'portal.profile.edit', 50, 'portal.profile.*');
+    }
+
+    /**
+     * Claim the core's own storage prefix (M018/S04).
+     *
+     * MediaAccessRegistry is default-deny, so without this every job photo is
+     * unreachable. The same list drives StorageFallbackController's refusal and
+     * the scope of PublicMediaMigrator — a module that stores files has to
+     * register its own prefix or its files are neither served nor migrated.
+     */
+    private function registerCoreMediaAccess(): void
+    {
+        $this->app->make(MediaAccessRegistry::class)->register(
+            'photos/',
+            function (string $path, ?Authenticatable $viewer): bool {
+                $photo = JobPhoto::query()
+                    ->where('file_path', $path)
+                    ->orWhere('thumbnail_path', $path)
+                    ->orWhere('annotated_path', $path)
+                    ->first();
+
+                // A path under photos/ with no row behind it is not ours to
+                // serve, whoever is asking.
+                if ($photo === null) {
+                    return false;
+                }
+
+                return $this->app->make(JobPhotoPolicy::class)->view($viewer, $photo);
+            }
+        );
     }
 
     private function registerCoreJobTypes(): void
