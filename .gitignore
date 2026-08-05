@@ -15,6 +15,8 @@
 /schneespur/storage/framework/sessions/*
 /schneespur/storage/framework/views/*
 /schneespur/storage/testing/
+# Storage::fake() writes here — the line above never matched Laravel's real path
+/schneespur/storage/framework/testing/
 
 # ── Build artifacts ──
 /schneespur/public/hot
