@@ -103,6 +103,13 @@ Route::get('/robots.txt', function () {
         ->header('Content-Type', 'text/plain; charset=UTF-8');
 });
 
+// Deliberately outside every auth group: the signature and the
+// MediaAccessRegistry gate inside the controller carry the check, and the
+// customer portal uses a different guard than the admin/driver side (M018/S04).
+Route::get('/media/{path}', \App\Http\Controllers\MediaController::class)
+    ->where('path', '.*')
+    ->name('media.show');
+
 if (! is_link(public_path('storage'))) {
     Route::get('/storage/{path}', \App\Http\Controllers\StorageFallbackController::class)
         ->where('path', '.*')

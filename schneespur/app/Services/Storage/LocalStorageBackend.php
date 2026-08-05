@@ -3,6 +3,7 @@
 namespace App\Services\Storage;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 class LocalStorageBackend implements StorageBackendInterface
 {
@@ -64,7 +65,15 @@ class LocalStorageBackend implements StorageBackendInterface
 
     public function url(string $relativePath): string
     {
-        return Storage::disk('public')->url($relativePath);
+        // 24h — long enough to outlive the workbox NetworkFirst cache for
+        // /driver/* pages (vite.config.js), which embeds these URLs. The gate in
+        // MediaController carries the authorisation; the signature only stops
+        // link forwarding.
+        return URL::temporarySignedRoute(
+            'media.show',
+            now()->addDay(),
+            ['path' => $relativePath],
+        );
     }
 
     public function isConfigured(): bool

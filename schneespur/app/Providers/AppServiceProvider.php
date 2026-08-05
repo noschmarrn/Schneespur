@@ -55,6 +55,7 @@ use App\Services\Scheduler\Tasks\RetentionDeleteTask;
 use App\Services\Scheduler\Tasks\PurgeModuleLogsTask;
 use App\Services\Scheduler\Tasks\UpdateCheckTask;
 use App\Services\Storage\LocalStorageBackend;
+use App\Services\Storage\MediaAccessRegistry;
 use App\Services\Storage\StorageBackendRegistry;
 use App\Services\Weather\BrightSkyProvider;
 use App\Services\Weather\MetNorwayProvider;
@@ -93,6 +94,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(RoleTemplateRegistry::class);
         $this->app->singleton(SlotRegistry::class);
         $this->app->singleton(LifecycleFieldRegistry::class);
+        $this->app->singleton(MediaAccessRegistry::class);
         $this->app->singleton(TwoFactorMethodRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));

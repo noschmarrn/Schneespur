@@ -14,16 +14,12 @@ class LocalStorageBackendPrivacyTest extends TestCase
     {
         parent::setUp();
 
+        // Both disks, not just one: this test is about which of the two gets
+        // written, so leaving either one real would leak state between runs.
+        Storage::fake('local');
+        Storage::fake('public');
+
         $this->backend = new LocalStorageBackend();
-    }
-
-    protected function tearDown(): void
-    {
-        Storage::disk('local')->delete('photos/probe.jpg');
-        Storage::disk('public')->delete('photos/probe.jpg');
-        Storage::disk('public')->delete('photos/legacy.jpg');
-
-        parent::tearDown();
     }
 
     public function test_stored_bytes_land_on_the_private_disk(): void

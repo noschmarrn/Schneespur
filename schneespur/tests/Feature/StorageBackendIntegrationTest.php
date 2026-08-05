@@ -24,6 +24,9 @@ class StorageBackendIntegrationTest extends TestCase
         parent::setUp();
 
         Storage::fake('public');
+        // The local backend writes here since M018/S04 — faking only 'public'
+        // would let these tests litter the real filesystem.
+        Storage::fake('local');
 
         $this->registry = $this->app->make(StorageBackendRegistry::class);
         $this->fakeS3 = new FakeS3StorageBackend;
