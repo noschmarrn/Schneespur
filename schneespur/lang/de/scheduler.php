@@ -6,4 +6,5 @@ return [
     'task_queue_work' => 'Warteschlange abarbeiten',
     'task_cron_heartbeat' => 'Cron-Heartbeat',
     'task_purge_module_logs' => 'Modul-Logs bereinigen',
+    'task_migrate_public_media' => 'Altbestände in den privaten Speicher verschieben',
 ];

@@ -51,7 +51,8 @@ class ScheduledTaskRegistryTest extends TestCase
         $this->assertTrue($registry->has('queue-work'));
         $this->assertTrue($registry->has('cron-heartbeat'));
         $this->assertTrue($registry->has('purge-module-logs'));
-        $this->assertCount(5, $registry->all());
+        $this->assertTrue($registry->has('migrate-public-media'));
+        $this->assertCount(6, $registry->all());
     }
 
     public function test_resolve_returns_task_instances(): void
@@ -78,7 +79,8 @@ class ScheduledTaskRegistryTest extends TestCase
 
         $enabled = $registry->enabledTasks();
 
-        $this->assertCount(5, $enabled);
+        // migrate-public-media is enabled until the media migration reports done.
+        $this->assertCount(6, $enabled);
         foreach ($enabled as $task) {
             $this->assertTrue($task->isEnabled());
         }
@@ -155,7 +157,7 @@ class ScheduledTaskRegistryTest extends TestCase
 
         $all = $registry->allWithStatus();
 
-        $this->assertCount(5, $all);
+        $this->assertCount(6, $all);
 
         $this->assertInstanceOf(ScheduledTaskInterface::class, $all['retention-delete']['task']);
         $this->assertNotNull($all['retention-delete']['last_run']);
@@ -196,7 +198,7 @@ class ScheduledTaskRegistryTest extends TestCase
         $this->assertTrue($registry->has('fake-module-task'));
         $task = $registry->resolve('fake-module-task');
         $this->assertInstanceOf(FakeEnabledTask::class, $task);
-        $this->assertCount(6, $registry->all());
+        $this->assertCount(7, $registry->all());
     }
 }
 

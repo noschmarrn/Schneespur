@@ -53,6 +53,7 @@ use App\Services\Report\ReportFormatRegistry;
 use App\Services\Scheduler\ScheduledTaskRegistry;
 use App\Services\Scheduler\Tasks\CronHeartbeatTask;
 use App\Services\Scheduler\Tasks\QueueWorkTask;
+use App\Services\Scheduler\Tasks\MigratePublicMediaTask;
 use App\Services\Scheduler\Tasks\RetentionDeleteTask;
 use App\Services\Scheduler\Tasks\PurgeModuleLogsTask;
 use App\Services\Scheduler\Tasks\UpdateCheckTask;
@@ -139,6 +140,7 @@ class AppServiceProvider extends ServiceProvider
             $registry->register('queue-work', QueueWorkTask::class);
             $registry->register('cron-heartbeat', CronHeartbeatTask::class);
             $registry->register('purge-module-logs', PurgeModuleLogsTask::class);
+            $registry->register('migrate-public-media', MigratePublicMediaTask::class);
 
             return $registry;
         });
