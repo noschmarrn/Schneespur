@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,7 +20,15 @@ class StoreManualJobRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', Rule::exists('users', 'id')->where('role', 'driver')],
+            // Check the many-to-many role pivot, not the legacy users.role column.
+            // The driver dropdown beside this field is filled from User::drivers(),
+            // which reads the pivot — and users.role defaults to 'driver' for every
+            // row created since M014 moved roles out of it, so the old rule waved
+            // through any user id at all (vuln-0002).
+            'user_id' => [
+                'required',
+                Rule::exists('users', 'id')->whereIn('id', User::drivers()->select('id')),
+            ],
             'customer_object_id' => ['required', 'exists:customer_objects,id'],
             'type' => ['required', Rule::in(app(\App\Services\Extension\JobTypeRegistry::class)->values())],
             'started_at' => ['required', 'date', 'before_or_equal:now'],
