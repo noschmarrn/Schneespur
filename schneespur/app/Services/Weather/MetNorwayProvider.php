@@ -137,7 +137,11 @@ class MetNorwayProvider implements WeatherProviderInterface
 
     private function buildUserAgent(): string
     {
-        $email = Setting::get('weather_user_agent_email');
+        // Stripped here as well as in WeatherSettingsController: the form is not
+        // the only writer of this setting, and a CR/LF makes Guzzle reject the
+        // request outright — which used to turn a poisoned value into weather
+        // silently going dark, not into a visible error (M018/S05).
+        $email = preg_replace('/[\r\n]+/', '', (string) Setting::get('weather_user_agent_email')) ?? '';
 
         if ($email) {
             return brand_slug() . '/1.0 ' . $email;
