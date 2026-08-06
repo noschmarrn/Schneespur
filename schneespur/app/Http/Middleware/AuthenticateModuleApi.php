@@ -45,9 +45,22 @@ class AuthenticateModuleApi
         }
 
         if (Auth::check()) {
+            // The session fallback exists for browser-based admin testing only.
+            // Any logged-in user used to pass — with real modules installed that
+            // is a privilege boundary, not a convenience (M018/S05, June audit M1).
+            if (! Auth::user()?->isAdmin()) {
+                Log::warning('Module API auth failed: session user is not an admin', [
+                    'module_slug' => $moduleSlug,
+                    'user_id' => Auth::id(),
+                    'ip' => $request->ip(),
+                ]);
+
+                return response()->json(['error' => 'Forbidden'], 403);
+            }
+
             $request->attributes->set('module_slug', $moduleSlug);
 
-            Log::debug('Module API auth via session', [
+            Log::debug('Module API auth via admin session', [
                 'module_slug' => $moduleSlug,
                 'user_id' => Auth::id(),
             ]);

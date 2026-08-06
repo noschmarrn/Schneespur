@@ -97,12 +97,21 @@ class ManualJobDriverValidationTest extends TestCase
             ->assertSessionHasErrors('user_id');
     }
 
-    /** The legacy column alone must no longer count as proof. */
+    /**
+     * The legacy column alone must no longer count as proof.
+     *
+     * No assignRole() here: users.role carries a DEFAULT of 'driver', so this
+     * user already reads as a driver in the legacy column without anyone ever
+     * granting it — which is precisely what the old rule accepted. Note the
+     * write below is deliberately a no-op re-statement of that default; setting
+     * the column to a DIFFERENT value would trip the legacy bridge in
+     * User::booted(), which syncs a changed role into the pivot and would hand
+     * this user the very role the test is trying to withhold.
+     */
     public function test_manual_job_rejects_a_user_with_only_the_legacy_role_column(): void
     {
         $ghost = $this->makeUser('Ghost Driver', 'ghost@test.local');
         $ghost->forceFill(['role' => 'driver'])->save();
-        // No assignRole('driver') — the pivot stays empty.
 
         $this->actingAs($this->admin())
             ->post('/admin/jobs/manual', $this->payload($ghost->id, $this->object()))
