@@ -8,6 +8,10 @@
 .env
 .env.*
 !.env.example
+# .env.testing is tracked on purpose: it holds no configuration (phpunit.xml
+# owns the test values), it exists so the suite finds an env file at all. See
+# the comment inside it.
+!.env.testing
 
 # ── Laravel runtime ──
 /schneespur/storage/logs/*.log
