@@ -26,6 +26,9 @@ class NotificationChannelRegistry extends ExtensionRegistry
 
     /**
      * @return array<int, array{slug: string, status: string, error: string|null}>
+     *
+     * status is one of 'sent', 'skipped' (channel exists but is not
+     * responsible for this notification type), or 'failed'.
      */
     public function dispatch(Job $job, string $type, array $context): array
     {
@@ -34,6 +37,15 @@ class NotificationChannelRegistry extends ExtensionRegistry
 
         $results = [];
         foreach ($channels as $slug => $channel) {
+            if ($channel instanceof SupportsNotificationTypes && ! $channel->supports($type)) {
+                // Not responsible is not the same as delivered. dispatch()
+                // infers its status from "send() did not throw", so without
+                // this a silent channel would report 'sent'.
+                $results[] = ['slug' => $slug, 'status' => 'skipped', 'error' => null];
+
+                continue;
+            }
+
             try {
                 $channel->send($job, $type, $context);
                 $results[] = ['slug' => $slug, 'status' => 'sent', 'error' => null];

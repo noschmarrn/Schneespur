@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Mail\JobCompletedMail;
 use App\Models\Customer;
 use App\Models\CustomerObject;
 use App\Models\Job;
@@ -37,6 +38,7 @@ use App\Services\Extension\TwoFactorMethodRegistry;
 use App\Services\Dispatch\ManualDispatchStrategy;
 use App\Services\Extension\DispatchStrategyRegistry;
 use App\Services\Notification\EmailNotificationChannel;
+use App\Services\Notification\MailableRegistry;
 use App\Services\Notification\NotificationChannelRegistry;
 use App\Services\ForecastService;
 use App\Services\ModuleLogger;
@@ -110,6 +112,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ModuleLogger::class);
         $this->app->singleton(ModuleManager::class, fn ($app) => new ModuleManager($app));
         $this->app->singleton(ModuleSignatureVerifier::class);
+        $this->app->singleton(MailableRegistry::class);
         $this->app->singleton(NotificationChannelRegistry::class, function ($app) {
             $registry = new NotificationChannelRegistry($app, $app->make(FilterRegistry::class));
             $registry->register('email', EmailNotificationChannel::class);
@@ -246,6 +249,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerCoreDashboardWidgets();
         $this->registerCoreJobTypes();
         $this->registerCoreMediaAccess();
+        $this->registerCoreMailables();
 
         $this->app->booted(function () {
             app(ModuleManager::class)->boot();
@@ -618,6 +622,30 @@ class AppServiceProvider extends ServiceProvider
                 return $this->app->make(JobPhotoPolicy::class)->view($viewer, $photo);
             }
         );
+    }
+
+    /**
+     * Which Mailable belongs to which core notification type (M020/P1-2).
+     *
+     * One factory, both types: job_completed_updated is the same mail sent
+     * again after late weather data arrived (SendJobCompletedNotification).
+     * Registered here, before $this->app->booted(...), so a module can still
+     * overwrite or add its own types afterwards.
+     */
+    private function registerCoreMailables(): void
+    {
+        $registry = $this->app->make(MailableRegistry::class);
+
+        $factory = fn (Job $job, array $context) => new JobCompletedMail(
+            $job,
+            $context['weather_available'] ?? false,
+            $context['pdf_content'] ?? null,
+            $context['pdf_filename'] ?? '',
+            $context['is_weather_update'] ?? false,
+        );
+
+        $registry->registerType('job_completed', $factory);
+        $registry->registerType('job_completed_updated', $factory);
     }
 
     private function registerCoreJobTypes(): void
