@@ -17,6 +17,48 @@ class RegionRegistryTest extends TestCase
         }
     }
 
+    public function test_the_german_preset_carries_the_agreed_values(): void
+    {
+        $de = app(RegionRegistry::class)->get('de');
+
+        $this->assertSame('EUR', $de->currencyCode);
+        $this->assertSame('after', $de->currencyPosition);
+        $this->assertSame('dot_comma', $de->numberFormat);
+        $this->assertSame('dmy_dot', $de->dateFormat);
+        $this->assertSame('24h', $de->timeFormat);
+        $this->assertSame('metric', $de->unitDistance);
+        $this->assertSame('celsius', $de->unitTemperature);
+        $this->assertSame('metric', $de->unitWeight);
+    }
+
+    public function test_austria_preset_matches_german_defaults(): void
+    {
+        $at = app(RegionRegistry::class)->get('at');
+
+        $this->assertSame('EUR', $at->currencyCode);
+        $this->assertSame('after', $at->currencyPosition);
+        $this->assertSame('dot_comma', $at->numberFormat);
+        $this->assertSame('dmy_dot', $at->dateFormat);
+        $this->assertSame('24h', $at->timeFormat);
+        $this->assertSame('metric', $at->unitDistance);
+        $this->assertSame('celsius', $at->unitTemperature);
+        $this->assertSame('metric', $at->unitWeight);
+    }
+
+    public function test_switzerland_uses_apostrophe_dot_and_currency_before(): void
+    {
+        $ch = app(RegionRegistry::class)->get('ch');
+
+        $this->assertSame('CHF', $ch->currencyCode);
+        $this->assertSame('before', $ch->currencyPosition);
+        $this->assertSame('apostrophe_dot', $ch->numberFormat);
+        $this->assertSame('dmy_dot', $ch->dateFormat);
+        $this->assertSame('24h', $ch->timeFormat);
+        $this->assertSame('metric', $ch->unitDistance);
+        $this->assertSame('celsius', $ch->unitTemperature);
+        $this->assertSame('metric', $ch->unitWeight);
+    }
+
     public function test_the_us_preset_carries_the_agreed_values(): void
     {
         $us = app(RegionRegistry::class)->get('us');
