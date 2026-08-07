@@ -122,3 +122,18 @@ function markdown_safe(string $markdown): string
         'allow_unsafe_links' => false,
     ]);
 }
+
+function format_date(?\DateTimeInterface $moment): string
+{
+    return app(\App\Services\Format\Formatter::class)->date($moment);
+}
+
+function format_time(?\DateTimeInterface $moment): string
+{
+    return app(\App\Services\Format\Formatter::class)->time($moment);
+}
+
+function format_datetime(?\DateTimeInterface $moment): string
+{
+    return app(\App\Services\Format\Formatter::class)->dateTime($moment);
+}

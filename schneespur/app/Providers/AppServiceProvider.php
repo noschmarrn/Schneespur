@@ -28,6 +28,7 @@ use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\LifecycleFieldRegistry;
 use App\Services\Extension\SlotRegistry;
+use App\Services\Format\Formatter;
 use App\Services\Format\RegionPreset;
 use App\Services\Format\RegionRegistry;
 use App\Services\Extension\ModuleApiRegistrar;
@@ -101,6 +102,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(LifecycleFieldRegistry::class);
         $this->app->singleton(MediaAccessRegistry::class);
         $this->app->singleton(RegionRegistry::class);
+        $this->app->singleton(Formatter::class, fn () => Formatter::fromSettings());
         $this->app->singleton(TwoFactorMethodRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
