@@ -44,6 +44,16 @@ class Formatter
         '12h' => 'g:i A',
     ];
 
+    /**
+     * Second precision, for evidence: the GPS trace in an Einsatznachweis
+     * needs it. It is the same setting, only a longer pattern — a separate
+     * "seconds" setting would just be a way to contradict the first one.
+     */
+    private const TIME_PATTERNS_WITH_SECONDS = [
+        '24h' => 'H:i:s',
+        '12h' => 'g:i:s A',
+    ];
+
     /** decimal separator, thousands separator */
     private const NUMBER_SEPARATORS = [
         'dot_comma' => [',', '.'],
@@ -84,9 +94,33 @@ class Formatter
         return $this->formatMoment($moment, self::DATE_PATTERNS[$this->setting('date_format')] ?? 'd.m.Y');
     }
 
-    public function time(?DateTimeInterface $moment): string
+    public function time(?DateTimeInterface $moment, bool $withSeconds = false): string
     {
-        return $this->formatMoment($moment, self::TIME_PATTERNS[$this->setting('time_format')] ?? 'H:i');
+        $key = $this->setting('time_format');
+
+        $pattern = $withSeconds
+            ? (self::TIME_PATTERNS_WITH_SECONDS[$key] ?? 'H:i:s')
+            : (self::TIME_PATTERNS[$key] ?? 'H:i');
+
+        return $this->formatMoment($moment, $pattern);
+    }
+
+    /**
+     * The three values the browser needs, handed to it by the layout.
+     *
+     * Only three: the running clock on the driver dashboard and the updater's
+     * signed_at date are the sole places the server cannot render. Everything
+     * else is formatted here — do not grow this list to "the settings".
+     *
+     * @return array{timeFormat: string, dateFormat: string, numberFormat: string}
+     */
+    public function browserSettings(): array
+    {
+        return [
+            'timeFormat' => $this->setting('time_format'),
+            'dateFormat' => $this->setting('date_format'),
+            'numberFormat' => $this->setting('number_format'),
+        ];
     }
 
     public function dateTime(?DateTimeInterface $moment): string

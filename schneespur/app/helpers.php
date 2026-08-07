@@ -128,9 +128,9 @@ function format_date(?\DateTimeInterface $moment): string
     return app(\App\Services\Format\Formatter::class)->date($moment);
 }
 
-function format_time(?\DateTimeInterface $moment): string
+function format_time(?\DateTimeInterface $moment, bool $withSeconds = false): string
 {
-    return app(\App\Services\Format\Formatter::class)->time($moment);
+    return app(\App\Services\Format\Formatter::class)->time($moment, $withSeconds);
 }
 
 function format_datetime(?\DateTimeInterface $moment): string

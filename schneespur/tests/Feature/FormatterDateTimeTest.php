@@ -47,6 +47,50 @@ class FormatterDateTimeTest extends TestCase
     }
 
     /**
+     * The GPS trace in an Einsatznachweis is evidence, so it keeps its
+     * seconds — but it must not be the one column in the document that
+     * ignores the time setting.
+     */
+    public function test_seconds_are_available_and_follow_the_time_setting(): void
+    {
+        $moment = new \DateTimeImmutable('2026-08-06 12:30:15', new \DateTimeZone('UTC'));
+
+        $german = $this->formatter(['time_format' => '24h']);
+        $this->assertSame('14:30:15', $german->time($moment, true));
+        $this->assertSame('14:30', $german->time($moment));
+
+        $american = $this->formatter(['time_format' => '12h']);
+        $this->assertSame('2:30:15 PM', $american->time($moment, true));
+    }
+
+    /**
+     * The layout hands three values to the browser. They come from the
+     * singleton, not from three fresh Setting::get() queries per page load,
+     * and they carry the Formatter's own defaults so the two sides cannot
+     * drift apart.
+     */
+    public function test_the_browser_gets_exactly_the_three_values_it_needs(): void
+    {
+        $f = $this->formatter([
+            'time_format' => '12h',
+            'date_format' => 'mdy_slash',
+            'number_format' => 'comma_dot',
+        ]);
+
+        $this->assertSame([
+            'timeFormat' => '12h',
+            'dateFormat' => 'mdy_slash',
+            'numberFormat' => 'comma_dot',
+        ], $f->browserSettings());
+    }
+
+    public function test_seconds_still_yield_the_placeholder_for_null(): void
+    {
+        $this->assertSame('—', $this->formatter([])->time(null, true));
+        $this->assertSame('—', format_time(null, true));
+    }
+
+    /**
      * The display timezone is applied by the Formatter, not by the caller.
      * ~35 call sites do it by hand today and some forget.
      */

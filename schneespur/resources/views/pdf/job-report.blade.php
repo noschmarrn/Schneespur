@@ -237,7 +237,7 @@
                         @foreach ($gpsTableData['points'] as $idx => $point)
                             <tr>
                                 <td>{{ $idx + 1 }}</td>
-                                <td>{{ \Carbon\Carbon::createFromTimestamp($point->timestamp)->setTimezone(config('app.display_timezone'))->format('H:i:s') }}</td>
+                                <td>{{ format_time(\Carbon\Carbon::createFromTimestamp($point->timestamp), true) }}</td>
                                 <td>{{ number_format($point->lat, 5) }}</td>
                                 <td>{{ number_format($point->lon, 5) }}</td>
                             </tr>
