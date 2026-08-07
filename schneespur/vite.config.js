@@ -75,6 +75,24 @@ export default defineConfig({
                             },
                         },
                     },
+                    {
+                        // Module assets ship from public/modules/{slug}/ via the
+                        // @moduleAssets directive and are outside globPatterns,
+                        // which is relative to outDir (public/build). Without
+                        // this rule a module's driver screen is dead offline.
+                        // StaleWhileRevalidate rather than NetworkFirst: the
+                        // filenames carry a hash, so they are immutable, and the
+                        // driver should not wait for a network attempt.
+                        urlPattern: /\/modules\/.*\.(?:js|css)$/,
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'module-assets-cache',
+                            expiration: {
+                                maxEntries: 60,
+                                maxAgeSeconds: 60 * 60 * 24 * 30,
+                            },
+                        },
+                    },
                 ],
             },
         }),
