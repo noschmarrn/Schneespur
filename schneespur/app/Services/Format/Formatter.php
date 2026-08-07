@@ -44,6 +44,22 @@ class Formatter
         '12h' => 'g:i A',
     ];
 
+    /** decimal separator, thousands separator */
+    private const NUMBER_SEPARATORS = [
+        'dot_comma' => [',', '.'],
+        'comma_dot' => ['.', ','],
+        'apostrophe_dot' => ['.', "'"],
+    ];
+
+    private const CURRENCY_SYMBOLS = [
+        'EUR' => '€',
+        'USD' => '$',
+        'CAD' => '$',
+        'GBP' => '£',
+        'CHF' => 'CHF',
+        'CZK' => 'Kč',
+    ];
+
     /** @param array<string, string> $settings */
     public function __construct(private readonly array $settings) {}
 
@@ -95,5 +111,69 @@ class Formatter
         return \DateTimeImmutable::createFromInterface($moment)
             ->setTimezone($zone)
             ->format($pattern);
+    }
+
+    public function number(?float $value, int $decimals = 1): string
+    {
+        if ($value === null) {
+            return self::PLACEHOLDER;
+        }
+
+        [$decimal, $thousands] = self::NUMBER_SEPARATORS[$this->setting('number_format')]
+            ?? self::NUMBER_SEPARATORS['dot_comma'];
+
+        return number_format($value, $decimals, $decimal, $thousands);
+    }
+
+    public function money(?int $cents): string
+    {
+        if ($cents === null) {
+            return self::PLACEHOLDER;
+        }
+
+        $amount = $this->number($cents / 100, 2);
+        $symbol = $this->currencySymbol();
+
+        return $this->setting('currency_position') === 'before'
+            ? $symbol . ($symbol === $this->setting('currency_code') ? ' ' : '') . $amount
+            : $amount . ' ' . $symbol;
+    }
+
+    public function parseDecimal(string $input): ?float
+    {
+        $input = trim($input);
+
+        if ($input === '') {
+            return null;
+        }
+
+        [$decimal, $thousands] = self::NUMBER_SEPARATORS[$this->setting('number_format')]
+            ?? self::NUMBER_SEPARATORS['dot_comma'];
+
+        // Strictly the configured separators — no guessing. "12,34,56" in a
+        // comma-decimal locale is a typo, and silently reading it as 123456
+        // would put a wrong price in a contract.
+        $normalised = str_replace([$thousands, "\u{00A0}", ' '], '', $input);
+        $normalised = str_replace($decimal, '.', $normalised);
+
+        return is_numeric($normalised) ? (float) $normalised : null;
+    }
+
+    public function parseMoneyToCents(string $input): ?int
+    {
+        $value = $this->parseDecimal($input);
+
+        return $value === null ? null : (int) round($value * 100);
+    }
+
+    /**
+     * The bare symbol, for labels like "Price (€)" that carry it in a sentence.
+     * Prints the ISO code when we have no symbol for it.
+     */
+    public function currencySymbol(): string
+    {
+        $code = $this->setting('currency_code');
+
+        return self::CURRENCY_SYMBOLS[$code] ?? $code;
     }
 }

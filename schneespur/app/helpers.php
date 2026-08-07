@@ -137,3 +137,13 @@ function format_datetime(?\DateTimeInterface $moment): string
 {
     return app(\App\Services\Format\Formatter::class)->dateTime($moment);
 }
+
+function format_number(?float $value, int $decimals = 1): string
+{
+    return app(\App\Services\Format\Formatter::class)->number($value, $decimals);
+}
+
+function format_money(?int $cents): string
+{
+    return app(\App\Services\Format\Formatter::class)->money($cents);
+}
