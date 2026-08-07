@@ -20,7 +20,7 @@ class EmailNotificationChannel implements NotificationChannelInterface, Supports
 
     public function send(Job $job, string $type, array $context): void
     {
-        if (! $this->mailables->has($type)) {
+        if (! $this->supports($type)) {
             // Not this channel's business. Before, every foreign type was
             // sent as "Auftrag abgeschlossen" — a mail to the customer for a
             // job that had not started.
@@ -31,7 +31,19 @@ class EmailNotificationChannel implements NotificationChannelInterface, Supports
 
         foreach ($recipients as $recipient) {
             try {
-                Mail::to($recipient)->send($this->mailables->make($type, $job, $context));
+                $mailable = $this->mailables->make($type, $job, $context);
+
+                if ($mailable === null) {
+                    // The registered factory can legitimately decline to
+                    // produce a mail for this job — that's the documented
+                    // escape hatch. Mail::send() is typed for a concrete
+                    // Mailable and would TypeError on null, which would then
+                    // be logged as a failure and reported as a diagnostic;
+                    // neither is true here, so just skip this recipient.
+                    continue;
+                }
+
+                Mail::to($recipient)->send($mailable);
 
                 $this->notificationLogService->logSent($job, $type, $recipient, [
                     'weather_available' => $context['weather_available'] ?? false,

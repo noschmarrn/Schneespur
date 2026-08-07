@@ -17,6 +17,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Tests\Support\LegacyTestChannel;
+use Tests\Support\ThrowingSupportsChannel;
 use Tests\TestCase;
 
 class NotificationMailableRegistryTest extends TestCase
@@ -95,7 +96,12 @@ class NotificationMailableRegistryTest extends TestCase
         app(EmailNotificationChannel::class)
             ->send($this->job(), 'driver_en_route', $this->context());
 
-        Mail::assertNothingSent();
+        // Not assertNothingSent(): JobCompletedMail implements ShouldQueue,
+        // so a regression that reintroduced the old always-send behaviour
+        // would land in MailFake's queuedMailables, not sentMailables, and
+        // assertNothingSent() would not see it. assertNothingOutgoing()
+        // checks both.
+        Mail::assertNothingOutgoing();
     }
 
     public function test_a_module_can_register_its_own_mailable(): void
@@ -111,6 +117,53 @@ class NotificationMailableRegistryTest extends TestCase
             ->send($this->job(), 'driver_en_route', $this->context());
 
         Mail::assertSent(TestEnRouteMail::class, 1);
+    }
+
+    public function test_a_registered_factory_returning_null_sends_and_logs_nothing(): void
+    {
+        Mail::fake();
+
+        app(MailableRegistry::class)->registerType(
+            'driver_en_route',
+            fn (Job $job, array $context) => null,
+        );
+
+        $job = $this->job();
+
+        app(EmailNotificationChannel::class)
+            ->send($job, 'driver_en_route', $this->context());
+
+        Mail::assertNothingOutgoing();
+        $this->assertDatabaseMissing('notification_logs', [
+            'notifiable_type' => Job::class,
+            'notifiable_id' => $job->id,
+            'type' => 'driver_en_route',
+        ]);
+    }
+
+    /**
+     * A third-party supports() throwing must not abort the whole dispatch
+     * loop — previously any channel misbehaviour was contained per-channel,
+     * and that must still hold now that supports() runs before send().
+     */
+    public function test_a_throwing_supports_does_not_stop_later_channels(): void
+    {
+        LegacyTestChannel::$called = false;
+
+        $registry = app(NotificationChannelRegistry::class);
+        // Registered before the well-behaved channel, so the loop must
+        // survive it and still reach 'later'.
+        $registry->register('throwing', ThrowingSupportsChannel::class);
+        $registry->register('later', LegacyTestChannel::class);
+
+        $results = $registry->dispatch($this->job(), 'driver_en_route', $this->context());
+
+        $throwingResult = collect($results)->firstWhere('slug', 'throwing');
+        $laterResult = collect($results)->firstWhere('slug', 'later');
+
+        $this->assertSame('failed', $throwingResult['status']);
+        $this->assertSame('sent', $laterResult['status']);
+        $this->assertTrue(LegacyTestChannel::$called);
     }
 
     public function test_the_channel_reports_skipped_rather_than_sent(): void
