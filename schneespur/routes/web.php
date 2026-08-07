@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\UpdateSettingsController;
 use App\Http\Controllers\Admin\BackupSettingsController;
 use App\Http\Controllers\Admin\DispatchSettingsController;
 use App\Http\Controllers\Admin\WeatherSettingsController;
+use App\Http\Controllers\Admin\FormatSettingsController;
 use App\Http\Controllers\Admin\ManualJobController as AdminManualJobController;
 use App\Http\Controllers\Driver\DriverJobController;
 use App\Http\Controllers\Driver\DriverShiftController;
@@ -251,6 +252,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings/weather', [WeatherSettingsController::class, 'edit'])->name('settings.weather');
     Route::post('/settings/weather', [WeatherSettingsController::class, 'update'])->name('settings.weather.update');
     Route::post('/settings/weather/test', [WeatherSettingsController::class, 'testConnection'])->name('settings.weather.test');
+
+    Route::get('/settings/format', [FormatSettingsController::class, 'edit'])->name('settings.format');
+    Route::post('/settings/format', [FormatSettingsController::class, 'update'])->name('settings.format.update');
 
     Route::get('/settings/backup', [BackupSettingsController::class, 'edit'])->name('settings.backup');
     Route::post('/settings/backup', [BackupSettingsController::class, 'update'])->name('settings.backup.update');
