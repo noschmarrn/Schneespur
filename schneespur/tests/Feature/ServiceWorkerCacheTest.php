@@ -23,7 +23,37 @@ class ServiceWorkerCacheTest extends TestCase
 
     public function test_module_assets_have_a_runtime_cache(): void
     {
-        $this->assertStringContainsString('module-assets-cache', $this->serviceWorker());
+        $sw = $this->serviceWorker();
+
+        // The build is minified (see the note above), so this pins the
+        // assertion to the exact shape of the module-assets-cache rule
+        // rather than to independent substrings. A bare "does the string
+        // module-assets-cache occur" check would still pass if a later
+        // edit kept the cache name but reverted the handler to
+        // NetworkFirst — the very regression this rule exists to
+        // prevent, per the comment in vite.config.js — or widened the
+        // expiration. Workbox-build turns the `expiration` option into
+        // an ExpirationPlugin, e.g.:
+        // new e.StaleWhileRevalidate({cacheName:"module-assets-cache",
+        // plugins:[new e.ExpirationPlugin({maxEntries:60,
+        // maxAgeSeconds:2592e3})]})
+        $found = preg_match(
+            '/new \w+\.(\w+)\(\{cacheName:"module-assets-cache",plugins:\[new \w+\.ExpirationPlugin\(\{maxEntries:(\d+),maxAgeSeconds:([0-9.e+-]+)\}\)\]\}\)/',
+            $sw,
+            $matches
+        );
+
+        $this->assertSame(1, $found, 'Could not find the module-assets-cache rule in the expected shape in sw.js');
+
+        [, $handler, $maxEntries, $maxAgeSeconds] = $matches;
+
+        $this->assertSame(
+            'StaleWhileRevalidate',
+            $handler,
+            'module-assets-cache handler regressed: module asset filenames are hashed and immutable, so StaleWhileRevalidate is required — NetworkFirst would make the driver wait on a network round trip'
+        );
+        $this->assertSame(60, (int) $maxEntries, 'module-assets-cache maxEntries regressed');
+        $this->assertSame(60 * 60 * 24 * 30, (int) (float) $maxAgeSeconds, 'module-assets-cache maxAgeSeconds regressed');
     }
 
     /** The existing rules must survive the addition. */
