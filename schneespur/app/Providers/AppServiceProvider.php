@@ -28,6 +28,8 @@ use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\LifecycleFieldRegistry;
 use App\Services\Extension\SlotRegistry;
+use App\Services\Format\RegionPreset;
+use App\Services\Format\RegionRegistry;
 use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\ModuleAssetRegistry;
 use App\Services\Extension\TwoFactorMethodRegistry;
@@ -98,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SlotRegistry::class);
         $this->app->singleton(LifecycleFieldRegistry::class);
         $this->app->singleton(MediaAccessRegistry::class);
+        $this->app->singleton(RegionRegistry::class);
         $this->app->singleton(TwoFactorMethodRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
@@ -234,6 +237,7 @@ class AppServiceProvider extends ServiceProvider
         ?>");
 
         $this->registerCoreLocales();
+        $this->registerCoreRegions();
         $this->registerCorePermissions();
         $this->registerCoreNavigation();
         $this->registerCorePortalNavigation();
@@ -270,6 +274,34 @@ class AppServiceProvider extends ServiceProvider
         $registry = app(LocaleRegistry::class);
         $registry->add('de', 'Deutsch');
         $registry->add('en', 'English');
+    }
+
+    private function registerCoreRegions(): void
+    {
+        $registry = $this->app->make(RegionRegistry::class);
+
+        foreach ([
+            // code  label                currency  pos       number           date          time   dist        temp          weight
+            ['de',   'Deutschland',       'EUR',    'after',  'dot_comma',     'dmy_dot',    '24h', 'metric',   'celsius',    'metric'],
+            ['at',   'Österreich',        'EUR',    'after',  'dot_comma',     'dmy_dot',    '24h', 'metric',   'celsius',    'metric'],
+            ['ch',   'Schweiz',           'CHF',    'before', 'apostrophe_dot', 'dmy_dot',   '24h', 'metric',   'celsius',    'metric'],
+            ['us',   'United States',     'USD',    'before', 'comma_dot',     'mdy_slash',  '12h', 'imperial', 'fahrenheit', 'imperial'],
+            ['ca',   'Canada',            'CAD',    'before', 'comma_dot',     'dmy_slash',  '12h', 'metric',   'celsius',    'metric'],
+            ['gb',   'United Kingdom',    'GBP',    'before', 'comma_dot',     'dmy_slash',  '24h', 'imperial', 'celsius',    'metric'],
+        ] as [$code, $label, $cur, $pos, $num, $date, $time, $dist, $temp, $weight]) {
+            $registry->add(new RegionPreset(
+                code: $code,
+                label: $label,
+                currencyCode: $cur,
+                currencyPosition: $pos,
+                numberFormat: $num,
+                dateFormat: $date,
+                timeFormat: $time,
+                unitDistance: $dist,
+                unitTemperature: $temp,
+                unitWeight: $weight,
+            ));
+        }
     }
 
     private function registerCorePermissions(): void
