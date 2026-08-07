@@ -40,7 +40,7 @@ class PurgeExpiredJobs extends Command
                 $jobs->map(fn ($job) => [
                     $job->id,
                     $job->customer?->name ?? '–',
-                    $job->ended_at->format('d.m.Y H:i'),
+                    format_datetime($job->ended_at),
                 ]),
             );
 

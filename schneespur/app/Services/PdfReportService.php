@@ -43,7 +43,7 @@ class PdfReportService
             'gpsTableData' => $gpsTableData,
         ], [
             'footer' => [
-                'left' => __('job.pdf_generated_at', ['date' => now()->format('d.m.Y H:i')]),
+                'left' => __('job.pdf_generated_at', ['date' => format_datetime(now())]),
                 'right' => __('job.pdf_title'),
             ],
         ]);
@@ -204,7 +204,7 @@ class PdfReportService
             'coverData' => $coverData,
         ], [
             'footer' => [
-                'left' => __('job.pdf_generated_at', ['date' => now()->format('d.m.Y H:i')]),
+                'left' => __('job.pdf_generated_at', ['date' => format_datetime(now())]),
                 'right' => __('job.pdf_customer_report_title'),
             ],
         ]);
@@ -302,7 +302,7 @@ class PdfReportService
             'coverData' => $coverData,
         ], [
             'footer' => [
-                'left' => __('job.pdf_generated_at', ['date' => now()->format('d.m.Y H:i')]),
+                'left' => __('job.pdf_generated_at', ['date' => format_datetime(now())]),
                 'right' => __('job.pdf_customer_report_title'),
             ],
         ]);

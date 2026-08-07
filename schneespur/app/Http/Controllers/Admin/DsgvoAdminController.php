@@ -8,7 +8,6 @@ use App\Models\DsgvoConfirmation;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -25,7 +24,7 @@ class DsgvoAdminController extends Controller
             $markdown = view(DsgvoOnboardingController::resolveDefaultTemplateView())->render();
         }
 
-        $previewHtml = Str::markdown($this->replacePlaceholders($markdown), ['html_input' => 'strip']);
+        $previewHtml = markdown_safe($this->replacePlaceholders($markdown));
         $confirmationCount = DsgvoConfirmation::where('template_version', $version)->count();
 
         return view('admin.dsgvo.index', [
@@ -67,7 +66,7 @@ class DsgvoAdminController extends Controller
             'markdown' => 'required|string',
         ]);
 
-        $html = Str::markdown($this->replacePlaceholders($request->markdown), ['html_input' => 'strip']);
+        $html = markdown_safe($this->replacePlaceholders($request->markdown));
 
         return new Response($html, 200, ['Content-Type' => 'text/html']);
     }
@@ -102,7 +101,7 @@ class DsgvoAdminController extends Controller
         $confirmation = DsgvoConfirmation::findOrFail($id);
         $confirmation->load('driver');
 
-        $snapshotHtml = Str::markdown($confirmation->notice_text_snapshot, ['html_input' => 'strip']);
+        $snapshotHtml = markdown_safe($confirmation->notice_text_snapshot);
 
         return view('admin.dsgvo.confirmation-show', [
             'confirmation' => $confirmation,

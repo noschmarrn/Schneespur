@@ -8,8 +8,8 @@
 @endif
 {{ __('notification.job_completed_body', [
     'date' => $job->localStartedAt()->format(__('notification.date_format')),
-    'time_start' => $job->localStartedAt()->format('H:i'),
-    'time_end' => $job->localEndedAt()?->format('H:i') ?? '–',
+    'time_start' => format_time($job->started_at),
+    'time_end' => format_time($job->ended_at),
     'type' => $job->type->label(),
     'driver' => $job->user->name,
 ]) }}
@@ -22,8 +22,8 @@
 @endphp
 @if($weather)
 {{ __('notification.weather_summary', [
-    'temperature' => number_format((float) $weather->temperature, 1),
-    'precipitation' => number_format((float) $weather->precipitation, 1),
+    'temperature' => format_temperature((float) $weather->temperature),
+    'precipitation' => format_precipitation((float) $weather->precipitation),
 ]) }}
 @endif
 @else

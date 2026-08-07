@@ -492,8 +492,11 @@
                 },
 
                 formatTime(isoStr) {
-                    const d = new Date(isoStr);
-                    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+                    // Not `new Date(isoStr)` unguarded: new Date(null) is the
+                    // 1st of January 1970, not an invalid date, so a job that
+                    // came back from the offline queue without a started_at
+                    // would print a plausible-looking wrong time.
+                    return window.schneespurFormatTime(isoStr ? new Date(isoStr) : null);
                 },
 
                 updateHeaderBadge(shiftActive) {

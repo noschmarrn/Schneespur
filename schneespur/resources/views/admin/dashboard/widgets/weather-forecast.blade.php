@@ -30,7 +30,7 @@
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-3">
                     <div class="text-4xl font-bold text-gray-900">
-                        {{ $weather['temperature'] !== null ? number_format($weather['temperature'], 1) . ' °C' : '—' }}
+                        {{ format_temperature($weather['temperature']) }}
                     </div>
                     <div class="flex items-center space-x-2">
                         @include('admin.partials._weather-icon', ['icon' => $weather['icon']])
@@ -41,15 +41,15 @@
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div>
                     <div class="text-xs font-medium text-gray-500">{{ __('dashboard.precipitation') }}</div>
-                    <div class="mt-1 text-sm font-semibold text-gray-900">{{ $weather['precipitation'] !== null ? number_format($weather['precipitation'], 1) . ' mm' : '—' }}</div>
+                    <div class="mt-1 text-sm font-semibold text-gray-900">{{ format_precipitation($weather['precipitation']) }}</div>
                 </div>
                 <div>
                     <div class="text-xs font-medium text-gray-500">{{ __('dashboard.snow_depth') }}</div>
-                    <div class="mt-1 text-sm font-semibold text-gray-900">{{ $weather['snow_depth'] !== null ? number_format($weather['snow_depth'], 1) . ' cm' : '—' }}</div>
+                    <div class="mt-1 text-sm font-semibold text-gray-900">{{ format_snow_depth($weather['snow_depth']) }}</div>
                 </div>
                 <div>
                     <div class="text-xs font-medium text-gray-500">{{ __('dashboard.wind_speed') }}</div>
-                    <div class="mt-1 text-sm font-semibold text-gray-900">{{ $weather['wind_speed'] !== null ? number_format($weather['wind_speed'], 1) . ' km/h' : '—' }}</div>
+                    <div class="mt-1 text-sm font-semibold text-gray-900">{{ format_speed($weather['wind_speed']) }}</div>
                 </div>
                 <div>
                     <div class="text-xs font-medium text-gray-500">{{ __('dashboard.humidity') }}</div>

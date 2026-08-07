@@ -36,7 +36,7 @@
                                             <span class="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-2 py-1 text-xs mr-1">{{ $role->name }}</span>
                                         @endforeach
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $user->created_at->format('d.m.Y') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_date($user->created_at) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('admin.users.edit', $user) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('ui.button_edit') }}</a>
 

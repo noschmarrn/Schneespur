@@ -31,11 +31,11 @@
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('portal.job_detail_started') }}</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ format_datetime($job->started_at) }}</dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('portal.job_detail_ended') }}</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $job->localEndedAt()?->format('d.m.Y H:i') ?? '–' }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ format_datetime($job->ended_at) }}</dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('portal.job_detail_duration') }}</dt>
@@ -75,9 +75,9 @@
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $snapshot->moment->label() }}</td>
                                 @if ($snapshot->fetched_at)
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->temperature }} &deg;C</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->precipitation }} mm</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->snow_depth }} cm</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_temperature($snapshot->temperature) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_precipitation((float) $snapshot->precipitation) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_snow_depth((float) $snapshot->snow_depth) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->weather_code }}</td>
                                 @else
                                     <td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ __('job.weather_not_fetched') }}</td>

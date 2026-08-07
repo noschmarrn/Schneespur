@@ -52,7 +52,7 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse ($logs as $log)
                             <tr class="{{ $log->status === 'failed' ? 'bg-red-50' : '' }}">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $log->created_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_datetime($log->created_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $log->customer_name ?? '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $log->recipient ?? '—' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ __('notification.type_' . $log->type, [], null) !== 'notification.type_' . $log->type ? __('notification.type_' . $log->type) : $log->type }}</td>

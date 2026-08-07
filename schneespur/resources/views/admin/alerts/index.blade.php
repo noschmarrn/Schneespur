@@ -105,7 +105,7 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <a href="{{ route('admin.jobs.show', $job) }}" class="text-indigo-600 hover:text-indigo-900">
-                                            #{{ $job->id }} — {{ $job->localStartedAt()->format('d.m.Y H:i') }}
+                                            #{{ $job->id }} — {{ format_datetime($job->started_at) }}
                                         </a>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->customer->name }}</td>
@@ -123,9 +123,9 @@
                                             {{ __('alert.type_' . $filters['type']) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($job->started_at) }}</td>
                                     @if ($isResolved)
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $alert->resolved_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($alert->resolved_at) }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $alert->resolvedBy?->name ?? '—' }}</td>
                                         <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{{ $alert->note ?? __('alert.no_note') }}</td>
                                     @else

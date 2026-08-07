@@ -402,7 +402,7 @@ class AdminModuleController extends Controller
         $manifest = $manager->getManifest($slug);
 
         if ($manifest) {
-            $activeModules = $this->getDbActiveModuleManifests($manager);
+            $activeModules = $manager->getActiveModuleManifests();
             $validator = new DependencyValidator();
             $errors = $validator->validate($manifest, $activeModules);
 
@@ -473,7 +473,7 @@ class AdminModuleController extends Controller
         }
 
         $manager->discover();
-        $activeModules = $this->getDbActiveModuleManifests($manager);
+        $activeModules = $manager->getActiveModuleManifests();
         $validator = new DependencyValidator();
         $dependants = $validator->checkReverseDependencies($slug, $manager->getAll(), $activeModules);
 
@@ -490,21 +490,6 @@ class AdminModuleController extends Controller
 
         return redirect()->route('admin.settings.modules.index')
             ->with('success', __('modules.disabled', ['slug' => $slug]));
-    }
-
-    private function getDbActiveModuleManifests(ModuleManager $manager): array
-    {
-        $enabledSlugs = Module::where('enabled', true)->pluck('slug')->toArray();
-        $active = [];
-
-        foreach ($enabledSlugs as $slug) {
-            $manifest = $manager->getManifest($slug);
-            if ($manifest) {
-                $active[$slug] = $manifest;
-            }
-        }
-
-        return $active;
     }
 
     private function formatDependencyErrors(array $errors, string $slug, ModuleManager $manager): string

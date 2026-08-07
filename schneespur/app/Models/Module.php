@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ModuleManager;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,21 @@ class Module extends Model
         'trust_level',
         'installed_at',
     ];
+
+    /**
+     * The ModuleManager caches the enable state once per boot (M018/S03).
+     * Writers go straight through this model — AdminModuleController updates
+     * `enabled` directly rather than via ModuleManager::enable() — so the cache
+     * is invalidated here instead of at every call site, where the next one
+     * would forget.
+     */
+    protected static function booted(): void
+    {
+        $forget = fn () => app(ModuleManager::class)->refreshPersistedState();
+
+        static::saved($forget);
+        static::deleted($forget);
+    }
 
     protected function casts(): array
     {

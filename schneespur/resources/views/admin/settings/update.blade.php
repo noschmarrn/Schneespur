@@ -75,7 +75,7 @@
                     <dt class="text-gray-500">{{ __('update.trust_expires') }}</dt>
                     <dd class="text-gray-900">
                         @if($state['trust_expires_at'])
-                            {{ \Carbon\Carbon::parse($state['trust_expires_at'])->format('d.m.Y') }}
+                            {{ format_date(\Carbon\Carbon::parse($state['trust_expires_at'])) }}
                         @else
                             {{ __('update.trust_not_loaded') }}
                         @endif
@@ -146,7 +146,7 @@
                                 <template x-if="result.signed_at">
                                     <div class="contents">
                                         <dt class="text-gray-500">{{ __('update.released_at') }}</dt>
-                                        <dd class="text-gray-900" x-text="new Date(result.signed_at).toLocaleDateString()"></dd>
+                                        <dd class="text-gray-900" x-text="window.schneespurFormatDate(result.signed_at ? new Date(result.signed_at) : null)"></dd>
                                     </div>
                                 </template>
                                 <template x-if="result.size_bytes">

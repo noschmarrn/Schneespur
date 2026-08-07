@@ -27,11 +27,11 @@
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('job.detail_started_at') }}</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ format_datetime($job->started_at) }}</dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('job.detail_ended_at') }}</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $job->localEndedAt()?->format('d.m.Y H:i') }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ format_datetime($job->ended_at) }}</dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('job.edit_grace_remaining') }}</dt>

@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\Module;
 use App\Services\ModuleManager;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 class ModuleTranslationTest extends TestCase
 {
+    use LazilyRefreshDatabase;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -24,8 +28,25 @@ class ModuleTranslationTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * Since M018/S03 the manager is default-deny: a module directory alone does
+     * not boot, the persisted row has to say so.
+     */
+    private function registerModule(string $slug): void
+    {
+        Module::create([
+            'slug' => $slug,
+            'version' => '1.0.0',
+            'enabled' => true,
+            'manifest_json' => [],
+            'installed_at' => now(),
+        ]);
+    }
+
     private function bootModuleManagerWithExample(): void
     {
+        $this->registerModule('example');
+
         putenv('EXAMPLE_MODULE_ENABLED=true');
         $_ENV['EXAMPLE_MODULE_ENABLED'] = true;
 
@@ -64,6 +85,8 @@ class ModuleTranslationTest extends TestCase
             'version' => '1.0.0',
             'description' => 'Module without lang directory',
         ]));
+
+        $this->registerModule('nolang');
 
         try {
             $manager = new ModuleManager($this->app, $tempDir);

@@ -26,6 +26,10 @@ class StorageBackendRegistryTest extends TestCase
         }
 
         Storage::fake('public');
+        // The local backend writes here since M018/S04 — faking only 'public'
+        // would let these tests litter the real filesystem, and the leftovers
+        // then break whichever test runs next.
+        Storage::fake('local');
     }
 
     protected function tearDown(): void

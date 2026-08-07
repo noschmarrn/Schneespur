@@ -23,7 +23,7 @@ return [
     'job_type_breakdown'  => 'Einsatzarten',
     'weather_summary'     => 'Wetter',
     'weather_no_data'     => 'Keine Wetterdaten verfügbar.',
-    'temperature_range'   => ':min °C bis :max °C',
+    'temperature_range'   => ':min bis :max',
     'precipitation_yes'   => 'Niederschlag: Ja',
     'precipitation_no'    => 'Niederschlag: Nein',
     'duration_format'     => ':hours Std :minutes Min',

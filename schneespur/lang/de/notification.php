@@ -5,7 +5,9 @@ return [
     'job_completed_updated_subject' => 'Aktualisierter Einsatznachweis: :customer am :date',
     'greeting' => 'Guten Tag :name,',
     'job_completed_body' => 'am :date wurde ein Einsatz (:type) für Sie durchgeführt. Zeitraum: :time_start – :time_end Uhr. Fahrer: :driver.',
-    'weather_summary' => 'Wetter: :temperature°C, :precipitation mm Niederschlag',
+    // The unit comes with the value — the operator's setting decides whether
+    // that is "1,2 mm" or "0.05 in".
+    'weather_summary' => 'Wetter: :temperature, :precipitation Niederschlag',
     'weather_unavailable' => 'Wetterdaten waren zum Zeitpunkt des Einsatzes nicht verfügbar.',
     'weather_update_note' => 'Dies ist ein aktualisierter Einsatznachweis mit nun verfügbaren Wetterdaten.',
     'pdf_attached' => 'Den vollständigen Einsatznachweis finden Sie im Anhang als PDF.',

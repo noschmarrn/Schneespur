@@ -5,7 +5,7 @@
         @forelse($jobs as $job)
             <a href="{{ route('driver.jobs.show', $job) }}" class="block bg-gray-800 rounded-xl p-4 space-y-2 hover:bg-gray-750 transition">
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-400">{{ $job->localStartedAt()->format('d.m.Y') }}</span>
+                    <span class="text-sm text-gray-400">{{ format_date($job->started_at) }}</span>
                     <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-900 text-blue-300">
                         {{ $job->type->label() }}
                     </span>
@@ -37,7 +37,7 @@
                         </span>
                     @endif
 
-                    <span class="text-gray-500">{{ $job->localStartedAt()->format('H:i') }}@if($job->ended_at)–{{ $job->localEndedAt()->format('H:i') }}@endif</span>
+                    <span class="text-gray-500">{{ format_time($job->started_at) }}@if($job->ended_at)–{{ format_time($job->ended_at) }}@endif</span>
                 </div>
             </a>
         @empty

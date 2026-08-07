@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Module;
 use App\Models\Setting;
 use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Extension\ModuleAssetRegistry;
@@ -18,6 +19,9 @@ class ModuleManager
     protected array $disabledModules = [];
 
     protected bool $discovered = false;
+
+    /** @var array<string, bool>|null  slug => persisted enabled flag; null = not loaded yet */
+    protected ?array $persistedEnabled = null;
 
     public function __construct(
         protected Application $app,
@@ -185,6 +189,11 @@ class ModuleManager
 
         $this->disabledModules = array_diff($this->disabledModules, [$slug]);
 
+        // Load the map before writing into it, otherwise the next read would
+        // discard this change by re-querying.
+        $this->persistedEnabled();
+        $this->persistedEnabled[$slug] = true;
+
         $this->createAssetSymlink($slug);
 
         return true;
@@ -211,6 +220,9 @@ class ModuleManager
             $this->disabledModules[] = $slug;
         }
 
+        $this->persistedEnabled();
+        $this->persistedEnabled[$slug] = false;
+
         $this->removeAssetSymlink($slug);
 
         Log::debug('ModuleManager: module disabled', ['slug' => $slug]);
@@ -220,7 +232,52 @@ class ModuleManager
 
     public function isEnabled(string $slug): bool
     {
-        return isset($this->modules[$slug]) && ! in_array($slug, $this->disabledModules, true);
+        if (! isset($this->modules[$slug])) {
+            return false;
+        }
+
+        // Runtime kill (crash isolation via autoDisable) wins for this request.
+        if (in_array($slug, $this->disabledModules, true)) {
+            return false;
+        }
+
+        // Default-deny: no persisted row means the module was never registered.
+        return $this->persistedEnabled()[$slug] ?? false;
+    }
+
+    /**
+     * Load the persisted enable state once per boot — a single query, not one
+     * per slug. isEnabled() runs for every discovered module during boot()
+     * (M018/S03).
+     *
+     * @return array<string, bool>
+     */
+    protected function persistedEnabled(): array
+    {
+        if ($this->persistedEnabled !== null) {
+            return $this->persistedEnabled;
+        }
+
+        try {
+            return $this->persistedEnabled = Module::query()
+                ->pluck('enabled', 'slug')
+                ->map(fn ($enabled) => (bool) $enabled)
+                ->all();
+        } catch (\Throwable $e) {
+            // Missing table (install, fresh migration) or an unreadable database.
+            // Default-deny: a state we cannot read must never boot modules.
+            Log::warning('ModuleManager: could not read persisted module state', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->persistedEnabled = [];
+        }
+    }
+
+    /** Drop the cached persisted state so the next lookup re-reads it. */
+    public function refreshPersistedState(): void
+    {
+        $this->persistedEnabled = null;
     }
 
     public function getManifest(string $slug): ?array

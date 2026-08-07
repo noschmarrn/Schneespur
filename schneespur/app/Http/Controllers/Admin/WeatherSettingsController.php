@@ -39,9 +39,14 @@ class WeatherSettingsController extends Controller
             'weather_cache_ttl' => ['required', 'integer', 'min:1'],
         ]);
 
+        // Defence in depth: this value ends up in an outbound User-Agent header
+        // (MetNorwayProvider::buildUserAgent). Header separators must never
+        // survive, regardless of what the validation rule currently accepts.
+        $userAgentEmail = preg_replace('/[\r\n]+/', '', $validated['weather_user_agent_email'] ?? '') ?? '';
+
         Setting::set('weather_provider', $validated['weather_provider']);
         Setting::set('weather_api_key', $validated['weather_api_key'] ?? '');
-        Setting::set('weather_user_agent_email', $validated['weather_user_agent_email'] ?? '');
+        Setting::set('weather_user_agent_email', $userAgentEmail);
         Setting::set('weather_cache_ttl', $validated['weather_cache_ttl'] * 60, 'int');
 
         return redirect()->route('admin.settings.weather')

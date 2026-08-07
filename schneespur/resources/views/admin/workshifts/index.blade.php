@@ -49,12 +49,12 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach ($shifts as $shift)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $shift->started_at->setTimezone(config('app.display_timezone'))->format('d.m.Y') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_date($shift->started_at) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $shift->user->name }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $shift->started_at->setTimezone(config('app.display_timezone'))->format('H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_time($shift->started_at) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         @if ($shift->ended_at)
-                                            {{ $shift->ended_at->setTimezone(config('app.display_timezone'))->format('H:i') }}
+                                            {{ format_time($shift->ended_at) }}
                                         @else
                                             <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">{{ __('workshift.status_active') }}</span>
                                         @endif

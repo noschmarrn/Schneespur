@@ -20,7 +20,11 @@ return [
     'field_contact_name'       => 'Contact Person',
     'field_email'              => 'Email',
     'field_phone'              => 'Phone',
-    'field_price_amount'       => 'Price (€)',
+    // No currency symbol in the label: the operator's currency is a setting,
+    // and the form prints the symbol from the Formatter next to the input.
+    // This line is the reason FormatDriftGuardTest exists — the English
+    // translation shipped a Euro sign for releases and nobody noticed.
+    'field_price_amount'       => 'Price',
     'field_price_unit'         => 'Unit',
     'field_notes'              => 'Special Notes',
     'field_lat'                => 'Latitude (optional)',

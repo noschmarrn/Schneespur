@@ -165,4 +165,44 @@ class ModuleApiAuthTest extends TestCase
 
         $response->assertUnauthorized();
     }
+
+    /**
+     * The session fallback exists so an admin can poke a module API from the
+     * browser. It used to admit ANY logged-in user — with five real modules
+     * installed that is a privilege boundary, not a convenience
+     * (M018/S05, M1 from the June audit).
+     */
+    public function test_session_fallback_rejects_a_non_admin_user(): void
+    {
+        $driver = User::create([
+            'name' => 'Driver',
+            'email' => 'api-driver@test.local',
+            'password' => Hash::make('password'),
+        ]);
+        $driver->assignRole('driver');
+
+        $this->actingAs($driver->fresh())
+            ->getJson('/api/mod/example/v1/status')
+            ->assertStatus(403);
+    }
+
+    /**
+     * Losing the admin role must close the door again — the fallback has to read
+     * the role at request time, not trust that the session was opened by an admin.
+     */
+    public function test_session_fallback_rejects_a_user_whose_admin_role_was_revoked(): void
+    {
+        $demoted = User::create([
+            'name' => 'Demoted',
+            'email' => 'api-demoted@test.local',
+            'password' => Hash::make('password'),
+        ]);
+        $demoted->assignRole('admin');
+        $demoted->removeRole('admin');
+        $demoted->assignRole('driver');
+
+        $this->actingAs($demoted->fresh())
+            ->getJson('/api/mod/example/v1/status')
+            ->assertStatus(403);
+    }
 }

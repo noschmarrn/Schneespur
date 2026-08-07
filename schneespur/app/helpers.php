@@ -106,3 +106,74 @@ function module_asset(string $slug, string $file): string
 {
     return '/modules/' . $slug . '/' . ltrim($file, '/');
 }
+
+/**
+ * Render Markdown to HTML with unsafe link schemes neutralised.
+ *
+ * This is the ONLY place in the application that turns Markdown into HTML.
+ * `html_input: strip` removes raw HTML, but on its own it leaves Markdown link
+ * targets untouched — CommonMark's `allow_unsafe_links` defaults to true, so
+ * `[x](javascript:…)` would render as a working anchor (M018/S02).
+ */
+function markdown_safe(string $markdown): string
+{
+    return \Illuminate\Support\Str::markdown($markdown, [
+        'html_input' => 'strip',
+        'allow_unsafe_links' => false,
+    ]);
+}
+
+function format_date(?\DateTimeInterface $moment): string
+{
+    return app(\App\Services\Format\Formatter::class)->date($moment);
+}
+
+function format_time(?\DateTimeInterface $moment, bool $withSeconds = false): string
+{
+    return app(\App\Services\Format\Formatter::class)->time($moment, $withSeconds);
+}
+
+function format_datetime(?\DateTimeInterface $moment, bool $withSeconds = false): string
+{
+    return app(\App\Services\Format\Formatter::class)->dateTime($moment, $withSeconds);
+}
+
+function format_number(?float $value, int $decimals = 1): string
+{
+    return app(\App\Services\Format\Formatter::class)->number($value, $decimals);
+}
+
+function format_money(?int $cents): string
+{
+    return app(\App\Services\Format\Formatter::class)->money($cents);
+}
+
+function format_temperature(?float $celsius): string
+{
+    return app(\App\Services\Format\Formatter::class)->temperature($celsius);
+}
+
+function format_speed(?float $kmh): string
+{
+    return app(\App\Services\Format\Formatter::class)->speed($kmh);
+}
+
+function format_distance(?float $metres): string
+{
+    return app(\App\Services\Format\Formatter::class)->distance($metres);
+}
+
+function format_snow_depth(?float $centimetres): string
+{
+    return app(\App\Services\Format\Formatter::class)->snowDepth($centimetres);
+}
+
+function format_precipitation(?float $millimetres): string
+{
+    return app(\App\Services\Format\Formatter::class)->precipitation($millimetres);
+}
+
+function format_weight(?float $kilograms): string
+{
+    return app(\App\Services\Format\Formatter::class)->weight($kilograms);
+}

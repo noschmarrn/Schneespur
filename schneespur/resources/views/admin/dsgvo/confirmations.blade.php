@@ -24,7 +24,7 @@
                             @foreach ($confirmations as $confirmation)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $confirmation->driver?->displayName() ?? '—' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $confirmation->confirmed_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($confirmation->confirmed_at) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $confirmation->template_version }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $confirmation->ip_address ?? '—' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

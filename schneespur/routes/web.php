@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\UpdateSettingsController;
 use App\Http\Controllers\Admin\BackupSettingsController;
 use App\Http\Controllers\Admin\DispatchSettingsController;
 use App\Http\Controllers\Admin\WeatherSettingsController;
+use App\Http\Controllers\Admin\FormatSettingsController;
 use App\Http\Controllers\Admin\ManualJobController as AdminManualJobController;
 use App\Http\Controllers\Driver\DriverJobController;
 use App\Http\Controllers\Driver\DriverShiftController;
@@ -102,6 +103,13 @@ Route::get('/robots.txt', function () {
     return response(implode("\n", $lines)."\n")
         ->header('Content-Type', 'text/plain; charset=UTF-8');
 });
+
+// Deliberately outside every auth group: the signature and the
+// MediaAccessRegistry gate inside the controller carry the check, and the
+// customer portal uses a different guard than the admin/driver side (M018/S04).
+Route::get('/media/{path}', \App\Http\Controllers\MediaController::class)
+    ->where('path', '.*')
+    ->name('media.show');
 
 if (! is_link(public_path('storage'))) {
     Route::get('/storage/{path}', \App\Http\Controllers\StorageFallbackController::class)
@@ -244,6 +252,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings/weather', [WeatherSettingsController::class, 'edit'])->name('settings.weather');
     Route::post('/settings/weather', [WeatherSettingsController::class, 'update'])->name('settings.weather.update');
     Route::post('/settings/weather/test', [WeatherSettingsController::class, 'testConnection'])->name('settings.weather.test');
+
+    Route::get('/settings/format', [FormatSettingsController::class, 'edit'])->name('settings.format');
+    Route::post('/settings/format', [FormatSettingsController::class, 'update'])->name('settings.format.update');
 
     Route::get('/settings/backup', [BackupSettingsController::class, 'edit'])->name('settings.backup');
     Route::post('/settings/backup', [BackupSettingsController::class, 'update'])->name('settings.backup.update');

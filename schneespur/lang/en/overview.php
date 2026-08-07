@@ -23,7 +23,7 @@ return [
     'job_type_breakdown'  => 'Job Types',
     'weather_summary'     => 'Weather',
     'weather_no_data'     => 'No weather data available.',
-    'temperature_range'   => ':min °C to :max °C',
+    'temperature_range'   => ':min to :max',
     'precipitation_yes'   => 'Precipitation: Yes',
     'precipitation_no'    => 'Precipitation: No',
     'duration_format'     => ':hours h :minutes min',

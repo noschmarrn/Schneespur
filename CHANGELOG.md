@@ -6,6 +6,39 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [1.2.0] — unreleased — Security hardening
+
+A hardening release. Two external penetration tests on 2026-08-03 — one against the 1.1.9 source, one against a live throwaway demo — produced seven distinct findings after verification. All seven are fixed here, and each one has a test that fails if it ever comes back.
+
+Install this update. Nothing needs configuring afterwards, but do read the module note at the end if you run the Telegram or Dokumente module.
+
+### Fixed
+- **Setup steps could still be reached after installation.** On an installed system, parts of the setup wizard remained callable without logging in, which allowed the mail configuration to be rewritten and a scheduled-task run to be triggered. Every setup route now refuses to work once the system is installed, and "installed" is decided the same way everywhere — a finished installation or an existing user account, so a deleted lock file changes nothing.
+- **Text with links could carry active content.** Privacy notices are written in Markdown and rendered in four places (saving, preview, driver onboarding, and the frozen copy stored with each confirmation). The renderer accepted link targets that browsers treat as script. All four paths now go through one renderer that permits ordinary link schemes only.
+- **A disabled module could still run.** Switching a module off was only remembered for the current request; after the next restart it booted again, routes and all. The switch is now read from the database at boot, and — this is the deliberate tightening — a module without a database entry does not boot at all. See the note below if you develop modules locally.
+- **Photos were reachable by anyone who knew or guessed the address.** Uploaded files were stored in a publicly served folder. They are now kept outside the web root and delivered through a checked route: administrators see everything, drivers see the jobs they drove themselves, customers see their own jobs and only while photo sharing is enabled for them, and nobody else sees anything. Links are additionally signed and expire after 24 hours, so a forwarded address stops working. Existing files are moved to the protected location automatically in the background, in small batches, and remain available throughout — no downtime and no action needed.
+- **A manual job could be booked onto someone who is not a driver.** The check consulted an obsolete field that has not been maintained since roles were reworked and that defaulted to "driver" for everyone. It now checks the actual role assignment.
+- **The weather service contact address could contain line breaks.** It is sent as part of an outgoing request header, where line breaks have structural meaning. They are now removed both when saving and immediately before the request. Side effect worth knowing: a value that had picked up a line break previously made weather retrieval fail silently — that now works again.
+- **Any signed-in user could reach the module interface.** The browser-session shortcut into the module API existed for administrators testing a module and admitted every logged-in account, including drivers. It is now restricted to administrators; module access tokens are unaffected.
+
+### Security
+- **PDF library updated** (dompdf 3.1.6) — closes six advisories — and the HTTP library updated alongside it. `composer audit` is clean.
+- **PDF generation no longer fetches remote content.** Nothing in the reports needs it: photos are embedded directly, the logo is read from disk, the GPS track is drawn inline. It was switched on regardless, which is what made several of the advisories above applicable in the first place. Reports look exactly the same.
+
+### Internal (for module developers)
+Three changes affect modules. The module documentation has been updated; the short version:
+
+- **Stored files are private by default.** The local storage backend writes outside the web root, and `url()` now returns a signed, permission-checked link rather than a permanent public one. Every module that stores files **must** register its path prefix with the new `MediaAccessRegistry` — an unregistered prefix is served to nobody and migrated for nobody. Never hand such a link to a third-party service that fetches it server-side; read the bytes and send those.
+- **PDF hooks cannot load remote images.** `data:` URIs and local file paths still work.
+- **The module API's session fallback is administrators only.** Token-based access is unchanged.
+- A hand-copied module directory no longer boots, and no longer appears in the admin interface either, because a module now needs a database entry. Local module development therefore needs that entry created manually; a registration command is planned.
+
+### Known limitations with existing modules
+Two modules need their own update to work fully with 1.2.0. Both updates are prepared separately:
+
+- **Telegram:** job photos are sent to Telegram as a link, and Telegram's servers fetch that link without a session — which the new photo protection correctly refuses. Photo messages will fail until the module sends the image data instead. Text and location messages are unaffected.
+- **Dokumente:** new documents are stored privately from the moment you update. Documents uploaded *before* the update stay where they are, and stay publicly reachable, until the module registers its path — they are downloadable throughout either way.
+
 ## [1.1.9] — 2026-07-29 — Correct product name on container deployments
 
 ### Fixed

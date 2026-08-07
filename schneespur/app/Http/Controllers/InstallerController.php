@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Events\User\UserCreated;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\Format\RegionRegistry;
 use App\Services\Installer\EnvFileWriter;
 use App\Services\Installer\InstallLockManager;
 use App\Services\Installer\MigrationRunner;
@@ -198,6 +199,19 @@ class InstallerController extends Controller
             Setting::set('display_timezone', $validated['timezone']);
             Setting::set('locale', $validated['locale']);
             Setting::set('app_brand', $brand);
+
+            // The wizard derives the format region explicitly here so a wizard
+            // install does not depend on migration ordering (the Docker/Coolify
+            // path has no wizard and relies on the migration doing the same
+            // derivation — see 2026_08_07_000001_seed_format_settings).
+            $regionCode = $validated['locale'] === 'de' ? 'de' : 'us';
+            $preset = app(RegionRegistry::class)->get($regionCode);
+
+            if ($preset !== null) {
+                foreach ($preset->toSettings() as $key => $value) {
+                    Setting::set($key, $value);
+                }
+            }
         } catch (\Exception) {
             // Settings table may not exist yet in edge cases — .env is the primary store
         }
@@ -251,6 +265,10 @@ class InstallerController extends Controller
         UserCreated::dispatch($user);
 
         $this->lockManager->lock();
+
+        // Grant this session — and only this session — the right to finish the
+        // remaining wizard steps, which now run in "installed" state.
+        $request->session()->put('installer_post_install_access', true);
 
         try {
             Setting::set('installed_at', now()->toIso8601String());
@@ -398,11 +416,14 @@ class InstallerController extends Controller
 
     // --- Done ---
 
-    public function showDone(): View
+    public function showDone(Request $request): View
     {
         if (! $this->lockManager->isLocked()) {
             return view('installer.step1-welcome', ['currentStep' => 1]);
         }
+
+        // The wizard is over; revoke the continuation grant.
+        $request->session()->forget('installer_post_install_access');
 
         $admin = User::admins()->first();
 

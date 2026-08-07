@@ -20,13 +20,13 @@
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">{{ __('workshift.col_started_at') }}</dt>
-                    <dd class="mt-1 text-sm text-gray-900">{{ $workShift->started_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900">{{ format_datetime($workShift->started_at) }}</dd>
                 </div>
                 <div>
                     <dt class="text-sm font-medium text-gray-500">{{ __('workshift.col_ended_at') }}</dt>
                     <dd class="mt-1 text-sm text-gray-900">
                         @if ($workShift->ended_at)
-                            {{ $workShift->ended_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') }}
+                            {{ format_datetime($workShift->ended_at) }}
                         @else
                             <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">{{ __('workshift.status_active') }}</span>
                         @endif
@@ -69,10 +69,10 @@
                             <tr>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->customer->name ?? '–' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->type->label() }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->localStartedAt()->format('H:i') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_time($job->started_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     @if ($job->ended_at)
-                                        {{ $job->localEndedAt()->format('H:i') }}
+                                        {{ format_time($job->ended_at) }}
                                     @else
                                         <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">{{ __('job.status_active') }}</span>
                                     @endif

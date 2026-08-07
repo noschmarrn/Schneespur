@@ -102,11 +102,11 @@ class PhotoAnnotationService
         }
         $lines[] = 'Kunde: ' . $customerLine;
 
-        $lines[] = 'Datum: ' . ($job->started_at?->format('d.m.Y H:i') ?? '');
+        $lines[] = 'Datum: ' . format_datetime($job->started_at);
 
         $weather = $job->weatherSnapshots->first();
         if ($weather && $weather->fetched_at) {
-            $lines[] = 'Wetter: ' . $weather->temperature . '°C, '
+            $lines[] = 'Wetter: ' . format_temperature($weather->temperature) . ', '
                 . $weather->precipitation . 'mm, '
                 . $weather->snow_depth . 'cm Schnee';
         }

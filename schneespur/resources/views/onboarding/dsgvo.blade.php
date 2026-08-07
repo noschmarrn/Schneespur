@@ -30,7 +30,7 @@
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
                         <h1 class="text-xl font-semibold text-gray-900">{{ __('dsgvo.notice_heading') }}</h1>
                         <span class="text-sm text-gray-500">
-                            {{ __('dsgvo.notice_meta', ['version' => $templateVersion, 'date' => now()->format('d.m.Y')]) }}
+                            {{ __('dsgvo.notice_meta', ['version' => $templateVersion, 'date' => format_date(now())]) }}
                         </span>
                     </div>
 

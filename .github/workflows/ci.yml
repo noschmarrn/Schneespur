@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Read-only: nothing here needs write access to the repository.
+permissions:
+  contents: read
+
+# A superseded push should not keep a runner busy.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  php:
+    name: PHP tests (${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # composer.json allows ^8.2, and the product has to run on ordinary
+        # shared hosting where 8.2 is still common. Testing only on the version
+        # this machine happens to have would let an 8.2 break ship unnoticed.
+        php: ['8.2', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: sqlite3, pdo_sqlite, zip, sodium, gd, intl
+          coverage: none
+
+      - name: Cache Composer packages
+        uses: actions/cache@v4
+        with:
+          path: schneespur/vendor
+          key: composer-${{ matrix.php }}-${{ hashFiles('schneespur/composer.lock') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      - name: Install PHP dependencies
+        working-directory: schneespur
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      # No .env is created on purpose: .env.testing is tracked and phpunit.xml
+      # carries every value the suite needs. If this step ever starts printing
+      # warnings, that pair has drifted — fix it there, do not add a cp here.
+      - name: Run test suite
+        working-directory: schneespur
+        run: php artisan test
+
+  js:
+    name: JS tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: schneespur/package-lock.json
+
+      - name: Install JS dependencies
+        working-directory: schneespur
+        run: npm ci
+
+      - name: Run JS tests
+        working-directory: schneespur
+        run: npm run test:js
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Both audits read their lock file and query the advisory database; they
+      # need no installed dependencies, so this job skips composer install and
+      # npm ci entirely.
+      #
+      # Both fail the job on any advisory. That is the point of the gate — a
+      # warning nobody has to act on is not a gate. When an advisory has no fix
+      # available, record the decision in the milestone spec and add an explicit
+      # ignore here, so the exception is visible instead of implied.
+      - name: composer audit
+        working-directory: schneespur
+        run: composer audit
+
+      - name: npm audit
+        working-directory: schneespur
+        run: npm audit --omit=dev

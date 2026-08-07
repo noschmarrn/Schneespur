@@ -29,6 +29,15 @@ class EnvFileWriter
     public function set(string $key, string $value): bool
     {
         $this->ensureEnvExists();
+
+        // ensureEnvExists() can fail quietly — a missing .env.example, or a
+        // read-only project directory, which is an ordinary situation on shared
+        // hosting. Check before reading rather than letting file_get_contents
+        // raise a warning on the way to the same `return false`.
+        if (! file_exists(base_path('.env'))) {
+            return false;
+        }
+
         $content = file_get_contents(base_path('.env'));
         if ($content === false) {
             return false;

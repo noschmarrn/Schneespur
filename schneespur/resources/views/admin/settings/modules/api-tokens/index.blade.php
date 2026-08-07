@@ -84,12 +84,12 @@
                                         <span class="ml-1 inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">{{ __('modules.token_expired') }}</span>
                                     @endif
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ $token->created_at->format('d.m.Y H:i') }}</td>
+                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ format_datetime($token->created_at) }}</td>
                                 <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                                    {{ $token->last_used_at ? $token->last_used_at->format('d.m.Y H:i') : __('modules.token_never_used') }}
+                                    {{ $token->last_used_at ? format_datetime($token->last_used_at) : __('modules.token_never_used') }}
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                                    {{ $token->expires_at ? $token->expires_at->format('d.m.Y H:i') : __('modules.token_no_expiry') }}
+                                    {{ $token->expires_at ? format_datetime($token->expires_at) : __('modules.token_no_expiry') }}
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3 text-right text-sm">
                                     <button

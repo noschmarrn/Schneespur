@@ -94,7 +94,7 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach ($jobs as $job)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_datetime($job->started_at) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->user->name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {{ $job->customerObject?->customer?->name ?? $job->customer?->name ?? '–' }}

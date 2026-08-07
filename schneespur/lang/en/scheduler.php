@@ -6,4 +6,5 @@ return [
     'task_queue_work' => 'Queue Worker',
     'task_cron_heartbeat' => 'Cron Heartbeat',
     'task_purge_module_logs' => 'Module Log Cleanup',
+    'task_migrate_public_media' => 'Move legacy files to private storage',
 ];

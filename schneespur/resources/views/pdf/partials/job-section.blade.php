@@ -62,13 +62,13 @@
         @endif
         <tr>
             <td class="label">{{ __('job.detail_started_at') }}</td>
-            <td class="value">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</td>
+            <td class="value">{{ format_datetime($job->started_at) }}</td>
         </tr>
         <tr>
             <td class="label">{{ __('job.detail_ended_at') }}</td>
             <td class="value">
                 @if ($job->ended_at)
-                    {{ $job->localEndedAt()->format('d.m.Y H:i') }}
+                    {{ format_datetime($job->ended_at) }}
                     ({{ $job->durationFormatted() }})
                 @else
                     {{ __('job.status_active') }}
@@ -106,9 +106,9 @@
                 @foreach ($job->weatherSnapshots->whereNotNull('fetched_at') as $snapshot)
                     <tr>
                         <td>{{ $snapshot->moment->label() }}</td>
-                        <td>{{ $snapshot->temperature }} &deg;C</td>
-                        <td>{{ $snapshot->precipitation }} mm</td>
-                        <td>{{ $snapshot->snow_depth }} cm</td>
+                        <td>{{ format_temperature($snapshot->temperature) }}</td>
+                        <td>{{ format_precipitation((float) $snapshot->precipitation) }}</td>
+                        <td>{{ format_snow_depth((float) $snapshot->snow_depth) }}</td>
                         <td>{{ $snapshot->weatherLabel() }}</td>
                     </tr>
                 @endforeach
@@ -144,7 +144,7 @@
                     @foreach ($gpsTableData['points'] as $idx => $point)
                         <tr>
                             <td>{{ $idx + 1 }}</td>
-                            <td>{{ \Carbon\Carbon::createFromTimestamp($point->timestamp)->setTimezone(config('app.display_timezone'))->format('H:i:s') }}</td>
+                            <td>{{ format_time(\Carbon\Carbon::createFromTimestamp($point->timestamp), true) }}</td>
                             <td>{{ number_format($point->lat, 5) }}</td>
                             <td>{{ number_format($point->lon, 5) }}</td>
                         </tr>
@@ -179,7 +179,7 @@
                                 <div class="photo-caption">{{ $photo->caption }}</div>
                             @endif
                             @if ($photo->taken_at)
-                                <div class="photo-caption">{{ $photo->taken_at->setTimezone(config('app.display_timezone'))->format('H:i') }}</div>
+                                <div class="photo-caption">{{ format_time($photo->taken_at) }}</div>
                             @endif
                         </td>
                     @endforeach

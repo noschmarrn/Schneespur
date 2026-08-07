@@ -60,8 +60,8 @@
             <div>
                 <x-input-label for="price_amount" :value="__('customer_object.field_price_amount')" />
                 <div class="relative mt-1">
-                    <x-text-input id="price_amount" name="price_amount" type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]{1,2})?" class="block w-full pr-10" :value="old('price_amount', isset($object) && $object->price_amount_cents ? number_format($object->price_amount_cents / 100, 2, ',', '') : '')" />
-                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 text-sm">€</span>
+                    <x-text-input id="price_amount" name="price_amount" type="text" inputmode="decimal" class="block w-full pr-10" :value="old('price_amount', isset($object) && $object->price_amount_cents ? format_number($object->price_amount_cents / 100, 2) : '')" />
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 text-sm">{{ app(\App\Services\Format\Formatter::class)->currencySymbol() }}</span>
                 </div>
                 <x-input-error :messages="$errors->get('price_amount')" class="mt-2" />
             </div>

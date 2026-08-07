@@ -23,5 +23,10 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="CACHE_STORE" value="array"/>
+        <!-- Pinned on purpose: without it Laravel falls back to the `database`
+             driver when no env file is present and to `file` when one is, so the
+             suite would behave differently depending on the developer's checkout.
+             S01 lost time to exactly that. -->
+        <env name="SESSION_DRIVER" value="file"/>
     </php>
 </phpunit>

@@ -16,11 +16,35 @@ class DomPdfRenderer implements PdfRendererInterface
         return 'DomPDF';
     }
 
+    /**
+     * Resolve the options every render path shares.
+     *
+     * `isRemoteEnabled` defaults to **false**: no core PDF loads anything over
+     * http(s) — photos are inlined as data: URIs, the logo is an absolute file
+     * path, the GPS track is an inline SVG — so leaving dompdf's fetcher on
+     * only donates an SSRF surface (M018/S05). A caller that genuinely needs a
+     * remote resource has to ask for it and own that decision.
+     *
+     * Note this gates http/https only. dompdf treats `data://` and `file://` as
+     * separate allowed protocols (`Options::validateRemoteUri()`), so turning
+     * this off leaves the embedded photos and the logo untouched.
+     *
+     * @param  array{paper?: string, orientation?: string, isRemoteEnabled?: bool}  $options
+     * @return array{paper: string, orientation: string, isRemoteEnabled: bool}
+     */
+    public function resolveOptions(array $options): array
+    {
+        return [
+            'paper' => $options['paper'] ?? 'a4',
+            'orientation' => $options['orientation'] ?? 'portrait',
+            'isRemoteEnabled' => $options['isRemoteEnabled'] ?? false,
+        ];
+    }
+
     public function render(string $view, array $data, array $options = []): string
     {
-        $paper = $options['paper'] ?? 'a4';
-        $orientation = $options['orientation'] ?? 'portrait';
-        $isRemoteEnabled = $options['isRemoteEnabled'] ?? true;
+        ['paper' => $paper, 'orientation' => $orientation, 'isRemoteEnabled' => $isRemoteEnabled]
+            = $this->resolveOptions($options);
 
         $pdf = Pdf::loadView($view, $data);
         $pdf->setPaper($paper, $orientation);
@@ -59,9 +83,14 @@ class DomPdfRenderer implements PdfRendererInterface
 
     public function renderFooter(string $html, string $leftText, string $rightText): string
     {
+        ['paper' => $paper, 'orientation' => $orientation, 'isRemoteEnabled' => $isRemoteEnabled]
+            = $this->resolveOptions([]);
+
         $pdf = Pdf::loadHTML($html);
-        $pdf->setPaper('a4', 'portrait');
-        $pdf->setOption('isRemoteEnabled', true);
+        $pdf->setPaper($paper, $orientation);
+        // Set explicitly rather than inheriting the package default: a change to
+        // config/dompdf.php must not be able to switch this path back on.
+        $pdf->setOption('isRemoteEnabled', $isRemoteEnabled);
         $pdf->render();
 
         $canvas = $pdf->getDomPDF()->getCanvas();

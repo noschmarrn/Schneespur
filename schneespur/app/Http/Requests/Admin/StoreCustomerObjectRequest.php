@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Services\Format\Formatter;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -14,12 +16,6 @@ class StoreCustomerObjectRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        if ($this->has('price_amount') && is_string($this->price_amount)) {
-            $this->merge([
-                'price_amount' => str_replace(',', '.', $this->price_amount),
-            ]);
-        }
-
         // notify_recipients is a mode enum consumed as customer|object|both
         // (see SendJobCompletedNotification / SendCustomerReportEmail).
         // Fall back to the DB default when the field is missing or empty
@@ -42,7 +38,21 @@ class StoreCustomerObjectRequest extends FormRequest
             'contact_name' => ['nullable', 'string', 'max:200'],
             'contact_email' => ['nullable', 'email', 'max:200'],
             'contact_phone' => ['nullable', 'string', 'max:50'],
-            'price_amount' => ['nullable', 'numeric', 'min:0'],
+            'price_amount' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    $parsed = app(Formatter::class)->parseDecimal((string) $value);
+
+                    if ($parsed === null || $parsed < 0) {
+                        $fail(__('customer_object.validation_price_amount_invalid'));
+                    }
+                },
+            ],
             'price_unit' => ['nullable', 'string', 'in:per_job,monthly,seasonal'],
             'site_notes' => ['nullable', 'string'],
             'plow_threshold_cm' => ['nullable', 'integer', 'min:0', 'max:255'],
@@ -67,8 +77,9 @@ class StoreCustomerObjectRequest extends FormRequest
     {
         $data = parent::validated($key, $default);
 
-        if ($key === null && isset($data['price_amount'])) {
-            $data['price_amount_cents'] = (int) round((float) $data['price_amount'] * 100);
+        if ($key === null && array_key_exists('price_amount', $data)) {
+            $data['price_amount_cents'] = app(Formatter::class)
+                ->parseMoneyToCents((string) $data['price_amount']);
             unset($data['price_amount']);
         }
 

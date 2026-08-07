@@ -21,7 +21,7 @@ return [
     'field_contact_name'       => 'Kontaktperson',
     'field_contact_email'      => 'E-Mail',
     'field_contact_phone'      => 'Telefon',
-    'field_price_amount'       => 'Preis (€)',
+    'field_price_amount'       => 'Preis',
     'field_price_unit'         => 'Einheit',
     'field_lat'                => 'Breitengrad (optional)',
     'field_lon'                => 'Längengrad (optional)',
@@ -59,6 +59,7 @@ return [
     'geocode_failed'           => 'Adresse konnte nicht aufgelöst werden.',
     'geocode_address_required' => 'Bitte füllen Sie Straße, PLZ und Ort aus.',
     'validation_notification_email_required' => 'Das Feld Benachrichtigungs-E-Mail ist erforderlich, wenn Automatische Benachrichtigung aktiviert ist.',
+    'validation_price_amount_invalid' => 'Der Preis konnte nicht gelesen werden. Bitte eine gültige, nicht negative Zahl eingeben.',
     'btn_objects'              => 'Objekte',
     'objects_count'            => ':count Objekt(e)',
 ];

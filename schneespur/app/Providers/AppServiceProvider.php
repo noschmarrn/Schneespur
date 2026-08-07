@@ -9,7 +9,9 @@ use App\Models\JobPhoto;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Policies\JobPhotoPolicy;
 use App\Policies\JobPolicy;
+use Illuminate\Contracts\Auth\Authenticatable;
 use App\Services\AlertService;
 use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\Diagnostic\DiagnosticPayloadSanitizer;
@@ -26,6 +28,9 @@ use App\Services\Extension\PermissionRegistry;
 use App\Services\Extension\RoleTemplateRegistry;
 use App\Services\Extension\LifecycleFieldRegistry;
 use App\Services\Extension\SlotRegistry;
+use App\Services\Format\Formatter;
+use App\Services\Format\RegionPreset;
+use App\Services\Format\RegionRegistry;
 use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\ModuleAssetRegistry;
 use App\Services\Extension\TwoFactorMethodRegistry;
@@ -51,10 +56,12 @@ use App\Services\Report\ReportFormatRegistry;
 use App\Services\Scheduler\ScheduledTaskRegistry;
 use App\Services\Scheduler\Tasks\CronHeartbeatTask;
 use App\Services\Scheduler\Tasks\QueueWorkTask;
+use App\Services\Scheduler\Tasks\MigratePublicMediaTask;
 use App\Services\Scheduler\Tasks\RetentionDeleteTask;
 use App\Services\Scheduler\Tasks\PurgeModuleLogsTask;
 use App\Services\Scheduler\Tasks\UpdateCheckTask;
 use App\Services\Storage\LocalStorageBackend;
+use App\Services\Storage\MediaAccessRegistry;
 use App\Services\Storage\StorageBackendRegistry;
 use App\Services\Weather\BrightSkyProvider;
 use App\Services\Weather\MetNorwayProvider;
@@ -93,6 +100,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(RoleTemplateRegistry::class);
         $this->app->singleton(SlotRegistry::class);
         $this->app->singleton(LifecycleFieldRegistry::class);
+        $this->app->singleton(MediaAccessRegistry::class);
+        $this->app->singleton(RegionRegistry::class);
+        $this->app->singleton(Formatter::class, fn () => Formatter::fromSettings());
         $this->app->singleton(TwoFactorMethodRegistry::class);
         $this->app->singleton(DiagnosticPayloadSanitizer::class);
         $this->app->singleton(DiagnosticReporterRegistry::class, fn ($app) => new DiagnosticReporterRegistry($app));
@@ -135,6 +145,7 @@ class AppServiceProvider extends ServiceProvider
             $registry->register('queue-work', QueueWorkTask::class);
             $registry->register('cron-heartbeat', CronHeartbeatTask::class);
             $registry->register('purge-module-logs', PurgeModuleLogsTask::class);
+            $registry->register('migrate-public-media', MigratePublicMediaTask::class);
 
             return $registry;
         });
@@ -228,11 +239,13 @@ class AppServiceProvider extends ServiceProvider
         ?>");
 
         $this->registerCoreLocales();
+        $this->registerCoreRegions();
         $this->registerCorePermissions();
         $this->registerCoreNavigation();
         $this->registerCorePortalNavigation();
         $this->registerCoreDashboardWidgets();
         $this->registerCoreJobTypes();
+        $this->registerCoreMediaAccess();
 
         $this->app->booted(function () {
             app(ModuleManager::class)->boot();
@@ -263,6 +276,34 @@ class AppServiceProvider extends ServiceProvider
         $registry = app(LocaleRegistry::class);
         $registry->add('de', 'Deutsch');
         $registry->add('en', 'English');
+    }
+
+    private function registerCoreRegions(): void
+    {
+        $registry = $this->app->make(RegionRegistry::class);
+
+        foreach ([
+            // code  label                currency  pos       number           date          time   dist        temp          weight
+            ['de',   'Deutschland',       'EUR',    'after',  'dot_comma',     'dmy_dot',    '24h', 'metric',   'celsius',    'metric'],
+            ['at',   'Österreich',        'EUR',    'after',  'dot_comma',     'dmy_dot',    '24h', 'metric',   'celsius',    'metric'],
+            ['ch',   'Schweiz',           'CHF',    'before', 'apostrophe_dot', 'dmy_dot',   '24h', 'metric',   'celsius',    'metric'],
+            ['us',   'United States',     'USD',    'before', 'comma_dot',     'mdy_slash',  '12h', 'imperial', 'fahrenheit', 'imperial'],
+            ['ca',   'Canada',            'CAD',    'before', 'comma_dot',     'dmy_slash',  '12h', 'metric',   'celsius',    'metric'],
+            ['gb',   'United Kingdom',    'GBP',    'before', 'comma_dot',     'dmy_slash',  '24h', 'imperial', 'celsius',    'metric'],
+        ] as [$code, $label, $cur, $pos, $num, $date, $time, $dist, $temp, $weight]) {
+            $registry->add(new RegionPreset(
+                code: $code,
+                label: $label,
+                currencyCode: $cur,
+                currencyPosition: $pos,
+                numberFormat: $num,
+                dateFormat: $date,
+                timeFormat: $time,
+                unitDistance: $dist,
+                unitTemperature: $temp,
+                unitWeight: $weight,
+            ));
+        }
     }
 
     private function registerCorePermissions(): void
@@ -547,6 +588,36 @@ class AppServiceProvider extends ServiceProvider
         $nav->addItem('reports', 'portal.nav_reports', 'portal.reports.index', 30, 'portal.reports.*');
         $nav->addItem('notifications', 'portal.nav_notifications', 'portal.notifications.index', 40, 'portal.notifications.*');
         $nav->addItem('profile', 'portal.nav_profile', 'portal.profile.edit', 50, 'portal.profile.*');
+    }
+
+    /**
+     * Claim the core's own storage prefix (M018/S04).
+     *
+     * MediaAccessRegistry is default-deny, so without this every job photo is
+     * unreachable. The same list drives StorageFallbackController's refusal and
+     * the scope of PublicMediaMigrator — a module that stores files has to
+     * register its own prefix or its files are neither served nor migrated.
+     */
+    private function registerCoreMediaAccess(): void
+    {
+        $this->app->make(MediaAccessRegistry::class)->register(
+            'photos/',
+            function (string $path, ?Authenticatable $viewer): bool {
+                $photo = JobPhoto::query()
+                    ->where('file_path', $path)
+                    ->orWhere('thumbnail_path', $path)
+                    ->orWhere('annotated_path', $path)
+                    ->first();
+
+                // A path under photos/ with no row behind it is not ours to
+                // serve, whoever is asking.
+                if ($photo === null) {
+                    return false;
+                }
+
+                return $this->app->make(JobPhotoPolicy::class)->view($viewer, $photo);
+            }
+        );
     }
 
     private function registerCoreJobTypes(): void
