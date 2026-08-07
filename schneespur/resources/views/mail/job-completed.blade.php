@@ -23,7 +23,7 @@
 @if($weather)
 {{ __('notification.weather_summary', [
     'temperature' => format_temperature((float) $weather->temperature),
-    'precipitation' => number_format((float) $weather->precipitation, 1),
+    'precipitation' => format_precipitation((float) $weather->precipitation),
 ]) }}
 @endif
 @else

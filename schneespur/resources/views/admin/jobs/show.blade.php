@@ -155,8 +155,8 @@
                                         <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">{{ $snapshot->providerLabel() }}</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_temperature($snapshot->temperature) }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->precipitation }} mm</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->snow_depth }} cm</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_precipitation((float) $snapshot->precipitation) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_snow_depth((float) $snapshot->snow_depth) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_speed($snapshot->wind_speed) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->humidity !== null ? $snapshot->humidity . ' %' : '–' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->weather_code }}</td>

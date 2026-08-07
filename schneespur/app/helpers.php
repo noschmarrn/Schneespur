@@ -163,6 +163,16 @@ function format_distance(?float $metres): string
     return app(\App\Services\Format\Formatter::class)->distance($metres);
 }
 
+function format_snow_depth(?float $centimetres): string
+{
+    return app(\App\Services\Format\Formatter::class)->snowDepth($centimetres);
+}
+
+function format_precipitation(?float $millimetres): string
+{
+    return app(\App\Services\Format\Formatter::class)->precipitation($millimetres);
+}
+
 function format_weight(?float $kilograms): string
 {
     return app(\App\Services\Format\Formatter::class)->weight($kilograms);

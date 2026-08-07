@@ -84,6 +84,30 @@ class FormatterUnitsTest extends TestCase
         $this->assertSame('1.7 tn', $this->imperial()->weight(1500.0));
     }
 
+    /**
+     * Snow depth is the central number in a winter-service Einsatznachweis.
+     * An American operator measures it in inches — leaving it metric would put
+     * "12.00 cm" in the same table row as "23.9 °F".
+     */
+    public function test_snow_depth_and_precipitation_follow_the_distance_unit(): void
+    {
+        $this->assertSame('12,0 cm', $this->metric()->snowDepth(12.0));
+        $this->assertSame('4.7 in', $this->imperial()->snowDepth(12.0));
+
+        $this->assertSame('1,2 mm', $this->metric()->precipitation(1.2));
+        $this->assertSame('0.05 in', $this->imperial()->precipitation(1.2));
+    }
+
+    /**
+     * Precipitation keeps two decimals in inches: a millimetre is 0.04 in, so
+     * one decimal would round a real rainfall down to "0.0".
+     */
+    public function test_a_small_rainfall_does_not_round_away_in_inches(): void
+    {
+        $this->assertSame('0.04 in', $this->imperial()->precipitation(1.0));
+        $this->assertNotSame('0.0 in', $this->imperial()->precipitation(1.0));
+    }
+
     public function test_null_yields_the_placeholder_everywhere(): void
     {
         $f = $this->metric();
@@ -92,5 +116,7 @@ class FormatterUnitsTest extends TestCase
         $this->assertSame('—', $f->speed(null));
         $this->assertSame('—', $f->distance(null));
         $this->assertSame('—', $f->weight(null));
+        $this->assertSame('—', $f->snowDepth(null));
+        $this->assertSame('—', $f->precipitation(null));
     }
 }

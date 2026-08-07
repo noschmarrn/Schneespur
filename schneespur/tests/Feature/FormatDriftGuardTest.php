@@ -110,6 +110,17 @@ class FormatDriftGuardTest extends TestCase
                     $offenders[] = "{$relative} ({$needle})";
                 }
             }
+
+            // mm and cm cannot be searched as bare strings — "comment" contains
+            // one and the PDF stylesheet's "@page { margin: 15mm }" the other.
+            // Only a unit glued to a printed value or a quoted suffix counts.
+            foreach (['/\}\}\s*(mm|cm)\b/' => 'appended to a Blade echo',
+                '/\'\s(mm|cm)\'/' => 'a quoted suffix',
+                '/:\w+\s(mm|cm)\b/' => 'baked into a translation'] as $pattern => $what) {
+                if (preg_match($pattern, $contents)) {
+                    $offenders[] = "{$relative} ({$what})";
+                }
+            }
         }
 
         $this->assertSame([], $offenders, 'Units and currency symbols belong in lang/*/format.php, printed by the Formatter');
@@ -126,5 +137,13 @@ class FormatDriftGuardTest extends TestCase
         $this->assertSame(1, preg_match("/format\('d\.m\.Y/", "\$d->format('d.m.Y H:i')"));
         $this->assertSame(1, preg_match("/format\('H:i/", "\$d->format('H:i')"));
         $this->assertSame(0, preg_match("/format\('H:i/", "\$d->format('Y-m-d')"));
+
+        // The mm/cm patterns must fire on a real offender and stay quiet on the
+        // two false friends that made a bare substring search impossible.
+        $this->assertSame(1, preg_match('/\}\}\s*(mm|cm)\b/', '{{ $snapshot->snow_depth }} cm'));
+        $this->assertSame(1, preg_match('/\'\s(mm|cm)\'/', "number_format(\$x, 1) . ' mm'"));
+        $this->assertSame(1, preg_match('/:\w+\s(mm|cm)\b/', 'Wetter: :precipitation mm Niederschlag'));
+        $this->assertSame(0, preg_match('/\}\}\s*(mm|cm)\b/', '{{-- a comment --}}'));
+        $this->assertSame(0, preg_match('/\'\s(mm|cm)\'/', '@page { margin: 15mm 15mm 18mm 15mm; }'));
     }
 }

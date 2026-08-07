@@ -99,11 +99,11 @@
                             </div>
                             <div class="bg-gray-700 rounded-lg p-2">
                                 <p class="text-xs text-gray-500">{{ __('driver.history_detail_precipitation') }}</p>
-                                <p class="text-sm font-medium text-gray-100">{{ number_format($ws->precipitation, 1) }} mm</p>
+                                <p class="text-sm font-medium text-gray-100">{{ format_precipitation((float) $ws->precipitation) }}</p>
                             </div>
                             <div class="bg-gray-700 rounded-lg p-2">
                                 <p class="text-xs text-gray-500">{{ __('driver.history_detail_snow_depth') }}</p>
-                                <p class="text-sm font-medium text-gray-100">{{ number_format($ws->snow_depth, 1) }} cm</p>
+                                <p class="text-sm font-medium text-gray-100">{{ format_snow_depth((float) $ws->snow_depth) }}</p>
                             </div>
                         </div>
                     </div>

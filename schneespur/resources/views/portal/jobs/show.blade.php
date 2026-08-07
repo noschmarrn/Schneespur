@@ -76,8 +76,8 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $snapshot->moment->label() }}</td>
                                 @if ($snapshot->fetched_at)
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_temperature($snapshot->temperature) }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->precipitation }} mm</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->snow_depth }} cm</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_precipitation((float) $snapshot->precipitation) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_snow_depth((float) $snapshot->snow_depth) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->weather_code }}</td>
                                 @else
                                     <td colspan="4" class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ __('job.weather_not_fetched') }}</td>

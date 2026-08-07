@@ -200,8 +200,8 @@
                         <tr>
                             <td>{{ $snapshot->moment->label() }}</td>
                             <td>{{ format_temperature($snapshot->temperature) }}</td>
-                            <td>{{ $snapshot->precipitation }} mm</td>
-                            <td>{{ $snapshot->snow_depth }} cm</td>
+                            <td>{{ format_precipitation((float) $snapshot->precipitation) }}</td>
+                            <td>{{ format_snow_depth((float) $snapshot->snow_depth) }}</td>
                             <td>{{ $snapshot->weatherLabel() }}</td>
                         </tr>
                     @endforeach

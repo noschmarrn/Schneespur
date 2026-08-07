@@ -255,6 +255,42 @@ class Formatter
             : $this->number($metres / 1000, 1) . ' ' . __('format.unit_kilometre');
     }
 
+    /**
+     * Snow depth, stored in centimetres.
+     *
+     * Follows unit_distance rather than carrying a setting of its own: nobody
+     * measures the road in miles and the snow on it in centimetres. In a
+     * winter-service Einsatznachweis this is the number the whole document is
+     * about, so it must not be the one that stayed metric.
+     */
+    public function snowDepth(?float $centimetres): string
+    {
+        if ($centimetres === null) {
+            return self::PLACEHOLDER;
+        }
+
+        return $this->setting('unit_distance') === 'imperial'
+            ? $this->number($centimetres / 2.54, 1) . ' ' . __('format.unit_inch')
+            : $this->number($centimetres, 1) . ' ' . __('format.unit_centimetre');
+    }
+
+    /**
+     * Precipitation, stored in millimetres.
+     *
+     * Two decimals in inches, one in millimetres: a millimetre is 0.04 in, so
+     * a single decimal would round a real rainfall down to "0.0 in".
+     */
+    public function precipitation(?float $millimetres): string
+    {
+        if ($millimetres === null) {
+            return self::PLACEHOLDER;
+        }
+
+        return $this->setting('unit_distance') === 'imperial'
+            ? $this->number($millimetres / 25.4, 2) . ' ' . __('format.unit_inch')
+            : $this->number($millimetres, 1) . ' ' . __('format.unit_millimetre');
+    }
+
     public function weight(?float $kilograms): string
     {
         if ($kilograms === null) {
