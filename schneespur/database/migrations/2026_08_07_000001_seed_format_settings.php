@@ -12,8 +12,12 @@ return new class extends Migration
      * The web installer sets them explicitly, but the Docker/Coolify deployment
      * only ever runs `migrate` — no wizard. There this migration IS the
      * decision, so it must read APP_LOCALE instead of assuming Germany. Same
-     * shape as 2026_05_10_000001_seed_app_brand_setting: existing installs are
-     * untouched because it only fills a missing value.
+     * shape as 2026_05_10_000001_seed_app_brand_setting, but guarded per key
+     * rather than on `format_region` alone: an install can reach a state where
+     * some of the nine keys are set and others are not (e.g. a `down()`
+     * rollback followed by a partial save on the settings page), and the plan
+     * requires that no migration ever overwrites a value an operator chose.
+     * So each key is filled only if it is still missing.
      *
      * Why `us` and not `gb` as the non-German template: the English interface
      * is, per the operator's own numbers, predominantly installed in North
@@ -23,10 +27,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (Setting::get('format_region') !== null) {
-            return;
-        }
-
         $code = config('app.locale') === 'de' ? 'de' : 'us';
         $preset = app(RegionRegistry::class)->get($code);
 
@@ -35,6 +35,10 @@ return new class extends Migration
         }
 
         foreach ($preset->toSettings() as $key => $value) {
+            if (Setting::get($key) !== null) {
+                continue; // never overwrite what an operator chose
+            }
+
             Setting::set($key, $value);
         }
     }

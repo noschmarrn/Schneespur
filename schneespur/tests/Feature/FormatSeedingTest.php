@@ -87,6 +87,14 @@ class FormatSeedingTest extends TestCase
         $this->assertSame('ch', Setting::get('format_region'));
     }
 
+    /**
+     * Positive-path coverage of the fill behaviour on a completely unconfigured
+     * install. Note: this does NOT exercise the guard — `format_region` is
+     * already null here, so it takes the same path with or without the guard.
+     * The guard itself is covered by
+     * test_migration_up_does_not_overwrite_an_existing_value_directly() and
+     * test_migration_up_fills_only_missing_keys_on_a_partially_configured_install().
+     */
     public function test_migration_up_fills_missing_settings_directly(): void
     {
         Setting::whereIn('key', ['format_region', 'currency_code', 'date_format'])->delete();
@@ -97,5 +105,28 @@ class FormatSeedingTest extends TestCase
         $this->assertSame('de', Setting::get('format_region'));
         $this->assertSame('EUR', Setting::get('currency_code'));
         $this->assertSame('dmy_dot', Setting::get('date_format'));
+    }
+
+    /**
+     * An install can reach a state where some of the nine format keys are set
+     * and others are not — e.g. a down() rollback followed by a partial save
+     * on the settings page, which writes the eight field keys but never
+     * touches format_region. The migration must guard per key, not on
+     * format_region alone, or it silently overwrites the hand-set value here.
+     */
+    public function test_migration_up_fills_only_missing_keys_on_a_partially_configured_install(): void
+    {
+        Setting::whereIn('key', [
+            'format_region', 'currency_code', 'currency_position', 'number_format',
+            'date_format', 'time_format', 'unit_distance', 'unit_temperature', 'unit_weight',
+        ])->delete();
+        Setting::set('date_format', 'mdy_slash');
+        config(['app.locale' => 'de']);
+
+        $this->loadMigration()->up();
+
+        $this->assertSame('mdy_slash', Setting::get('date_format'));
+        $this->assertSame('de', Setting::get('format_region'));
+        $this->assertSame('EUR', Setting::get('currency_code'));
     }
 }
