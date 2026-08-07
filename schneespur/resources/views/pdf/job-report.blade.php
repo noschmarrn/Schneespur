@@ -69,7 +69,7 @@
                 @endif
                 <td>
                     <h1>{{ __('job.pdf_title') }}</h1>
-                    <div class="subtitle">{{ __('job.pdf_subtitle', ['id' => $job->id, 'date' => $job->localStartedAt()->format('d.m.Y')]) }}</div>
+                    <div class="subtitle">{{ __('job.pdf_subtitle', ['id' => $job->id, 'date' => format_date($job->started_at)]) }}</div>
                     <div class="subtitle" style="margin-top: 2px; font-size: 10pt; color: #1e293b; font-weight: bold;">{{ $job->customerObject?->customer?->name ?? $job->customer?->name ?? '–' }}@if($job->customerObject) — {{ $job->customerObject->name }}@endif</div>
                 </td>
                 @if ($companyName)
@@ -155,13 +155,13 @@
             @endif
             <tr>
                 <td class="label">{{ __('job.detail_started_at') }}</td>
-                <td class="value">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</td>
+                <td class="value">{{ format_datetime($job->started_at) }}</td>
             </tr>
             <tr>
                 <td class="label">{{ __('job.detail_ended_at') }}</td>
                 <td class="value">
                     @if ($job->ended_at)
-                        {{ $job->localEndedAt()->format('d.m.Y H:i') }}
+                        {{ format_datetime($job->ended_at) }}
                         ({{ $job->durationFormatted() }})
                     @else
                         {{ __('job.status_active') }}
@@ -199,7 +199,7 @@
                     @foreach ($job->weatherSnapshots->whereNotNull('fetched_at') as $snapshot)
                         <tr>
                             <td>{{ $snapshot->moment->label() }}</td>
-                            <td>{{ $snapshot->temperature }} &deg;C</td>
+                            <td>{{ format_temperature($snapshot->temperature) }}</td>
                             <td>{{ $snapshot->precipitation }} mm</td>
                             <td>{{ $snapshot->snow_depth }} cm</td>
                             <td>{{ $snapshot->weatherLabel() }}</td>
@@ -272,7 +272,7 @@
                                     <div class="photo-caption">{{ $photo->caption }}</div>
                                 @endif
                                 @if ($photo->taken_at)
-                                    <div class="photo-caption">{{ $photo->taken_at->setTimezone(config('app.display_timezone'))->format('H:i') }}</div>
+                                    <div class="photo-caption">{{ format_time($photo->taken_at) }}</div>
                                 @endif
                             </td>
                         @endforeach

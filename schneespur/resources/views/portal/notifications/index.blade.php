@@ -17,7 +17,7 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach ($logs as $log)
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $log->created_at->format('d.m.Y H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_datetime($log->created_at) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         @switch($log->type)
                                             @case('job_completed')

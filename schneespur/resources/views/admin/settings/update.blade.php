@@ -75,7 +75,7 @@
                     <dt class="text-gray-500">{{ __('update.trust_expires') }}</dt>
                     <dd class="text-gray-900">
                         @if($state['trust_expires_at'])
-                            {{ \Carbon\Carbon::parse($state['trust_expires_at'])->format('d.m.Y') }}
+                            {{ format_date(\Carbon\Carbon::parse($state['trust_expires_at'])) }}
                         @else
                             {{ __('update.trust_not_loaded') }}
                         @endif

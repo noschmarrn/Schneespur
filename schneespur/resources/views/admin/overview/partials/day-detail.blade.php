@@ -43,7 +43,7 @@
                     <tbody class="divide-y divide-gray-200">
                         @foreach($summary->jobs as $job)
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->localStartedAt()->format('H:i') }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_time($job->started_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ $job->customerObject?->customer?->name ?? $job->customer?->name ?? '—' }}
                                     @if($job->customerObject)

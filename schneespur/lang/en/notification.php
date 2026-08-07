@@ -5,7 +5,7 @@ return [
     'job_completed_updated_subject' => 'Updated Service Report: :customer on :date',
     'greeting' => 'Dear :name,',
     'job_completed_body' => 'a service operation (:type) was performed for you on :date. Time: :time_start – :time_end. Driver: :driver.',
-    'weather_summary' => 'Weather: :temperature°C, :precipitation mm precipitation',
+    'weather_summary' => 'Weather: :temperature, :precipitation mm precipitation',
     'weather_unavailable' => 'Weather data was not available at the time of the service operation.',
     'weather_update_note' => 'This is an updated service report with weather data now available.',
     'pdf_attached' => 'Please find the complete service report attached as a PDF.',

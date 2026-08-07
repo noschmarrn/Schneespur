@@ -21,7 +21,7 @@ return [
     'field_contact_name'       => 'Contact Person',
     'field_contact_email'      => 'Email',
     'field_contact_phone'      => 'Phone',
-    'field_price_amount'       => 'Price (€)',
+    'field_price_amount'       => 'Price',
     'field_price_unit'         => 'Unit',
     'field_lat'                => 'Latitude (optional)',
     'field_lon'                => 'Longitude (optional)',
@@ -59,6 +59,7 @@ return [
     'geocode_failed'           => 'Could not resolve address.',
     'geocode_address_required' => 'Please fill in street, postal code and city.',
     'validation_notification_email_required' => 'The notification email field is required when automatic notification is enabled.',
+    'validation_price_amount_invalid' => 'The price could not be read. Enter a valid, non-negative number.',
     'btn_objects'              => 'Objects',
     'objects_count'            => ':count object(s)',
 ];

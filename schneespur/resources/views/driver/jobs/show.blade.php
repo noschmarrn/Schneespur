@@ -12,7 +12,7 @@
         {{-- Customer & type --}}
         <div class="bg-gray-800 rounded-xl p-4 space-y-3">
             <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-400">{{ $job->localStartedAt()->format('d.m.Y') }}</span>
+                <span class="text-sm text-gray-400">{{ format_date($job->started_at) }}</span>
                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-blue-900 text-blue-300">
                     {{ $job->type->label() }}
                 </span>
@@ -51,13 +51,13 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <p class="text-xs text-gray-500">{{ __('driver.history_detail_started') }}</p>
-                    <p class="text-sm text-gray-100">{{ $job->localStartedAt()->format('H:i') }}</p>
+                    <p class="text-sm text-gray-100">{{ format_time($job->started_at) }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500">{{ __('driver.history_detail_ended') }}</p>
                     <p class="text-sm text-gray-100">
                         @if($job->ended_at)
-                            {{ $job->localEndedAt()->format('H:i') }}
+                            {{ format_time($job->ended_at) }}
                         @else
                             <span class="text-green-400">{{ __('driver.history_duration_active') }}</span>
                         @endif
@@ -95,7 +95,7 @@
                         <div class="grid grid-cols-3 gap-2 text-center">
                             <div class="bg-gray-700 rounded-lg p-2">
                                 <p class="text-xs text-gray-500">{{ __('driver.history_detail_temperature') }}</p>
-                                <p class="text-sm font-medium text-gray-100">{{ number_format($ws->temperature, 1) }} °C</p>
+                                <p class="text-sm font-medium text-gray-100">{{ format_temperature($ws->temperature) }}</p>
                             </div>
                             <div class="bg-gray-700 rounded-lg p-2">
                                 <p class="text-xs text-gray-500">{{ __('driver.history_detail_precipitation') }}</p>

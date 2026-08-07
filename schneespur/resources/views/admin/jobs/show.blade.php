@@ -95,13 +95,13 @@
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('job.detail_started_at') }}</dt>
-                <dd class="mt-1 text-sm text-gray-900">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</dd>
+                <dd class="mt-1 text-sm text-gray-900">{{ format_datetime($job->started_at) }}</dd>
             </div>
             <div>
                 <dt class="text-sm font-medium text-gray-500">{{ __('job.detail_ended_at') }}</dt>
                 <dd class="mt-1 text-sm text-gray-900">
                     @if ($job->ended_at)
-                        {{ $job->localEndedAt()->format('d.m.Y H:i') }}
+                        {{ format_datetime($job->ended_at) }}
                         <span class="text-gray-500">({{ $job->durationFormatted() }})</span>
                         @if ($job->isInGracePeriod())
                             <span class="ml-2 inline-flex items-center gap-1 text-amber-600" title="{{ __('job.lock_open') }}">
@@ -111,7 +111,7 @@
                         @elseif ($job->isLocked())
                             <span class="ml-2 inline-flex items-center gap-1 text-gray-500" title="{{ __('job.lock_closed') }}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                <span class="text-xs">{{ __('job.lock_since', ['date' => $job->graceDeadline()->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i')]) }}</span>
+                                <span class="text-xs">{{ __('job.lock_since', ['date' => format_datetime($job->graceDeadline())]) }}</span>
                             </span>
                         @endif
                     @else
@@ -154,13 +154,13 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">{{ $snapshot->providerLabel() }}</span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->temperature }} &deg;C</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_temperature($snapshot->temperature) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->precipitation }} mm</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->snow_depth }} cm</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->wind_speed !== null ? $snapshot->wind_speed . ' km/h' : '–' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_speed($snapshot->wind_speed) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->humidity !== null ? $snapshot->humidity . ' %' : '–' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->weather_code }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->fetched_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($snapshot->fetched_at) }}</td>
                                 @else
                                     <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ __('job.weather_not_fetched') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -249,7 +249,10 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach ($job->audits->sortByDesc('created_at') as $audit)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $audit->created_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i:s') }}</td>
+                                    {{-- Formatter has no seconds-aware time method; date goes through
+                                         format_date(), the audit trail keeps second precision via a manual,
+                                         but display-timezone-consistent, time conversion. --}}
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_date($audit->created_at) }} {{ $audit->created_at->copy()->setTimezone(config('app.display_timezone'))->format('H:i:s') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $audit->user?->name ?? '—' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ __('job.audit_action_' . $audit->action) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500">

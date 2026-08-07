@@ -63,7 +63,7 @@
                     <dd class="mt-1">
                         @if($weatherSummary && $weatherSummary->temp_min !== null)
                             <div class="text-sm text-gray-900">
-                                {{ __('overview.temperature_range', ['min' => number_format($weatherSummary->temp_min, 1), 'max' => number_format($weatherSummary->temp_max, 1)]) }}
+                                {{ __('overview.temperature_range', ['min' => format_temperature($weatherSummary->temp_min), 'max' => format_temperature($weatherSummary->temp_max)]) }}
                             </div>
                             <div class="text-sm text-gray-900">
                                 {{ $weatherSummary->has_precipitation ? __('overview.precipitation_yes') : __('overview.precipitation_no') }}
@@ -85,7 +85,7 @@
                 <x-slot name="action">
                     <a href="{{ route('admin.overview.daily', ['date' => $lastJobDate->toDateString()]) }}"
                        class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
-                        {{ __('overview.last_job_day') }}: {{ $lastJobDate->format('d.m.Y') }}
+                        {{ __('overview.last_job_day') }}: {{ format_date($lastJobDate) }}
                     </a>
                 </x-slot>
             @endif

@@ -10,7 +10,7 @@
             <div class="ml-3">
                 <p class="text-sm text-amber-700">
                     {{ __('job.retention_hint', ['count' => $retentionStats->count]) }}
-                    {{ __('job.retention_hint_oldest', ['date' => \Carbon\Carbon::parse($retentionStats->oldestDate)->format('d.m.Y')]) }}
+                    {{ __('job.retention_hint_oldest', ['date' => format_date(\Carbon\Carbon::parse($retentionStats->oldestDate))]) }}
                 </p>
                 <p class="mt-1">
                     <a href="{{ route('admin.settings.retention') }}" class="text-sm font-medium text-amber-700 underline hover:text-amber-600">{{ __('job.retention_hint_action') }} &rarr;</a>

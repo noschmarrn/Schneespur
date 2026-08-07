@@ -143,7 +143,7 @@
                         @foreach($jobs as $job)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <a href="{{ route('admin.jobs.show', $job) }}" class="text-gray-900 hover:text-indigo-600">{{ $job->localStartedAt()->format('d.m.Y') }}</a>
+                                    <a href="{{ route('admin.jobs.show', $job) }}" class="text-gray-900 hover:text-indigo-600">{{ format_date($job->started_at) }}</a>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ $job->customerObject?->customer?->name ?? $job->customer?->name ?? '—' }}
@@ -152,8 +152,8 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->type->label() }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->localStartedAt()->format('H:i') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->ended_at ? $job->localEndedAt()->format('H:i') : '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_time($job->started_at) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_time($job->ended_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                                     @if($job->ended_at)
                                         @php $jm = $job->started_at->diffInMinutes($job->ended_at); $jh = intdiv($jm, 60); $jr = $jm % 60; @endphp

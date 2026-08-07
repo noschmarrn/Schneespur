@@ -75,8 +75,8 @@
                 :message="__('overview.customer_report_email_modal_message', [
                     'name' => $selectedCustomer->name,
                     'email' => $selectedCustomer->notification_email ?? $selectedCustomer->email,
-                    'from' => $from->format('d.m.Y'),
-                    'to' => $to->format('d.m.Y'),
+                    'from' => format_date($from),
+                    'to' => format_date($to),
                     'count' => $totalJobs,
                 ])">
                 <x-slot name="action">
@@ -169,13 +169,13 @@
                         @foreach($jobs as $job)
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <a href="{{ route('admin.jobs.show', $job) }}" class="text-gray-900 hover:text-indigo-600">{{ $job->localStartedAt()->format('d.m.Y') }}</a>
+                                    <a href="{{ route('admin.jobs.show', $job) }}" class="text-gray-900 hover:text-indigo-600">{{ format_date($job->started_at) }}</a>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->customerObject?->name ?? '–' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->user->displayName() }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->type->label() }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->localStartedAt()->format('H:i') }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $job->ended_at ? $job->localEndedAt()->format('H:i') : '—' }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_time($job->started_at) }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ format_time($job->ended_at) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                                     @if($job->ended_at)
                                         @php $jm = $job->started_at->diffInMinutes($job->ended_at); $jh = intdiv($jm, 60); $jr = $jm % 60; @endphp

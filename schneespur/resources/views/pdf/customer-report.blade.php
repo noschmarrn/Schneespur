@@ -75,7 +75,7 @@
                 @endif
                 <td>
                     <h1>{{ __('job.pdf_customer_report_title') }}</h1>
-                    <div class="subtitle">{{ __('job.pdf_customer_report_subtitle', ['customer' => $customer->name, 'from' => $from->format('d.m.Y'), 'to' => $to->format('d.m.Y')]) }}</div>
+                    <div class="subtitle">{{ __('job.pdf_customer_report_subtitle', ['customer' => $customer->name, 'from' => format_date($from), 'to' => format_date($to)]) }}</div>
                 </td>
                 @if ($companyName)
                     <td style="text-align: right;">
@@ -177,7 +177,7 @@
                 <table class="info-grid">
                     <tr>
                         <td class="label">{{ __('job.pdf_cover_temp_range') }}</td>
-                        <td class="value">{{ $coverData['weather']['minTemp'] }} &ndash; {{ $coverData['weather']['maxTemp'] }} &deg;C</td>
+                        <td class="value">{{ format_temperature($coverData['weather']['minTemp']) }} &ndash; {{ format_temperature($coverData['weather']['maxTemp']) }}</td>
                     </tr>
                     @if (! empty($coverData['weather']['topConditions']))
                         <tr>
@@ -215,7 +215,7 @@
                     @foreach ($jobs as $index => $job)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ $job->localStartedAt()->format('d.m.Y H:i') }}</td>
+                            <td>{{ format_datetime($job->started_at) }}</td>
                             <td>{{ $job->customerObject?->name ?? '–' }}</td>
                             <td>{{ $job->type->label() }}</td>
                             <td>

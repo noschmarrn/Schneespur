@@ -19,7 +19,10 @@
             </div>
             <div>
                 <dt class="font-medium text-gray-500">{{ __('dsgvo.admin_snapshot_meta_date') }}</dt>
-                <dd class="mt-1 text-gray-900">{{ $confirmation->confirmed_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i:s') }}</dd>
+                {{-- Formatter has no seconds-aware time method; date goes through format_date(),
+                     the legal confirmation record keeps second precision via a manual, but
+                     display-timezone-consistent, time conversion. --}}
+                <dd class="mt-1 text-gray-900">{{ format_date($confirmation->confirmed_at) }} {{ $confirmation->confirmed_at->copy()->setTimezone(config('app.display_timezone'))->format('H:i:s') }}</dd>
             </div>
             <div>
                 <dt class="font-medium text-gray-500">{{ __('dsgvo.admin_snapshot_meta_version') }}</dt>

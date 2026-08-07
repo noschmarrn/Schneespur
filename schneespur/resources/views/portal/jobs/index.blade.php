@@ -62,7 +62,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <a href="{{ route('portal.jobs.show', $job) }}" class="text-indigo-600 hover:text-indigo-900">
-                                            {{ $job->localStartedAt()->format('d.m.Y H:i') }}
+                                            {{ format_datetime($job->started_at) }}
                                         </a>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->customerObject?->name ?? '–' }}</td>

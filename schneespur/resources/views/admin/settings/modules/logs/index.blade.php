@@ -45,7 +45,11 @@
                     <tbody class="divide-y divide-gray-200">
                         @foreach($logs as $log)
                             <tr>
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ $log->created_at->format('d.m.Y H:i:s') }}</td>
+                                {{-- Formatter has no seconds-aware time method (M019 setting only offers 12h/24h,
+                                     no seconds); the date portion still goes through format_date() for the
+                                     configured date order, the time-with-seconds keeps a manual, but
+                                     display-timezone-consistent, conversion so log entries stay second-precise. --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500">{{ format_date($log->created_at) }} {{ $log->created_at->copy()->setTimezone(config('app.display_timezone'))->format('H:i:s') }}</td>
                                 <td class="whitespace-nowrap px-4 py-3 text-sm">
                                     @if($log->level === 'error')
                                         <span class="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">{{ __('modules.log_level_error') }}</span>

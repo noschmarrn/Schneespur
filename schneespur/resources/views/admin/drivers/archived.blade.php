@@ -22,7 +22,7 @@
                             @foreach ($drivers as $driver)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $driver->displayName() }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $driver->anonymized_at->setTimezone(config('app.display_timezone'))->format('d.m.Y H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($driver->anonymized_at) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500">{{ $driver->anonymization_reason }}</td>
                                 </tr>
                             @endforeach

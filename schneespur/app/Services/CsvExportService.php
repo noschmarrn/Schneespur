@@ -61,7 +61,7 @@ class CsvExportService
             }
 
             $csv->insertOne([
-                $job->started_at->format('d.m.Y'),
+                format_date($job->started_at),
                 $job->user?->displayName() ?? '',
                 $job->customer?->name ?? '',
                 $job->customerObject?->name ?? '',
@@ -69,8 +69,8 @@ class CsvExportService
                 $job->customerObject?->zip ?? '',
                 $job->customerObject?->city ?? '',
                 $job->type->label(),
-                $job->started_at->format('H:i'),
-                $job->ended_at?->format('H:i') ?? '',
+                format_time($job->started_at),
+                format_time($job->ended_at),
                 $duration,
                 $job->work_shift_id ?? '',
                 $job->is_manual ? __('export.csv_source_manual') : __('export.csv_source_automatic'),

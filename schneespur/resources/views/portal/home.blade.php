@@ -24,7 +24,7 @@
             <div class="text-sm font-medium text-gray-500">{{ __('portal.kpi_last_activity') }}</div>
             <div class="mt-1 text-3xl font-semibold text-gray-900">
                 @if ($lastJob)
-                    {{ $lastJob->started_at->format('d.m.Y H:i') }}
+                    {{ format_datetime($lastJob->started_at) }}
                 @else
                     {{ __('portal.kpi_no_activity') }}
                 @endif
@@ -51,7 +51,7 @@
                         <div class="text-sm text-gray-500 text-right whitespace-nowrap">
                             @if ($object->last_job_at)
                                 <span class="block text-xs text-gray-400">{{ __('portal.last_job_label') }}</span>
-                                {{ \Carbon\Carbon::parse($object->last_job_at)->format('d.m.Y H:i') }}
+                                {{ format_datetime(\Carbon\Carbon::parse($object->last_job_at)) }}
                             @else
                                 &mdash;
                             @endif

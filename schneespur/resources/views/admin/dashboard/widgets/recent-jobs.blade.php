@@ -23,7 +23,7 @@
                         @foreach ($recentJobs as $job)
                             <tr class="{{ Route::has('admin.jobs.show') ? 'cursor-pointer hover:bg-gray-50' : '' }}"
                                 @if (Route::has('admin.jobs.show')) onclick="window.location='{{ route('admin.jobs.show', $job) }}'" @endif>
-                                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">{{ $job->localStartedAt()->format('d.m.Y H:i') }}</td>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-900">{{ format_datetime($job->started_at) }}</td>
                                 <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-700">
                                     {{ $job->customerObject?->customer?->name ?? $job->customer?->name ?? '—' }}
                                     @if($job->customerObject)
