@@ -252,7 +252,7 @@
                                     {{-- Formatter has no seconds-aware time method; date goes through
                                          format_date(), the audit trail keeps second precision via a manual,
                                          but display-timezone-consistent, time conversion. --}}
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_date($audit->created_at) }} {{ $audit->created_at->copy()->setTimezone(config('app.display_timezone'))->format('H:i:s') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($audit->created_at, true) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $audit->user?->name ?? '—' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ __('job.audit_action_' . $audit->action) }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500">

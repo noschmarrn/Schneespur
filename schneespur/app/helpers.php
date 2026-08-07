@@ -133,9 +133,9 @@ function format_time(?\DateTimeInterface $moment, bool $withSeconds = false): st
     return app(\App\Services\Format\Formatter::class)->time($moment, $withSeconds);
 }
 
-function format_datetime(?\DateTimeInterface $moment): string
+function format_datetime(?\DateTimeInterface $moment, bool $withSeconds = false): string
 {
-    return app(\App\Services\Format\Formatter::class)->dateTime($moment);
+    return app(\App\Services\Format\Formatter::class)->dateTime($moment, $withSeconds);
 }
 
 function format_number(?float $value, int $decimals = 1): string

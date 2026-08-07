@@ -63,6 +63,18 @@ class FormatterDateTimeTest extends TestCase
         $this->assertSame('2:30:15 PM', $american->time($moment, true));
     }
 
+    /** Audit trails and DSGVO confirmations want the whole stamp with seconds. */
+    public function test_date_time_carries_the_seconds_flag_through(): void
+    {
+        $moment = new \DateTimeImmutable('2026-08-06 12:30:15', new \DateTimeZone('UTC'));
+
+        $f = $this->formatter(['date_format' => 'mdy_slash', 'time_format' => '12h']);
+
+        $this->assertSame('08/06/2026 2:30:15 PM', $f->dateTime($moment, true));
+        $this->assertSame('08/06/2026 2:30 PM', $f->dateTime($moment));
+        $this->assertSame('—', $f->dateTime(null, true));
+    }
+
     /**
      * The layout hands three values to the browser. They come from the
      * singleton, not from three fresh Setting::get() queries per page load,

@@ -20,7 +20,9 @@ return [
     'field_contact_name'       => 'Kontaktperson',
     'field_email'              => 'E-Mail',
     'field_phone'              => 'Telefon',
-    'field_price_amount'       => 'Preis (€)',
+    // No currency symbol in the label: the operator's currency is a setting,
+    // and the form prints the symbol from the Formatter next to the input.
+    'field_price_amount'       => 'Preis',
     'field_price_unit'         => 'Einheit',
     'field_notes'              => 'Besonderheiten',
     'field_lat'                => 'Breitengrad (optional)',

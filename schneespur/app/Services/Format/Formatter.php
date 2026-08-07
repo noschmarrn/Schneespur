@@ -123,13 +123,13 @@ class Formatter
         ];
     }
 
-    public function dateTime(?DateTimeInterface $moment): string
+    public function dateTime(?DateTimeInterface $moment, bool $withSeconds = false): string
     {
         if ($moment === null) {
             return self::PLACEHOLDER;
         }
 
-        return $this->date($moment) . ' ' . $this->time($moment);
+        return $this->date($moment) . ' ' . $this->time($moment, $withSeconds);
     }
 
     private function formatMoment(?DateTimeInterface $moment, string $pattern): string
