@@ -176,4 +176,68 @@ class Formatter
 
         return self::CURRENCY_SYMBOLS[$code] ?? $code;
     }
+
+    public function temperature(?float $celsius): string
+    {
+        if ($celsius === null) {
+            return self::PLACEHOLDER;
+        }
+
+        return $this->setting('unit_temperature') === 'fahrenheit'
+            ? $this->number($celsius * 9 / 5 + 32, 1) . ' ' . __('format.unit_fahrenheit')
+            : $this->number($celsius, 1) . ' ' . __('format.unit_celsius');
+    }
+
+    public function speed(?float $kmh): string
+    {
+        if ($kmh === null) {
+            return self::PLACEHOLDER;
+        }
+
+        // Speed follows the distance unit: no country measures in miles and
+        // drives in km/h, so a separate setting would only add a way to be
+        // inconsistent.
+        return $this->setting('unit_distance') === 'imperial'
+            ? $this->number($kmh * 0.621371, 1) . ' ' . __('format.unit_mph')
+            : $this->number($kmh, 1) . ' ' . __('format.unit_kmh');
+    }
+
+    public function distance(?float $metres): string
+    {
+        if ($metres === null) {
+            return self::PLACEHOLDER;
+        }
+
+        if ($this->setting('unit_distance') === 'imperial') {
+            $miles = $metres / 1609.344;
+
+            return $miles < 1.0
+                ? $this->number($metres * 3.28084, 0) . ' ' . __('format.unit_foot')
+                : $this->number($miles, 1) . ' ' . __('format.unit_mile');
+        }
+
+        return $metres < 1000.0
+            ? $this->number($metres, 0) . ' ' . __('format.unit_metre')
+            : $this->number($metres / 1000, 1) . ' ' . __('format.unit_kilometre');
+    }
+
+    public function weight(?float $kilograms): string
+    {
+        if ($kilograms === null) {
+            return self::PLACEHOLDER;
+        }
+
+        if ($this->setting('unit_weight') === 'imperial') {
+            $pounds = $kilograms * 2.20462;
+
+            // Short ton = 2000 lb (US), not the British long ton of 2240.
+            return $pounds < 2000.0
+                ? $this->number($pounds, 0) . ' ' . __('format.unit_pound')
+                : $this->number($pounds / 2000, 1) . ' ' . __('format.unit_short_ton');
+        }
+
+        return $kilograms < 1000.0
+            ? $this->number($kilograms, 0) . ' ' . __('format.unit_kilogram')
+            : $this->number($kilograms / 1000, 1) . ' ' . __('format.unit_tonne');
+    }
 }

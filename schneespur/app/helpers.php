@@ -147,3 +147,23 @@ function format_money(?int $cents): string
 {
     return app(\App\Services\Format\Formatter::class)->money($cents);
 }
+
+function format_temperature(?float $celsius): string
+{
+    return app(\App\Services\Format\Formatter::class)->temperature($celsius);
+}
+
+function format_speed(?float $kmh): string
+{
+    return app(\App\Services\Format\Formatter::class)->speed($kmh);
+}
+
+function format_distance(?float $metres): string
+{
+    return app(\App\Services\Format\Formatter::class)->distance($metres);
+}
+
+function format_weight(?float $kilograms): string
+{
+    return app(\App\Services\Format\Formatter::class)->weight($kilograms);
+}
