@@ -36,6 +36,7 @@ return [
     'flash_rotated'                      => 'A new OwnTracks password has been generated. The old password is now invalid.',
     'error_owntracks_username_taken'     => 'This OwnTracks username is already taken. Please choose a different one.',
     'error_password_already_revealed'    => 'The password has already been displayed and cannot be retrieved again for security reasons. Generate a new password if needed.',
+    'error_critical_field_failed'        => 'The action could not be completed because a required add-on failed. Please try again or contact the administrator.',
     'btn_copy_password'                  => 'Copy password to clipboard',
     'btn_rotate_password'                => 'Generate new password…',
     'modal_rotate_title'                 => 'Generate New Password',

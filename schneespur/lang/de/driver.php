@@ -36,6 +36,7 @@ return [
     'flash_rotated'                      => 'Neues OwnTracks-Passwort wurde erzeugt. Das alte Passwort ist ab sofort ungültig.',
     'error_owntracks_username_taken'     => 'Dieser OwnTracks-Benutzername ist bereits vergeben. Bitte wählen Sie einen anderen.',
     'error_password_already_revealed'    => 'Das Passwort wurde bereits angezeigt und kann aus Sicherheitsgründen nicht erneut abgerufen werden. Erzeugen Sie bei Bedarf ein neues Passwort.',
+    'error_critical_field_failed'        => 'Der Vorgang konnte nicht abgeschlossen werden, da eine notwendige Zusatzfunktion fehlgeschlagen ist. Bitte versuchen Sie es erneut oder wenden Sie sich an den Administrator.',
     'btn_copy_password'                  => 'Passwort in Zwischenablage kopieren',
     'btn_rotate_password'                => 'Neues Passwort erzeugen…',
     'modal_rotate_title'                 => 'Passwort neu erzeugen',

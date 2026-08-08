@@ -19,6 +19,7 @@ use App\Models\WeatherSnapshot;
 use App\Models\WorkShift;
 use App\Services\Extension\LifecycleFieldRegistry;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class JobLifecycleService
@@ -35,7 +36,7 @@ class JobLifecycleService
                 'started_at' => now(),
             ]);
 
-            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::ShiftStart, $shift, $extra, $user);
+            $this->persistLifecycleFields(LifecyclePoint::ShiftStart, $shift, $extra, $user);
 
             return $shift;
         });
@@ -61,7 +62,7 @@ class JobLifecycleService
             $shift->ended_at = now();
             $shift->save();
 
-            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::ShiftEnd, $shift, $extra, $user);
+            $this->persistLifecycleFields(LifecyclePoint::ShiftEnd, $shift, $extra, $user);
         });
 
         WorkShiftEnded::dispatch($shift, $user);
@@ -93,7 +94,7 @@ class JobLifecycleService
                 'is_manual' => false,
             ]);
 
-            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::JobStart, $job, $extra, $user);
+            $this->persistLifecycleFields(LifecyclePoint::JobStart, $job, $extra, $user);
 
             return $job;
         });
@@ -124,7 +125,7 @@ class JobLifecycleService
 
             $job->save();
 
-            app(LifecycleFieldRegistry::class)->persist(LifecyclePoint::JobEnd, $job, $extra, $user);
+            $this->persistLifecycleFields(LifecyclePoint::JobEnd, $job, $extra, $user);
         });
 
         $lat = null;
@@ -213,6 +214,33 @@ class JobLifecycleService
         return WorkShift::where('user_id', $user->id)
             ->whereNull('ended_at')
             ->first();
+    }
+
+    /**
+     * Runs LifecycleFieldRegistry::persist() and translates a critical
+     * handler's failure into the lifecycle's own error vocabulary.
+     *
+     * The registry rethrows the handler's raw exception unchanged when the
+     * contribution is marked `critical` — that is correct at the registry's
+     * layer, but a raw \RuntimeException reaching a driver controller falls
+     * through its `catch (JobLifecycleException $e)` block straight into
+     * Laravel's exception handler (an unhandled 500, no flash, form lost).
+     * Wrapping it here, once, gives every lifecycle transition the same
+     * flash-message path the other JobLifecycleException cases already use,
+     * without LifecycleFieldRegistry having to know about this exception
+     * type. A JobLifecycleException raised inside a handler is passed
+     * through unchanged so its own message is not replaced by the generic
+     * one.
+     */
+    private function persistLifecycleFields(LifecyclePoint $point, Model $entity, array $extra, User $user): void
+    {
+        try {
+            app(LifecycleFieldRegistry::class)->persist($point, $entity, $extra, $user);
+        } catch (JobLifecycleException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw JobLifecycleException::criticalFieldFailed($e);
+        }
     }
 
     private function dispatchWeather(int $jobId, WeatherMoment $moment, float $lat, float $lon): void

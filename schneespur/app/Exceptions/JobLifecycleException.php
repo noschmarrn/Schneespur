@@ -30,4 +30,16 @@ class JobLifecycleException extends RuntimeException
     {
         return new self('Ein aktiver Einsatz muss zuerst beendet werden, bevor die Schicht beendet werden kann.');
     }
+
+    /**
+     * A lifecycle field handler marked `critical` failed. The original cause
+     * is preserved as $previous — it is already logged (Log::warning plus
+     * DiagnosticManager) inside LifecycleFieldRegistry::persist(), so this
+     * message is deliberately generic: the driver reads it in a flash, and
+     * the handler's raw exception message must not leak to the field.
+     */
+    public static function criticalFieldFailed(\Throwable $previous): self
+    {
+        return new self(__('driver.error_critical_field_failed'), 0, $previous);
+    }
 }
