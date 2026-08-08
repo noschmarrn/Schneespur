@@ -141,6 +141,18 @@ Route::get('/dashboard', function () {
         return redirect()->route('admin.dashboard');
     }
 
+    // Drivers belong on /driver, not here. resources/js/app.js bootstraps the
+    // offline sync queue only when the path starts with /driver, so on this url
+    // driver/dashboard.blade.php's handleFormSubmit() cancelled the submit with
+    // preventDefault() and then bailed on the missing queue: the job completion
+    // was dropped with no record and no message to the driver.
+    // Must test isDriver(), NOT ! isAdmin(): EnsureDriver redirects every
+    // non-driver back to route('dashboard'), so a role-less user would ping-pong.
+    if (Auth::user()->isDriver()) {
+        return redirect()->route('driver.home');
+    }
+
+    // Falls through for users with neither role, whose behaviour is unchanged.
     $user = Auth::user();
     $shiftActive = \App\Models\WorkShift::where('user_id', $user->id)
         ->whereNull('ended_at')

@@ -216,7 +216,9 @@ class SlotRegistryTest extends TestCase
         $driver->confirmed_version = (int) \App\Models\Setting::get('dsgvo_template_version', 1);
         $driver->save();
 
-        $response = $this->actingAs($driver->fresh())->get(route('dashboard'));
+        // driver.home, not dashboard: /dashboard now redirects drivers here, because
+        // only /driver bootstraps the offline sync queue (see DashboardRoutingTest).
+        $response = $this->actingAs($driver->fresh())->get(route('driver.home'));
 
         $response->assertStatus(200);
     }

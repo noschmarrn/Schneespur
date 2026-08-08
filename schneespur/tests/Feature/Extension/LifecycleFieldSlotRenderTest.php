@@ -49,8 +49,10 @@ class LifecycleFieldSlotRenderTest extends TestCase
         $driver->confirmed_version = (int) Setting::get('dsgvo_template_version', 1);
         $driver->save();
 
+        // driver.home, not dashboard: /dashboard now redirects drivers here, because
+        // only /driver bootstraps the offline sync queue (see DashboardRoutingTest).
         $this->actingAs($driver->fresh())
-            ->get(route('dashboard'))
+            ->get(route('driver.home'))
             ->assertOk()
             ->assertSee('data-testid="demo-field"', false);
     }
