@@ -43,6 +43,7 @@ class LifecycleFieldRegistry extends ExtensionRegistry
             'view' => null,
             'rules' => [],
             'persist' => null,
+            'critical' => false,
             'order' => 100,
             'permission' => null,
         ], $contribution, ['slug' => $slug, 'point' => $point]));
@@ -146,6 +147,14 @@ class LifecycleFieldRegistry extends ExtensionRegistry
                 }
 
                 Log::warning("LifecycleFieldRegistry: persist handler '{$entry['slug']}' failed at {$point->value}: {$e->getMessage()}");
+
+                if ($entry['critical'] ?? false) {
+                    // The inner DB::transaction already rolled back as a
+                    // savepoint. Rethrowing takes the outer transaction from
+                    // JobLifecycleService with it, so the entity does not
+                    // survive without the value its handler owed it.
+                    throw $e;
+                }
             }
         }
     }
