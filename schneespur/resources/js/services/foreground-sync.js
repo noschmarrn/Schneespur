@@ -2,7 +2,7 @@ import { SyncQueue } from './sync-queue.js';
 
 const MAX_RETRIES = 3;
 
-class ForegroundSync {
+export class ForegroundSync {
     constructor() {
         this.queue = new SyncQueue();
         this.syncing = false;

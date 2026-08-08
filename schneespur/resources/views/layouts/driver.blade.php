@@ -61,6 +61,7 @@
                                 <button x-show="failedCount > 0" x-cloak
                                         @click="retry()"
                                         type="button"
+                                        :aria-label="failedAriaLabel"
                                         class="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold leading-none text-white min-h-[44px] sm:min-h-0">
                                     <span x-text="failedCount"></span>
                                     <span>{{ __('driver.connectivity_retry') }}</span>
@@ -124,10 +125,17 @@
                         offline: @json(__('driver.connectivity_offline')),
                         syncing: @json(__('driver.connectivity_syncing')),
                     },
+                    // Raw string, ':count' placeholder left in place — this
+                    // number only exists client-side, so the substitution
+                    // happens in the getter below rather than in __().
+                    failedCountLabel: @json(__('driver.connectivity_failed_count')),
                     get label() {
                         return this.labels[this.state] || this.labels.online;
                     },
-                    init() {
+                    get failedAriaLabel() {
+                        return this.failedCountLabel.replace(':count', this.failedCount);
+                    },
+                    async init() {
                         window.addEventListener('online', () => {
                             if (this.state !== 'syncing') this.state = 'online';
                         });
@@ -140,22 +148,52 @@
                                 this.pendingCount = e.detail.count;
                             }
                         });
-                        window.addEventListener('sync:complete', (e) => {
+                        window.addEventListener('sync:complete', () => {
                             this.state = navigator.onLine ? 'online' : 'offline';
                             this.pendingCount = 0;
-                            if (e.detail && e.detail.failedStored != null) {
-                                this.failedCount = e.detail.failedStored;
-                            }
+                            this.refreshFailedCount();
                         });
                         window.addEventListener('sync:error', () => {
                             this.state = navigator.onLine ? 'online' : 'offline';
                         });
+
+                        // A page load with no sync run yet must still show a
+                        // failed entry saved on a previous visit. Wait for the
+                        // queue's IndexedDB connection to actually open first —
+                        // failedCount() throws before that.
+                        if (window.foregroundSync && window.foregroundSync.ready) {
+                            await window.foregroundSync.ready;
+                        }
+                        await this.refreshFailedCount();
+                    },
+                    // The single source of truth for failedCount: always a
+                    // fresh read of the queue, never a value carried in an
+                    // event payload. sync:complete is only a hint that now is
+                    // a good time to re-read it, not a value to trust as-is —
+                    // several flush() paths (offline, a sync already in
+                    // flight, nothing pending) return without dispatching
+                    // anything at all.
+                    async refreshFailedCount() {
+                        const queue = window.foregroundSync && window.foregroundSync.queue;
+                        if (!queue || !queue.db) return;
+                        try {
+                            this.failedCount = await queue.failedCount();
+                        } catch {
+                            // Leave the previous value — an error here means
+                            // "unknown", not "zero".
+                        }
                     },
                     async retry() {
                         if (!window.foregroundSync) return;
-                        await window.foregroundSync.queue.retryFailed();
-                        this.failedCount = 0;
-                        window.foregroundSync.flush();
+                        try {
+                            await window.foregroundSync.queue.retryFailed();
+                            await this.refreshFailedCount();
+                            await window.foregroundSync.flush();
+                        } catch {
+                            // Tapping retry while offline or mid-sync must not
+                            // surface a console error to the driver — the
+                            // count above already reflects reality.
+                        }
                     },
                 }));
             });

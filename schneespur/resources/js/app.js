@@ -22,7 +22,10 @@ window.schneespurFormatDate = formatDate;
 
 if (window.location.pathname.startsWith('/driver')) {
     window.foregroundSync = foregroundSync;
-    foregroundSync.init();
+    // The connectivity indicator awaits this before touching `queue.db` —
+    // without it, a page that loads faster than IndexedDB opens could read
+    // the queue before init() has actually finished.
+    window.foregroundSync.ready = foregroundSync.init();
 }
 
 Alpine.start();
