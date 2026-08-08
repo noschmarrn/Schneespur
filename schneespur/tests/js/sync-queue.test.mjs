@@ -82,6 +82,16 @@ test('removeSynced leaves failed entries alone', async () => {
     const q = await new SyncQueue().init();
     const id = await q.addRequest({ url: '/x', method: 'POST', data: {} });
 
+    // markFailed() never sets syncedAt, so without this the one-hour guard
+    // in removeSynced() would skip the entry regardless of whether it reads
+    // the SYNC_DONE or SYNC_FAILED index — the test would pass for the wrong
+    // reason. Backdating syncedAt past the guard forces the pass to come
+    // from the index filter (by_synced === SYNC_FAILED), which is the thing
+    // this test actually exists to check.
+    const entry = await q.db.get('pending_requests', id);
+    entry.syncedAt = Date.now() - 2 * 60 * 60 * 1000;
+    await q.db.put('pending_requests', entry);
+
     await q.markFailed(id, 'max_retries');
     await q.removeSynced();
 

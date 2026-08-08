@@ -171,7 +171,9 @@ class AdminFormHookTest extends TestCase
     }
 
     /** No consumer should be indistinguishable from a consumer that hands the
-     *  value back unchanged — that is what "prints nothing extra" means. */
+     *  value back unchanged — that is what "prints nothing extra" means. This
+     *  guards against a registered callback introducing visible side effects,
+     *  not against the initial-value type — see the next test for that. */
     public function test_an_unconsumed_hook_renders_identically_to_a_passthrough_consumer(): void
     {
         $object = $this->object();
@@ -191,5 +193,27 @@ class AdminFormHookTest extends TestCase
             ->getContent();
 
         $this->assertSame($unconsumed, $passthrough);
+    }
+
+    /** The published contract for schneespur.admin.customer_object.form.after
+     *  is a string accumulator (@filterSlot's initial value is '', not []) —
+     *  a registered callback receives and must return a string. A passthrough
+     *  consumer can't tell '' from [] apart (implode('', (array) $x) collapses
+     *  both to the same output), so pin the actual type instead. */
+    public function test_the_hook_passes_a_string_to_registered_callbacks(): void
+    {
+        $object = $this->object();
+        $admin = $this->admin();
+
+        app(FilterRegistry::class)->register(
+            'schneespur.admin.customer_object.form.after',
+            fn ($html, $entity) => $html . '[' . gettype($html) . ']',
+        );
+
+        $html = $this->actingAs($admin)
+            ->get("/admin/customers/{$object->customer_id}/objects/{$object->id}/edit")
+            ->getContent();
+
+        $this->assertStringContainsString('[string]', $html);
     }
 }
