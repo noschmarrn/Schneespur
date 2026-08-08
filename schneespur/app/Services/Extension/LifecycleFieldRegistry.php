@@ -32,6 +32,13 @@ use Illuminate\Support\Facades\View;
  * 3. Manual jobs bypass lifecycle hooks.
  *    createManualJob does not render @lifecycleFields or call persist();
  *    lifecycle fields are only captured on the driver shift/job-start/job-end flows.
+ *
+ * 4. A contribution may opt in to `'critical' => true`.
+ *    Default is `false` — today's behaviour: a throwing persist handler is
+ *    logged and diagnosed, then swallowed so the rest of the flow completes.
+ *    A critical contribution's failure is rethrown instead, taking the
+ *    outer JobLifecycleService transaction down with it, so the entity is
+ *    never left holding a value its handler owed it but never wrote.
  */
 class LifecycleFieldRegistry extends ExtensionRegistry
 {

@@ -6,9 +6,10 @@ use App\Models\Job;
 use App\Services\Notification\NotificationChannelInterface;
 
 /**
- * Stands in for the telegram module: implements the published interface and
- * nothing else. It must keep being called for every type, or that module dies
- * on its next update.
+ * Stands in for a channel that implements only the published
+ * NotificationChannelInterface and not the newer SupportsNotificationTypes —
+ * modules/example today, dokumente once it ships. Such a channel must keep
+ * being called for every type, or that module dies on its next update.
  */
 class LegacyTestChannel implements NotificationChannelInterface
 {

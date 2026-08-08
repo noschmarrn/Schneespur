@@ -179,9 +179,10 @@ class NotificationMailableRegistryTest extends TestCase
     }
 
     /**
-     * The telegram module implements NotificationChannelInterface and not the
-     * new one. It must keep being called exactly as before — a required
-     * method on the published interface would be a fatal on its next update.
+     * modules/example implements NotificationChannelInterface and not the
+     * new one; dokumente plans to. Such a channel must keep being called
+     * exactly as before — a required method on the published interface
+     * would be a fatal on its next update.
      */
     public function test_a_channel_without_the_new_interface_is_still_called(): void
     {
