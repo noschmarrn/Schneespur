@@ -219,6 +219,8 @@
 
     {{-- Modules attach entity-level fields here. A filter rather than a slot,
          because SlotRegistry freezes its data at registration and a module
-         needs the object it is editing. Null while creating. --}}
-    @filterSlot('schneespur.admin.customer_object.form.after', '', $object ?? null)
+         needs the object it is editing. Null while creating: the create page
+         passes an unsaved model instance, not an absent variable, so the
+         entity is only forwarded once it actually exists. --}}
+    @filterSlot('schneespur.admin.customer_object.form.after', '', ($object ?? null)?->exists ? $object : null)
 </div>

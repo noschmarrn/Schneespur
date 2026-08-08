@@ -62,5 +62,5 @@
         </div>
     </fieldset>
 
-    @filterSlot('schneespur.admin.driver.form.after', '', $driver ?? null)
+    @filterSlot('schneespur.admin.driver.form.after', '', ($driver ?? null)?->exists ? $driver : null)
 </div>
