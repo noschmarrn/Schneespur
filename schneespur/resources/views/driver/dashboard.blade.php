@@ -1,7 +1,8 @@
 <x-driver-layout :shiftStatus="isset($shiftActive) && $shiftActive ? 'active' : 'inactive'">
     <div
+        {{-- No x-init="init()" here: Alpine calls the x-data object's own init()
+             automatically, so writing it out runs it twice. See DriverDashboardViewTest. --}}
         x-data="driverDashboard()"
-        x-init="init()"
         @submit="handleFormSubmit($event)"
         class="space-y-4"
     >
