@@ -119,6 +119,27 @@ class NotificationMailableRegistryTest extends TestCase
         Mail::assertSent(TestEnRouteMail::class, 1);
     }
 
+    /**
+     * registerType() is typed `callable`, but register() is inherited from
+     * ExtensionRegistry and accepts anything — e.g. a module registering a
+     * Mailable class-string instead of a factory. has()/supports() would
+     * report true, so the failure must name itself clearly at make() time
+     * rather than surface as an opaque "value is not callable" fatal.
+     */
+    public function test_a_non_callable_registration_fails_with_a_clear_message(): void
+    {
+        app(MailableRegistry::class)->register('driver_en_route', TestEnRouteMail::class);
+
+        $results = app(NotificationChannelRegistry::class)
+            ->dispatch($this->job(), 'driver_en_route', $this->context());
+
+        $email = collect($results)->firstWhere('slug', 'email');
+
+        $this->assertSame('failed', $email['status']);
+        $this->assertStringContainsString('not callable', $email['error']);
+        $this->assertStringContainsString('driver_en_route', $email['error']);
+    }
+
     public function test_a_registered_factory_returning_null_sends_and_logs_nothing(): void
     {
         Mail::fake();

@@ -31,7 +31,25 @@ class MailableRegistry extends ExtensionRegistry
     {
         $factory = $this->resolve($type);
 
-        return $factory === null ? null : $factory($job, $context);
+        if ($factory === null) {
+            return null;
+        }
+
+        if (! is_callable($factory)) {
+            // register() is inherited from ExtensionRegistry and accepts
+            // any value — e.g. register('x', SomeMail::class) instead of
+            // the documented registerType('x', fn ($job, $context) => ...).
+            // has()/supports() would then report true and this would
+            // otherwise fail as an opaque "value is not callable" fatal.
+            throw new \RuntimeException(sprintf(
+                'MailableRegistry: the factory registered for notification type "%s" is not callable (got %s). '
+                . 'Use registerType(string $type, callable $factory) with a callable(Job, array): ?Mailable.',
+                $type,
+                get_debug_type($factory),
+            ));
+        }
+
+        return $factory($job, $context);
     }
 
     /** @return array<int, string> */
