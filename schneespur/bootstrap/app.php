@@ -13,6 +13,7 @@ use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetInstallerLocale;
 use App\Http\Middleware\SetUserLocale;
 use App\Services\Diagnostic\DiagnosticManager;
+use App\Support\TrustedHostPolicy;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use App\Services\Scheduler\ScheduledTaskRegistry;
@@ -58,9 +59,20 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         // Reject Host-header injection by trusting only the APP_URL host (and
-        // its subdomains). Laravel enforces this only outside local/testing and
-        // skips it when APP_URL has no host, so it is safe on stock installs.
-        $middleware->trustHosts();
+        // its subdomains) -- but ONLY once APP_URL actually names a host.
+        //
+        // The earlier justification here ("safe on stock installs, Laravel
+        // skips it when APP_URL has no host") was wrong: the shipped default
+        // IS a host, http://localhost, and with no .env yet APP_ENV falls back
+        // to "production", so enforcement was on. Every request to a freshly
+        // uploaded install -- /install included -- died as a
+        // SuspiciousOperationException, i.e. 400 Bad Request. Proven on real
+        // shared hosting. InstallerBootstrap::ensureAppUrl() cannot rescue it:
+        // TrustHosts is global and runs first, and ensureAppUrl() calls
+        // $request->getHost(), which is the throwing call.
+        if (TrustedHostPolicy::shouldEnforce(env('APP_URL'))) {
+            $middleware->trustHosts();
+        }
 
         $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('portal', 'portal/*')) {
