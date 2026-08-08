@@ -133,6 +133,15 @@ rm -f "$BUILD_DIR/app/test.php"
 rm -rf "$BUILD_DIR/database/factories"
 rm -rf "$BUILD_DIR/database/seeders"
 
+# Remove any SQLite file that leaked in from local development. The repo
+# gitignores database/database.sqlite, but this script copies database/
+# wholesale and .gitignore does not apply to cp. Shipping it is not merely
+# untidy: config/database.php defaults DB_CONNECTION to "sqlite", so a fresh
+# install that has no .env yet connects to THIS file, finds a users row, and
+# the installer aborts with 410 "already installed" — with no way forward for
+# the operator. Found by deploying 1.2.0 to real shared hosting.
+find "$BUILD_DIR/database" -maxdepth 1 -type f \( -name "*.sqlite" -o -name "*.sqlite3" -o -name "*.db" \) -delete
+
 # ── 6. Slim vendor directory ──
 echo "▸ Slimming vendor directory..."
 
