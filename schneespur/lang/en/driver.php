@@ -135,6 +135,8 @@ return [
     'connectivity_offline'               => 'Offline',
     'connectivity_syncing'               => 'Syncing…',
     'connectivity_pending_count'         => ':count pending',
+    'connectivity_failed_count'          => ':count not transmitted',
+    'connectivity_retry'                 => 'Retry',
 
     'offline_queued'                     => 'Action will be synced when connection is restored.',
 

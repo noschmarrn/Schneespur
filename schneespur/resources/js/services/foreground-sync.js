@@ -77,7 +77,9 @@ class ForegroundSync {
                 const retryCount = (entry.retryCount || 0) + 1;
 
                 if (retryCount >= MAX_RETRIES) {
-                    await this._removeEntry(entry.id);
+                    // Keep it, do not delete it. A dropped entry is an action
+                    // the driver performed and nobody has any record of.
+                    await this.queue.markFailed(entry.id, 'max_retries');
                     window.dispatchEvent(new CustomEvent('sync:error', {
                         detail: { entryId: entry.id, reason: 'max_retries', url: entry.url },
                     }));
@@ -90,7 +92,11 @@ class ForegroundSync {
         await this.queue.removeSynced();
 
         window.dispatchEvent(new CustomEvent('sync:complete', {
-            detail: { synced: syncedCount, failed: failedCount },
+            detail: {
+                synced: syncedCount,
+                failed: failedCount,
+                failedStored: await this.queue.failedCount(),
+            },
         }));
 
         this.syncing = false;
@@ -120,12 +126,6 @@ class ForegroundSync {
         if (!entry) return;
         entry.retryCount = retryCount;
         await db.put('pending_requests', entry);
-    }
-
-    async _removeEntry(id) {
-        const db = this.queue.db;
-        if (!db) return;
-        await db.delete('pending_requests', id);
     }
 }
 

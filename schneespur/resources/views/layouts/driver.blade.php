@@ -58,6 +58,13 @@
                                 <span x-show="pendingCount > 0" x-cloak
                                       class="inline-flex items-center justify-center rounded-full bg-amber-600 text-white text-[10px] font-bold leading-none px-1.5 py-0.5"
                                       x-text="pendingCount"></span>
+                                <button x-show="failedCount > 0" x-cloak
+                                        @click="retry()"
+                                        type="button"
+                                        class="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold leading-none text-white min-h-[44px] sm:min-h-0">
+                                    <span x-text="failedCount"></span>
+                                    <span>{{ __('driver.connectivity_retry') }}</span>
+                                </button>
                             </div>
 
                             <a href="{{ route('driver.jobs.index') }}"
@@ -111,6 +118,7 @@
                 Alpine.data('connectivityIndicator', () => ({
                     state: navigator.onLine ? 'online' : 'offline',
                     pendingCount: 0,
+                    failedCount: 0,
                     labels: {
                         online: @json(__('driver.connectivity_online')),
                         offline: @json(__('driver.connectivity_offline')),
@@ -132,13 +140,22 @@
                                 this.pendingCount = e.detail.count;
                             }
                         });
-                        window.addEventListener('sync:complete', () => {
+                        window.addEventListener('sync:complete', (e) => {
                             this.state = navigator.onLine ? 'online' : 'offline';
                             this.pendingCount = 0;
+                            if (e.detail && e.detail.failedStored != null) {
+                                this.failedCount = e.detail.failedStored;
+                            }
                         });
                         window.addEventListener('sync:error', () => {
                             this.state = navigator.onLine ? 'online' : 'offline';
                         });
+                    },
+                    async retry() {
+                        if (!window.foregroundSync) return;
+                        await window.foregroundSync.queue.retryFailed();
+                        this.failedCount = 0;
+                        window.foregroundSync.flush();
                     },
                 }));
             });
