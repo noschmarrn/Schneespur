@@ -43,7 +43,7 @@
                         <div class="flex items-center gap-2">
                             @extensionSlot('driver.topbar.actions')
 
-                            <div x-data="connectivityIndicator()" x-init="init()" class="flex items-center gap-1">
+                            <div x-data="connectivityIndicator()" class="flex items-center gap-1">
                                 <span class="relative flex h-2 w-2">
                                     <template x-if="state === 'syncing'">
                                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -150,8 +150,7 @@
                         });
                         window.addEventListener('sync:complete', () => {
                             this.state = navigator.onLine ? 'online' : 'offline';
-                            this.pendingCount = 0;
-                            this.refreshFailedCount();
+                            this.refreshCounts();
                         });
                         window.addEventListener('sync:error', () => {
                             this.state = navigator.onLine ? 'online' : 'offline';
@@ -162,24 +161,33 @@
                         // queue's IndexedDB connection to actually open first —
                         // failedCount() throws before that.
                         if (window.foregroundSync && window.foregroundSync.ready) {
-                            await window.foregroundSync.ready;
+                            try {
+                                await window.foregroundSync.ready;
+                            } catch {
+                                // IndexedDB unavailable (e.g. Firefox private
+                                // browsing) — nothing more to read, badges
+                                // stay at their initial values.
+                                return;
+                            }
                         }
-                        await this.refreshFailedCount();
+                        await this.refreshCounts();
                     },
-                    // The single source of truth for failedCount: always a
+                    // The single source of truth for both counters: always a
                     // fresh read of the queue, never a value carried in an
-                    // event payload. sync:complete is only a hint that now is
-                    // a good time to re-read it, not a value to trust as-is —
-                    // several flush() paths (offline, a sync already in
-                    // flight, nothing pending) return without dispatching
-                    // anything at all.
-                    async refreshFailedCount() {
+                    // event payload. sync:start/sync:complete are only hints
+                    // that now is a good time to re-read it, not values to
+                    // trust as-is — several flush() paths (offline, a sync
+                    // already in flight, nothing pending) return without
+                    // dispatching anything at all, and offline page loads
+                    // never see a sync event at all.
+                    async refreshCounts() {
                         const queue = window.foregroundSync && window.foregroundSync.queue;
                         if (!queue || !queue.db) return;
                         try {
                             this.failedCount = await queue.failedCount();
+                            this.pendingCount = await queue.getCount();
                         } catch {
-                            // Leave the previous value — an error here means
+                            // Leave the previous values — an error here means
                             // "unknown", not "zero".
                         }
                     },
@@ -187,12 +195,12 @@
                         if (!window.foregroundSync) return;
                         try {
                             await window.foregroundSync.queue.retryFailed();
-                            await this.refreshFailedCount();
+                            await this.refreshCounts();
                             await window.foregroundSync.flush();
                         } catch {
                             // Tapping retry while offline or mid-sync must not
                             // surface a console error to the driver — the
-                            // count above already reflects reality.
+                            // counts above already reflect reality.
                         }
                     },
                 }));
