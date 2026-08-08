@@ -216,4 +216,9 @@
             </div>
         </div>
     </fieldset>
+
+    {{-- Modules attach entity-level fields here. A filter rather than a slot,
+         because SlotRegistry freezes its data at registration and a module
+         needs the object it is editing. Null while creating. --}}
+    @filterSlot('schneespur.admin.customer_object.form.after', '', $object ?? null)
 </div>

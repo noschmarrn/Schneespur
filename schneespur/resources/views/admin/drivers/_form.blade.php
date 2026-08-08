@@ -61,4 +61,6 @@
             </div>
         </div>
     </fieldset>
+
+    @filterSlot('schneespur.admin.driver.form.after', '', $driver ?? null)
 </div>
