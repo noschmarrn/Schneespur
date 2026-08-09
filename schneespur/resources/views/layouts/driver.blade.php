@@ -111,7 +111,7 @@
         <script>
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function () {
-                    navigator.serviceWorker.register('/build/sw.js');
+                    navigator.serviceWorker.register('/sw.js');
                 });
             }
 

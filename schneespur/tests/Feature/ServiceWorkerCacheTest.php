@@ -14,7 +14,9 @@ class ServiceWorkerCacheTest extends TestCase
 {
     private function serviceWorker(): string
     {
-        $path = public_path('build/sw.js');
+        // The document root, not public/build — see ServiceWorkerScopeTest for
+        // why the worker has to be served from there.
+        $path = public_path('sw.js');
 
         $this->assertFileExists($path, 'Run `npm run build` — the committed service worker is missing');
 
