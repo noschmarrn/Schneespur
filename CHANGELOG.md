@@ -6,11 +6,23 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
-## [1.2.0] — unreleased — Security hardening
+## [1.2.0] — 2026-08-09 — Security hardening, regional formats & offline reliability
 
-A hardening release. Two external penetration tests on 2026-08-03 — one against the 1.1.9 source, one against a live throwaway demo — produced seven distinct findings after verification. All seven are fixed here, and each one has a test that fails if it ever comes back.
+Three strands in one release.
 
-Install this update. Nothing needs configuring afterwards, but do read the module note at the end if you run the Telegram or Dokumente module.
+**Hardening.** Two external penetration tests on 2026-08-03 — one against the 1.1.9 source, one against a live throwaway demo — produced seven distinct findings after verification. All seven are fixed here, and each one has a test that fails if it ever comes back.
+
+**Units and formats.** Dates, times, numbers, currency, distances, temperatures and weights are no longer German-only. One settings page decides them for the whole installation, and every screen, report, export and email follows it.
+
+**The driver app offline.** Actions that failed to sync are no longer thrown away silently, and the service worker now actually covers the driver pages — until this release it did not, so nothing was genuinely available offline.
+
+Install this update. Nothing needs configuring afterwards — the format settings start from your installation language, and you can adjust them at any time. Do read the module note at the end if you run the Telegram or Dokumente module.
+
+### Added
+- **Units and formats follow your region.** A new settings page, *Admin → Settings → Units & Formats*, sets the currency and where its symbol goes, the decimal and thousands separators, the date and time format (including 12-hour time), and whether distances, temperatures and weights are metric or imperial. Region templates for Germany, Austria, Switzerland, the United States, Canada and the United Kingdom fill in all of it at once, and every field stays individually adjustable afterwards — Canada uses Canadian dollars but stays metric, the UK drives in miles but weighs in kilograms.
+
+  The setting reaches everywhere the old hardcoded German formats used to: the admin interface, the driver app, the customer portal, the PDF reports, the CSV and Excel exports, and outgoing email. Speed follows the distance unit, as do snow depth and precipitation. Nothing is converted in storage — the same numbers are simply shown the way your region writes them, so switching back and forth is lossless. Both new and existing installations are seeded from the installation language — German installations get the German template, every other language starts on the United States one — and nothing that an operator has already set is ever overwritten.
+- **Failed offline actions are kept and shown instead of being dropped.** When the driver app is out of network it queues what the driver does and replays it once there is signal again. An entry that still failed after three attempts used to be discarded without a word — the driver had no way to know something had been lost. Failed entries now stay in the queue, the connectivity indicator turns red and names how many there are, and a tap retries them. The count survives a page change and a reload, and it is read back from the queue itself rather than from the last event that happened to arrive.
 
 ### Fixed
 - **Setup steps could still be reached after installation.** On an installed system, parts of the setup wizard remained callable without logging in, which allowed the mail configuration to be rewritten and a scheduled-task run to be triggered. Every setup route now refuses to work once the system is installed, and "installed" is decided the same way everywhere — a finished installation or an existing user account, so a deleted lock file changes nothing.
@@ -21,17 +33,36 @@ Install this update. Nothing needs configuring afterwards, but do read the modul
 - **The weather service contact address could contain line breaks.** It is sent as part of an outgoing request header, where line breaks have structural meaning. They are now removed both when saving and immediately before the request. Side effect worth knowing: a value that had picked up a line break previously made weather retrieval fail silently — that now works again.
 - **Any signed-in user could reach the module interface.** The browser-session shortcut into the module API existed for administrators testing a module and admitted every logged-in account, including drivers. It is now restricted to administrators; module access tokens are unaffected.
 
+Five more, found by installing this release on ordinary shared hosting rather than by running the test suite:
+
+- **The driver app was never actually available offline.** The service worker — the piece that makes the app work without network — was installed from a subdirectory, and a service worker can only take charge of addresses below wherever it is served from. It therefore took charge of nothing the driver ever visits. Everything downstream of that was dead too: reloading a driver page without network showed the browser's connection error, and none of the caching rules for driver pages, fonts or module screens ever applied. The worker is now served from the top level, where it covers the whole app. After the update, open the driver app once with network available so the worker can install itself.
+- **A fresh installation refused every request, the setup wizard included.** With no configuration file written yet, the host-header check introduced in 1.1.6 trusted only `localhost` — so on a real domain every single page answered with an error and there was no way in at all. The check now stays off until an installation has a configured address of its own to compare against. Existing installations were never affected.
+- **The release package contained a database.** The build copied the whole database directory, developer scratch file included. A fresh installation connected to that file, found an account in it and concluded it was already installed, so the setup wizard refused to start. The release now ships the directory structure without any database.
+- **The driver dashboard was also served at an address that had no sync queue.** Reaching it through `/dashboard` instead of `/driver` produced a page that looked identical but carried none of the offline machinery: anything done there while out of network was lost without a trace. That address now sends drivers to the real driver app.
+- **The dashboard ran its own startup routine twice** on every load — two status requests, doubled online/offline listeners, and a timer left running for the life of the page.
+
 ### Security
 - **PDF library updated** (dompdf 3.1.6) — closes six advisories — and the HTTP library updated alongside it. `composer audit` is clean.
 - **PDF generation no longer fetches remote content.** Nothing in the reports needs it: photos are embedded directly, the logo is read from disk, the GPS track is drawn inline. It was switched on regardless, which is what made several of the advisories above applicable in the first place. Reports look exactly the same.
 
 ### Internal (for module developers)
-Three changes affect modules. The module documentation has been updated; the short version:
+The module documentation has been updated for everything below.
+
+**Three hardening changes are breaking or near-breaking:**
 
 - **Stored files are private by default.** The local storage backend writes outside the web root, and `url()` now returns a signed, permission-checked link rather than a permanent public one. Every module that stores files **must** register its path prefix with the new `MediaAccessRegistry` — an unregistered prefix is served to nobody and migrated for nobody. Never hand such a link to a third-party service that fetches it server-side; read the bytes and send those.
 - **PDF hooks cannot load remote images.** `data:` URIs and local file paths still work.
 - **The module API's session fallback is administrators only.** Token-based access is unchanged.
 - A hand-copied module directory no longer boots, and no longer appears in the admin interface either, because a module now needs a database entry. Local module development therefore needs that entry created manually; a registration command is planned.
+
+**New seams**, all additive and dormant until a module uses them:
+
+- **`Formatter` and `RegionRegistry`.** Every display value now goes through one `Formatter` service — dates, times, numbers, money, distance, speed, temperature, weight — and modules must use it too, or their screens will contradict the rest of the page. It works outside Blade, so PDF, export and mail code can call it directly. `RegionRegistry` takes further region presets the same way `LocaleRegistry` takes languages. Note that `Formatter` is a container singleton: a test that changes a format setting has to forget the instance. New document: *Formats & Units*.
+- **`MailableRegistry`** lets a module register its own mailable per notification type. Previously a module that declared any notification type had all of them sent as the job-completion email — the wrong template, to the wrong recipients. A registry entry that is not callable now fails loudly at registration instead of at send time.
+- **Lifecycle handlers can declare that their failure must abort.** A handler registered as critical stops the driver's lifecycle transition when it throws, rather than letting the transition commit with the module's own work missing. The driver sees a normal error message; the exception is wrapped so it does not surface as a server error.
+- **Admin form hooks on the customer-object and driver forms** let a module attach its own fields, with validation and persistence, the way `LifecycleFieldRegistry` already does for the driver screens. On a create form the hook receives `null` for the entity — not an unsaved model — so `$entity === null` is a reliable "this does not exist yet".
+- **The offline queue exposes a failed state.** Actions a module queues through the driver app follow the same three-attempt rule and then surface in the driver's failed count rather than disappearing.
+- **Module assets are cached for offline use.** Files served from `public/modules/{slug}/` are covered by a service-worker rule, so a module's driver screen survives without network. Filenames there are hashed and treated as immutable.
 
 ### Known limitations with existing modules
 Two modules need their own update to work fully with 1.2.0. Both updates are prepared separately:
