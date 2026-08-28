@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [Unreleased]
+
+### Changed
+- **The system requirement is stated as PHP 8.4.** It always was that in practice: every release since 1.1.7 shipped a dependency set that refuses to start below PHP 8.4.1, while the README, both install guides and the in-app help promised 8.2. On 8.2 or 8.3 that combination produces a blank error page on every request, with nothing explaining why — the check that produces it runs before the application starts, so the setup wizard never gets the chance to name the problem. The requirement is now stated correctly everywhere, including the wizard's own check, and the dependency resolver is pinned to 8.4.1 so that building on a machine with a newer PHP cannot raise the bar unnoticed a second time. Nothing changes for an installation that is running: if yours works, it is already on 8.4 or newer.
+
+  Lowering the requirement instead was weighed and left for later. PHP 8.3 is within reach but costs around forty dependency updates including a Laravel minor version, and 8.2 is out of reach altogether because the image library requires 8.3 or newer.
+
 ## [1.2.0] — 2026-08-09 — Security hardening, regional formats & offline reliability
 
 Three strands in one release.
