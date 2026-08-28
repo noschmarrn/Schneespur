@@ -22,10 +22,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # composer.json allows ^8.2, and the product has to run on ordinary
-        # shared hosting where 8.2 is still common. Testing only on the version
-        # this machine happens to have would let an 8.2 break ship unnoticed.
-        php: ['8.2', '8.4']
+        # composer.json requires ^8.4, and the built vendor/ carries a
+        # platform_check that aborts below 8.4.1 — 8.4 is the version the
+        # product actually runs on. This stayed a matrix on purpose: when the
+        # floor moves, or a newer PHP is to be supported, a second entry proves
+        # it instead of the build machine's version deciding it silently.
+        php: ['8.4']
     steps:
       - uses: actions/checkout@v4
 
@@ -98,7 +100,7 @@ jobs:
       # ignore here, so the exception is visible instead of implied.
       - name: composer audit
         working-directory: schneespur
-        run: composer audit
+        run: composer audit --locked
 
       - name: npm audit
         working-directory: schneespur

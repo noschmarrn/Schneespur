@@ -55,6 +55,10 @@ Thumbs.db
 node_modules/
 .next/
 dist/
+# …but not the example module's dist/: those two files are hand-written
+# fixtures, not build output. ModuleAssetTest reads them, and without them
+# the test only passes on a machine that happens to have them lying around.
+!/schneespur/modules/example/dist/
 __pycache__/
 *.pyc
 .venv/
