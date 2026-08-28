@@ -46,7 +46,7 @@ return [
 
     // Installation
     'installation_requirements_title' => 'System Requirements',
-    'installation_requirements_text'  => ':app_name requires PHP 8.2 or higher, a MySQL database, and a web server with mod_rewrite (Apache) or equivalent Nginx configuration. The software runs on standard shared web hosting (e.g. Strato, IONOS, All-Inkl.) — SSH or Docker are not required.',
+    'installation_requirements_text'  => ':app_name requires PHP 8.4 or higher, a MySQL database, and a web server with mod_rewrite (Apache) or equivalent Nginx configuration. The software runs on standard shared web hosting (e.g. Strato, IONOS, All-Inkl.) — SSH or Docker are not required.',
     'installation_upload_title'       => 'Upload Files',
     'installation_upload_text'        => 'Upload all files to your hosting web directory via FTP. The "public" directory must be accessible as the document root. Most hosts point the domain root to a folder like "htdocs" or "public_html" — copy the contents of "public" there and adjust the paths in index.php accordingly.',
     'installation_database_title'     => 'Set Up Database',

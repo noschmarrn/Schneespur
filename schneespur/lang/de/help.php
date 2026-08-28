@@ -46,7 +46,7 @@ return [
 
     // Installation
     'installation_requirements_title' => 'Systemvoraussetzungen',
-    'installation_requirements_text'  => ':app_name benötigt PHP 8.2 oder höher, eine MySQL-Datenbank und einen Webserver mit mod_rewrite (Apache) oder entsprechender Nginx-Konfiguration. Die Software läuft auf klassischem Shared Webhosting (z. B. Strato, IONOS, All-Inkl.) — SSH oder Docker sind nicht erforderlich.',
+    'installation_requirements_text'  => ':app_name benötigt PHP 8.4 oder höher, eine MySQL-Datenbank und einen Webserver mit mod_rewrite (Apache) oder entsprechender Nginx-Konfiguration. Die Software läuft auf klassischem Shared Webhosting (z. B. Strato, IONOS, All-Inkl.) — SSH oder Docker sind nicht erforderlich.',
     'installation_upload_title'       => 'Dateien hochladen',
     'installation_upload_text'        => 'Laden Sie alle Dateien per FTP in das Webverzeichnis Ihres Hostings hoch. Das Verzeichnis „public" muss als Document Root erreichbar sein. Bei vielen Hostern zeigt der Domain-Root auf einen Ordner wie „htdocs" oder „public_html" — kopieren Sie den Inhalt von „public" dorthin und passen Sie die Pfade in der index.php an.',
     'installation_database_title'     => 'Datenbank einrichten',

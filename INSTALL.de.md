@@ -23,7 +23,7 @@ Diese Anleitung beschreibt die Installation von Schneespur auf einem klassischen
 
 | Anforderung | Minimum | Empfohlen |
 |-------------|---------|-----------|
-| PHP | 8.2 | 8.3 oder 8.4 |
+| PHP | 8.4 | 8.4 oder neuer |
 | MySQL | 5.7 | 8.0+ |
 | MariaDB (alternativ) | 10.3 | 10.6+ |
 

@@ -28,14 +28,14 @@ class PreflightChecker
     private function checkPhpVersion(): array
     {
         $version = PHP_VERSION;
-        $passes = version_compare($version, '8.2.0', '>=');
+        $passes = version_compare($version, '8.4.1', '>=');
 
         return [[
-            'name' => 'PHP >= 8.2',
+            'name' => 'PHP >= 8.4',
             'status' => $passes ? 'pass' : 'fail',
             'message' => $passes
                 ? 'PHP ' . $version
-                : 'PHP ' . $version . ' — mindestens 8.2 erforderlich',
+                : 'PHP ' . $version . ' — mindestens 8.4 erforderlich',
         ]];
     }
 

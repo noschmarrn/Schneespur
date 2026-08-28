@@ -23,7 +23,7 @@ This guide describes how to install Schneespur on a standard shared web hosting 
 
 | Requirement | Minimum | Recommended |
 |-------------|---------|-------------|
-| PHP | 8.2 | 8.3 or 8.4 |
+| PHP | 8.4 | 8.4 or newer |
 | MySQL | 5.7 | 8.0+ |
 | MariaDB (alternative) | 10.3 | 10.6+ |
 

@@ -27,7 +27,7 @@
 </p>
 
 <p align="center">
-  <img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white">
+  <img alt="PHP 8.4+" src="https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php&logoColor=white">
   <img alt="Laravel 12" src="https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white">
   <img alt="License AGPL-3.0" src="https://img.shields.io/badge/license-AGPL--3.0-blue">
   <img alt="Self-hosted" src="https://img.shields.io/badge/self--hosted-shared%20hosting%20ready-2ea44f">
@@ -92,7 +92,7 @@ Building your own module? The **[developer docs](https://wintertrace.com/docs/)*
 
 | Component | Minimum |
 |-----------|---------|
-| PHP | 8.2 |
+| PHP | 8.4 |
 | MySQL / MariaDB | 5.7 / 10.3 |
 | Web server | Apache with `mod_rewrite` |
 | PHP extensions | `pdo_mysql`, `mbstring`, `openssl`, `gd`, `sodium`, `fileinfo` |
@@ -113,7 +113,7 @@ Detailed guide: **[INSTALL.en.md](INSTALL.en.md)**
 
 | Area | Technology |
 |------|------------|
-| Backend | PHP 8.2+ / Laravel 12 |
+| Backend | PHP 8.4+ / Laravel 12 |
 | Frontend | Blade + Alpine.js + Tailwind CSS v4 |
 | Maps | Leaflet + OpenStreetMap |
 | PDF | DomPDF (pure PHP — no Chrome / Puppeteer) |
