@@ -313,13 +313,13 @@ class PdfReportService
         $customerSlug = str($object->customer->name)->slug();
         $objectSlug = str($object->name)->slug();
 
-        return __('job.pdf_filename_combined')."-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}-{$customerSlug}-{$objectSlug}.pdf";
+        return str(__('job.pdf_filename_combined'))->slug()."-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}-{$customerSlug}-{$objectSlug}.pdf";
     }
 
     public function customerReportFilename(Customer $customer, Carbon $from, Carbon $to): string
     {
         $slug = str($customer->name)->slug();
-        return __('job.pdf_filename_combined')."-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}-{$slug}.pdf";
+        return str(__('job.pdf_filename_combined'))->slug()."-{$from->format('Y-m-d')}-{$to->format('Y-m-d')}-{$slug}.pdf";
     }
 
     public function jobReportFilename(Job $job): string
@@ -327,6 +327,6 @@ class PdfReportService
         $date = $job->started_at->format('Y-m-d');
         $customer = str($job->customerObject?->customer?->name ?? $job->customer?->name ?? 'unknown')->slug();
         $object = $job->customerObject ? '-' . str($job->customerObject->name)->slug() : '';
-        return __('job.pdf_filename_proof')."-{$date}-{$customer}{$object}-{$job->id}.pdf";
+        return str(__('job.pdf_filename_proof'))->slug()."-{$date}-{$customer}{$object}-{$job->id}.pdf";
     }
 }
