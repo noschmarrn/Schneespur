@@ -31,7 +31,7 @@ class PortalDashboardController extends Controller
             ->whereBetween('started_at', [$season->start, $season->end])
             ->value('total_minutes');
 
-        $totalHours = number_format($totalMinutes / 60, 1);
+        $totalHours = app(\App\Services\Format\Formatter::class)->number($totalMinutes / 60, 1);
 
         $lastJob = Job::where('customer_id', $customer->id)
             ->whereNotNull('ended_at')

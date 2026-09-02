@@ -53,7 +53,8 @@ class CustomerReportController extends Controller
                 $days = max(1, $from->diffInDays($to));
                 if ($days >= 7) {
                     $weeks = max(1, ceil($days / 7));
-                    $frequencyPerWeek = round($totalJobs / $weeks, 1);
+                    $frequencyPerWeek = app(\App\Services\Format\Formatter::class)
+                        ->number($weeks > 0 ? $totalJobs / $weeks : 0.0, 1);
                 }
 
                 $sammelPdfUrl = route('admin.exports.customer-pdf', [
