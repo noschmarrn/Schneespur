@@ -159,7 +159,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_snow_depth((float) $snapshot->snow_depth) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_speed($snapshot->wind_speed) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->humidity !== null ? $snapshot->humidity . ' %' : '–' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->weather_code }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ \App\Services\Weather\ConditionMapper::label(\App\Services\Weather\ConditionMapper::fromWmoCode($snapshot->weather_code)) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($snapshot->fetched_at) }}</td>
                                 @else
                                     <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ __('job.weather_not_fetched') }}</td>
