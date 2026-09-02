@@ -15,11 +15,13 @@ class GeocodingService
                 'User-Agent' => brand_slug().'/1.0 ('.config('app.url').')',
             ])
                 ->timeout(5)
+                // No country filter: Wintertrace runs in the US, Canada, Norway
+                // and beyond, and even a German operator may keep a site across
+                // the border. Street, postcode and city are enough for Nominatim.
                 ->get('https://nominatim.openstreetmap.org/search', [
                     'street' => $street,
                     'city' => $city,
                     'postalcode' => $zip,
-                    'country' => 'de',
                     'format' => 'json',
                     'limit' => 1,
                 ]);
