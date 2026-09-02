@@ -13,6 +13,21 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
   Lowering the requirement instead was weighed and left for later. PHP 8.3 is within reach but costs around forty dependency updates including a Laravel minor version, and 8.2 is out of reach altogether because the image library requires 8.3 or newer.
 
+### Fixed
+
+Ten defects found by two independent field tests of 1.2.0 — one German operation, one American — that put the release into daily use rather than into a test suite. Both reports named the first two of these as blockers.
+
+- **The season period lost October, November and December.** Choosing a season that starts in November stored January instead, and the list of end dates offered "November 31", a day that does not exist. Both symptoms came from the same defect, and both are gone: the season now starts and ends in the month you pick, and the end dates offered are the real ones for each month. If your season period looks wrong, open *Admin → Settings → Company* and set it once — the value has been silently reset to January every time any other setting on that page was saved, so it is worth checking even if you set it long ago. Jobs driven in November and December were never lost; they simply fell outside every season-based evaluation.
+- **Address lookup only worked for German addresses.** The "find coordinates" button asked the map service to search Germany and nowhere else, which is why it worked in Passau and failed in Minneapolis, Vienna and Zurich alike — even though the software offers regional templates for six countries. It now searches worldwide, with no country restriction of any kind, so a German operation can equally place an object across the border.
+- **The customer's language setting never reached their email.** Every notice went out in the installation's language regardless of what was set on the customer. The language is now applied before the message is composed, which is the only point at which it has any effect. Related: on an English installation, new customers were created as German-speaking; they now start in the installation's language.
+- **PDF attachments were always named in German.** Every proof of service arrived as `einsatznachweis-…`, including for recipients who cannot read that word. Filenames now follow the language of the installation.
+- **The weather column showed a number instead of a description.** Admin and customer portal printed a bare `1` where the PDF has always written "Mostly clear". Both now use the same descriptions as the PDF — which also means light, moderate and heavy snowfall are told apart on screen, and a job with no weather data on record says so instead of claiming "Cloudy".
+- **English decimal points in a German interface.** The customer portal wrote "1.8" hours and the customer evaluation "0.1 jobs/week", while the rest of the software wrote "12,5". Both now follow the separator you set under *Units & Formats*.
+- **The credentials email showed raw asterisks** around "Email" and "Password" in its plain-text version.
+- **A mistyped address produced Laravel's untranslated error page** — "404 | NOT FOUND", unstyled, with no way back, in the German customer portal as much as anywhere else. There is now a proper page in your language with a link back to where you came from.
+- **Correcting one field in a manual job form emptied the customer and object selection.** After a validation error the two dropdowns reset, so fixing the reported problem produced the next one. Both the administrator and the driver version of the form now keep what was selected.
+- **Warnings and error messages disappeared after five seconds.** They now stay until closed; success messages still fade, since they only confirm what is already visible. This is what made a failed address lookup look like nothing had happened at all, and in the driver app it was the only explanation a driver ever got for why a shift or a job would not start — five seconds of it, on a phone, in the dark, wearing gloves.
+
 ## [1.2.0] — 2026-08-09 — Security hardening, regional formats & offline reliability
 
 Three strands in one release.
