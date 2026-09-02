@@ -169,7 +169,9 @@ class RetentionService
 
         $jobs->load(['jobPhotos', 'gpsPoints', 'weatherSnapshots']);
 
-        $grouped = $jobs->groupBy(fn (Job $job) => $job->ended_at->format('Y-m'));
+        // Grouped by calendar month. In UTC a job driven on New Year's Eve
+        // after 18:00 local (Chicago) falls into the following year.
+        $grouped = $jobs->groupBy(fn (Job $job) => $job->localEndedAt()->format('Y-m'));
 
         foreach ($grouped as $yearMonth => $monthJobs) {
             [$year, $month] = explode('-', $yearMonth);

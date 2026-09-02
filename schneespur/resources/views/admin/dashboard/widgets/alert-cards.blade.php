@@ -29,7 +29,7 @@
                             <div class="font-medium mb-1">{{ __('alert.card_recent_jobs') }}</div>
                             <ul class="space-y-0.5">
                                 @foreach ($config['recentJobs'] as $alertJob)
-                                    <li class="truncate">{{ $alertJob->customer->name }} — {{ $alertJob->started_at->format(__('alert.date_format')) }}</li>
+                                    <li class="truncate">{{ $alertJob->customer->name }} — {{ $alertJob->localStartedAt()->format(__('alert.date_format')) }}</li>
                                 @endforeach
                             </ul>
                         </div>
