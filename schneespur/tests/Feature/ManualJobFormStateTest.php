@@ -61,6 +61,18 @@ class ManualJobFormStateTest extends TestCase
         return $user->fresh();
     }
 
+    private function driver(): User
+    {
+        $user = User::create([
+            'name' => 'Real Driver',
+            'email' => 'driver@test.local',
+            'password' => Hash::make('password'),
+        ]);
+        $user->assignRole('driver');
+
+        return $user->fresh();
+    }
+
     public function test_the_customer_selection_survives_a_validation_error(): void
     {
         $customer = Customer::create(['name' => 'Hausverwaltung Donaublick', 'email' => 'hv@test.local']);
@@ -70,13 +82,17 @@ class ManualJobFormStateTest extends TestCase
         ]);
 
         $admin = $this->admin();
+        $driver = $this->driver();
 
-        // Deliberately incomplete: customer_object_id and type are sent (so the
-        // selection actually lands in old()), but started_at is left out, so
-        // validation fails on that field alone and the form comes back.
+        // Deliberately incomplete: user_id, customer_object_id and type are all
+        // sent (so the selection actually lands in old() and no unrelated field
+        // fails), but started_at is left out — the one and only required field
+        // missing — so validation fails on that field alone and the form comes
+        // back.
         $response = $this->actingAs($admin)
             ->from(route('admin.jobs.manual.create'))
             ->post(route('admin.jobs.manual.store'), [
+                'user_id' => $driver->id,
                 'customer_object_id' => $object->id,
                 'type' => 'raumen_streuen',
                 'ended_at' => now()->format('Y-m-d\TH:i'),
@@ -84,6 +100,7 @@ class ManualJobFormStateTest extends TestCase
 
         $response->assertRedirect(route('admin.jobs.manual.create'));
         $response->assertSessionHasErrors('started_at');
+        $response->assertSessionDoesntHaveErrors('user_id');
         $response->assertSessionDoesntHaveErrors('customer_object_id');
 
         $followUp = $this->actingAs($admin)->get(route('admin.jobs.manual.create'));
