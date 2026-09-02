@@ -33,6 +33,7 @@ class PortalCredentialsMail extends Mailable
     {
         return new Content(
             markdown: 'mail.portal-credentials',
+            text: 'mail.portal-credentials-text',
             with: [
                 'customer' => $this->customer,
                 'password' => $this->plainPassword,
