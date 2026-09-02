@@ -91,6 +91,10 @@ return [
     'pdf_active_blocked' => 'PDF download available only after job completion.',
     'pdf_gps_sampled' => 'Showing :shown of :total coordinates (sampled)',
 
+    // Used in download filenames, so: lowercase, ASCII, hyphens only.
+    'pdf_filename_proof' => 'proof-of-service',
+    'pdf_filename_combined' => 'combined-proof-of-service',
+
     'pdf_customer_report_title' => 'Combined Proof of Service',
     'pdf_customer_report_subtitle' => ':customer — :from to :to',
     'pdf_cover_summary' => 'Summary',
