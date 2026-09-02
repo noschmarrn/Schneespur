@@ -213,6 +213,24 @@
                 </div>
 
                 <div>
+                    <label for="display_timezone" class="block text-sm font-medium text-gray-700">{{ __('settings.timezone_label') }}</label>
+                    <select name="display_timezone" id="display_timezone"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        @foreach ($timezones as $region => $zones)
+                            <optgroup label="{{ $region }}">
+                                @foreach ($zones as $identifier => $label)
+                                    <option value="{{ $identifier }}" @selected(old('display_timezone', $display_timezone) === $identifier)>{{ $label }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('settings.timezone_help') }}</p>
+                    @error('display_timezone')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
                     <label for="app_brand" class="block text-sm font-medium text-gray-700">{{ __('settings.brand_label') }}</label>
                     <select name="app_brand" id="app_brand"
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">

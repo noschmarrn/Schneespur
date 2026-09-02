@@ -34,6 +34,8 @@ class CompanyController extends Controller
             'alert_overdue_hours' => Setting::get('alert_overdue_hours', 4),
             'default_locale' => Setting::get('default_locale', 'de'),
             'locales' => app(LocaleRegistry::class)->labels(),
+            'display_timezone' => \App\Support\Timezones::resolve(),
+            'timezones' => \App\Support\Timezones::grouped(),
             'app_brand' => brand_slug(),
             'brands' => brand_options(),
         ]);
@@ -56,6 +58,14 @@ class CompanyController extends Controller
             'season_to' => ['required', 'string', 'regex:/^\d{2}-\d{2}$/'],
             'alert_overdue_hours' => ['required', 'integer', 'min:1'],
             'default_locale' => ['required', 'string', Rule::in(app(LocaleRegistry::class)->codes())],
+            // Not Rule::in() over 400-odd identifiers on every request — and a
+            // rejected value matters: an invalid zone throws inside
+            // Formatter::formatMoment(), which is to say on every page with a date.
+            'display_timezone' => ['required', 'string', function (string $attribute, mixed $value, \Closure $fail) {
+                if (! \App\Support\Timezones::isValid((string) $value)) {
+                    $fail(__('settings.timezone_invalid'));
+                }
+            }],
             // Optional so older forms / API clients that never post it keep the
             // brand they were installed with instead of silently resetting it.
             'app_brand' => ['nullable', 'string', Rule::in(array_keys(brand_options()))],
@@ -73,6 +83,7 @@ class CompanyController extends Controller
         Setting::set('season_to', $validated['season_to']);
         Setting::set('alert_overdue_hours', $validated['alert_overdue_hours'], 'int');
         Setting::set('default_locale', $validated['default_locale']);
+        Setting::set('display_timezone', $validated['display_timezone']);
 
         if (! empty($validated['app_brand'])) {
             Setting::set('app_brand', $validated['app_brand']);

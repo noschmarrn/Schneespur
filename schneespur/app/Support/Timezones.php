@@ -63,6 +63,53 @@ final class Timezones
         Config::set('app.display_timezone', self::resolve());
     }
 
+    /**
+     * Every zone PHP knows, by region, labelled with its current UTC offset.
+     *
+     * Deliberately the full IANA list rather than a curated one. The curated
+     * list this replaces offered six European zones, and the wizard's
+     * detection only applies a zone that is already an option — so an
+     * American installation silently stayed on Europe/Berlin without anyone
+     * choosing it. A curated list is a list that is wrong for the next country.
+     *
+     * The offset is current on purpose: it moves with daylight saving, which
+     * is what makes the label useful while picking. Nothing is stored from the
+     * label; only the identifier is.
+     *
+     * @return array<string, array<string, string>>
+     */
+    public static function grouped(): array
+    {
+        $now = new \DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $grouped = [];
+
+        foreach (DateTimeZone::listIdentifiers() as $identifier) {
+            $region = str_contains($identifier, '/')
+                ? strstr($identifier, '/', true)
+                : $identifier;
+
+            $offset = (new DateTimeZone($identifier))->getOffset($now);
+            $sign = $offset < 0 ? '-' : '+';
+            $offset = abs($offset);
+
+            $grouped[$region][$identifier] = sprintf(
+                '%s (UTC%s%02d:%02d)',
+                $identifier,
+                $sign,
+                intdiv($offset, 3600),
+                intdiv($offset % 3600, 60)
+            );
+        }
+
+        ksort($grouped);
+
+        foreach ($grouped as &$zones) {
+            ksort($zones);
+        }
+
+        return $grouped;
+    }
+
     public static function isValid(string $identifier): bool
     {
         return $identifier !== '' && in_array($identifier, DateTimeZone::listIdentifiers(), true);

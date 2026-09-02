@@ -49,6 +49,9 @@ class CompanyLocaleTest extends TestCase
             'season_to' => '03-31',
             'alert_overdue_hours' => 4,
             'default_locale' => 'cs',
+            // Required since 1.2.1 — without it validation fails on this
+            // field and the test silently stops testing what it names.
+            'display_timezone' => 'Europe/Berlin',
         ]);
 
         $response->assertSessionHasNoErrors();
@@ -63,6 +66,9 @@ class CompanyLocaleTest extends TestCase
             'season_to' => '03-31',
             'alert_overdue_hours' => 4,
             'default_locale' => 'xx',
+            // Required since 1.2.1 — without it validation fails on this
+            // field and the test silently stops testing what it names.
+            'display_timezone' => 'Europe/Berlin',
         ]);
 
         $response->assertSessionHasErrors('default_locale');

@@ -81,6 +81,9 @@ class CompanySeasonFormTest extends TestCase
             // the request never reaches Setting::set() at all.
             'alert_overdue_hours' => 4,
             'default_locale' => 'de',
+            // Required since 1.2.1 — without it validation fails on this
+            // field and the test silently stops testing what it names.
+            'display_timezone' => 'Europe/Berlin',
         ]);
 
         $this->assertSame('11-01', Setting::get('season_from'));

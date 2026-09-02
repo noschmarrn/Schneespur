@@ -38,6 +38,9 @@ return [
     'locale_title'               => 'Language & Format',
     'locale_default'             => 'Default Language',
     'locale_help'                => 'Sets the display language and date format.',
+    'timezone_label'             => 'Time zone',
+    'timezone_help'              => 'Decides the time in which jobs are entered and shown. Storage stays in UTC either way.',
+    'timezone_invalid'           => 'The selected time zone is not a valid identifier.',
     'brand_label'                => 'Product name',
     'brand_help'                 => 'The name this software appears under in the interface, the PWA and outgoing email. Derived from the install language (German → Schneespur, otherwise Wintertrace) and changeable here.',
 
