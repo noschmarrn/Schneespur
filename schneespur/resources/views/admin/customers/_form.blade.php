@@ -37,7 +37,7 @@
                 <x-input-label for="locale" :value="__('customer.field_locale')" />
                 <select id="locale" name="locale" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                     @foreach(app(\App\Services\Extension\LocaleRegistry::class)->labels() as $code => $label)
-                        <option value="{{ $code }}" @selected(old('locale', $customer->locale ?? 'de') === $code)>{{ $label }}</option>
+                        <option value="{{ $code }}" @selected(old('locale', $customer->locale ?? config('app.locale')) === $code)>{{ $label }}</option>
                     @endforeach
                 </select>
                 <x-input-error :messages="$errors->get('locale')" class="mt-2" />
