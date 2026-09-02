@@ -43,4 +43,18 @@ class ErrorPageTest extends TestCase
         $response->assertNotFound();
         $response->assertSee(__('errors.404_back'));
     }
+
+    /**
+     * The 404 page has its own <head> but no route matches it, so the
+     * SecurityHeaders middleware (which sets X-Robots-Tag on the web group)
+     * never runs. Without its own <meta name="robots"> it would be the only
+     * self-contained page in the app without a noindex signal.
+     */
+    public function test_the_error_page_carries_its_own_noindex_meta_tag(): void
+    {
+        $response = $this->get('/quatsch-tippfehler');
+
+        $response->assertNotFound();
+        $response->assertSee('<meta name="robots" content="noindex, nofollow">', false);
+    }
 }
