@@ -19,11 +19,21 @@
             $allObjects = $customers->flatMap(fn ($c) => $c->objects->map(fn ($o) => [
                 'id' => $o->id, 'customer_id' => $c->id, 'name' => $o->name, 'street' => $o->street, 'city' => $o->city,
             ]));
+
+            // The customer select carries no name attribute on purpose — the
+            // customer follows from the object. That also means old('customer_id')
+            // is always empty, so after a validation error the selection has to be
+            // derived from the object that *was* sent; otherwise customer and
+            // object both drop out of the form and the next submit fails again.
+            $oldObjectId = old('customer_object_id') ? (int) old('customer_object_id') : null;
+            $oldCustomerId = $oldObjectId
+                ? ($allObjects->firstWhere('id', $oldObjectId)['customer_id'] ?? null)
+                : null;
         @endphp
         <form method="POST" action="{{ route('admin.jobs.manual.store') }}" class="mt-6"
               x-data="{
-                  selectedCustomerId: {{ old('customer_id') ? (int) old('customer_id') : 'null' }},
-                  selectedObjectId: {{ old('customer_object_id') ? (int) old('customer_object_id') : 'null' }},
+                  selectedCustomerId: {{ $oldCustomerId ?? 'null' }},
+                  selectedObjectId: {{ $oldObjectId ?? 'null' }},
                   allObjects: {{ json_encode($allObjects) }},
                   get objects() { return this.allObjects.filter(o => o.customer_id === this.selectedCustomerId); },
                   onCustomerChange() {

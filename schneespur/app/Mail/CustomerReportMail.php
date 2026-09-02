@@ -25,6 +25,9 @@ class CustomerReportMail extends Mailable implements ShouldQueue
         public ?CustomerObject $customerObject = null,
     ) {
         $this->pdfContentBase64 = $pdfContent !== null ? base64_encode($pdfContent) : null;
+
+        // See JobCompletedMail: locale() has to be set before send() reads it.
+        $this->locale($this->customer->locale ?? config('app.locale'));
     }
 
     public ?string $pdfContentBase64 = null;
@@ -61,8 +64,6 @@ class CustomerReportMail extends Mailable implements ShouldQueue
 
     public function build(): static
     {
-        $this->locale($this->customer->locale ?? 'de');
-
         if ($this->pdfContentBase64 !== null) {
             $this->attachData(base64_decode($this->pdfContentBase64), $this->pdfFilename, [
                 'mime' => 'application/pdf',

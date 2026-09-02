@@ -127,11 +127,23 @@
                 <p class="text-sm text-gray-500">{{ __('settings.season_help') }}</p>
 
                 @php
+                    // Month numbers as VALUES, not keys: PHP silently turns the
+                    // numeric string keys '10'…'12' into integers, and the strict
+                    // comparisons below then never match — which is how every
+                    // season starting in October or later fell back to January.
                     $months = [
-                        '01' => __('January'), '02' => __('February'), '03' => __('March'),
-                        '04' => __('April'), '05' => __('May'), '06' => __('June'),
-                        '07' => __('July'), '08' => __('August'), '09' => __('September'),
-                        '10' => __('October'), '11' => __('November'), '12' => __('December'),
+                        ['num' => '01', 'name' => __('January'),   'last' => '31'],
+                        ['num' => '02', 'name' => __('February'),  'last' => '28'],
+                        ['num' => '03', 'name' => __('March'),     'last' => '31'],
+                        ['num' => '04', 'name' => __('April'),     'last' => '30'],
+                        ['num' => '05', 'name' => __('May'),       'last' => '31'],
+                        ['num' => '06', 'name' => __('June'),      'last' => '30'],
+                        ['num' => '07', 'name' => __('July'),      'last' => '31'],
+                        ['num' => '08', 'name' => __('August'),    'last' => '31'],
+                        ['num' => '09', 'name' => __('September'), 'last' => '30'],
+                        ['num' => '10', 'name' => __('October'),   'last' => '31'],
+                        ['num' => '11', 'name' => __('November'),  'last' => '30'],
+                        ['num' => '12', 'name' => __('December'),  'last' => '31'],
                     ];
                     $seasonFromMonth = substr(old('season_from', $season_from), 0, 2);
                     $seasonToMonth = substr(old('season_to', $season_to), 0, 2);
@@ -142,8 +154,8 @@
                         <label for="season_from" class="block text-sm font-medium text-gray-700">{{ __('settings.season_from') }}</label>
                         <select name="season_from" id="season_from"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            @foreach ($months as $num => $name)
-                                <option value="{{ $num }}-01" @selected($seasonFromMonth === $num)>{{ $name }}</option>
+                            @foreach ($months as $month)
+                                <option value="{{ $month['num'] }}-01" @selected($seasonFromMonth === $month['num'])>{{ $month['name'] }}</option>
                             @endforeach
                         </select>
                         @error('season_from')
@@ -154,15 +166,8 @@
                         <label for="season_to" class="block text-sm font-medium text-gray-700">{{ __('settings.season_to') }}</label>
                         <select name="season_to" id="season_to"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            @foreach ($months as $num => $name)
-                                @php
-                                    $lastDay = match ($num) {
-                                        '02' => '28',
-                                        '04', '06', '09', '11' => '30',
-                                        default => '31',
-                                    };
-                                @endphp
-                                <option value="{{ $num }}-{{ $lastDay }}" @selected($seasonToMonth === $num)>{{ $name }}</option>
+                            @foreach ($months as $month)
+                                <option value="{{ $month['num'] }}-{{ $month['last'] }}" @selected($seasonToMonth === $month['num'])>{{ $month['name'] }}</option>
                             @endforeach
                         </select>
                         @error('season_to')

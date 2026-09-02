@@ -13,7 +13,10 @@ class PortalCredentialsMail extends Mailable
         public Customer $customer,
         public string $plainPassword,
         public bool $isReset = false,
-    ) {}
+    ) {
+        // See JobCompletedMail: locale() has to be set before send() reads it.
+        $this->locale($this->customer->locale ?? config('app.locale'));
+    }
 
     public function envelope(): Envelope
     {
@@ -30,6 +33,7 @@ class PortalCredentialsMail extends Mailable
     {
         return new Content(
             markdown: 'mail.portal-credentials',
+            text: 'mail.portal-credentials-text',
             with: [
                 'customer' => $this->customer,
                 'password' => $this->plainPassword,
@@ -40,7 +44,6 @@ class PortalCredentialsMail extends Mailable
 
     public function build(): static
     {
-        $this->locale($this->customer->locale ?? 'de');
         $this->replyTo(config('mail.from.address'));
 
         return $this;

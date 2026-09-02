@@ -91,6 +91,10 @@ return [
     'pdf_active_blocked' => 'PDF-Download erst nach Einsatzende möglich.',
     'pdf_gps_sampled' => 'Zeige :shown von :total Koordinaten (Auswahl)',
 
+    // Used in download filenames, so: lowercase, ASCII, hyphens only.
+    'pdf_filename_proof' => 'einsatznachweis',
+    'pdf_filename_combined' => 'sammel-einsatznachweis',
+
     'pdf_customer_report_title' => 'Sammel-Einsatznachweis',
     'pdf_customer_report_subtitle' => ':customer — :from bis :to',
     'pdf_cover_summary' => 'Zusammenfassung',

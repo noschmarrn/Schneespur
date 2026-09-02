@@ -23,6 +23,11 @@ class JobCompletedMail extends Mailable implements ShouldQueue
     ) {
         // Base64-encode binary PDF so the database queue can JSON-serialize it
         $this->pdfContentBase64 = $pdfContent !== null ? base64_encode($pdfContent) : null;
+
+        // Not in build(): Mailable::send() wraps prepareMailableForDelivery() —
+        // and with it build() — inside withLocale($this->locale, …), so anything
+        // set in build() arrives after the language has already been chosen.
+        $this->locale($this->job->customer->locale ?? config('app.locale'));
     }
 
     public ?string $pdfContentBase64 = null;
@@ -62,8 +67,6 @@ class JobCompletedMail extends Mailable implements ShouldQueue
 
     public function build(): static
     {
-        $this->locale($this->job->customer->locale ?? 'de');
-
         if ($this->pdfContentBase64 !== null) {
             $this->attachData(base64_decode($this->pdfContentBase64), $this->pdfFilename, [
                 'mime' => 'application/pdf',
