@@ -14,6 +14,44 @@ class StoreManualJobRequest extends FormRequest
     }
 
     /**
+     * A datetime-local field sends "2026-01-15T08:30" with no zone at all.
+     * Carbon::parse() would put config('app.timezone') on that — UTC — so an
+     * operator in Berlin who typed 08:30 got 08:30 UTC stored and 09:30 back.
+     *
+     * Converting here rather than in the controller is the point: this runs
+     * before the rules, so 'before_or_equal:now' compares two values that are
+     * genuinely in the same zone. Left naive, that boundary moved with the
+     * offset — in Chicago it accepted jobs six hours into the future.
+     */
+    protected function prepareForValidation(): void
+    {
+        $zone = (string) config('app.display_timezone', 'UTC');
+
+        $converted = [];
+
+        foreach (['started_at', 'ended_at'] as $field) {
+            $value = $this->input($field);
+
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+
+            try {
+                $converted[$field] = \Carbon\CarbonImmutable::parse($value, $zone)
+                    ->utc()
+                    ->toIso8601String();
+            } catch (\Throwable) {
+                // Leave it untouched — the 'date' rule then reports it properly,
+                // which is a far better answer than an exception page.
+            }
+        }
+
+        if ($converted !== []) {
+            $this->merge($converted);
+        }
+    }
+
+    /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array

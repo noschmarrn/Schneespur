@@ -38,6 +38,9 @@ class ManualJobController extends Controller
 
         $validated = $request->validated();
 
+        // started_at/ended_at leave the FormRequest already converted to UTC
+        // with an explicit offset; parse() reads that offset. Do not add a
+        // timezone here — it would be applied twice.
         $driver = User::findOrFail($validated['user_id']);
         $customerObject = CustomerObject::findOrFail($validated['customer_object_id']);
         $vehicle = isset($validated['vehicle_id']) ? Vehicle::find($validated['vehicle_id']) : null;

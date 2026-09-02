@@ -32,6 +32,7 @@ use App\Services\Extension\SlotRegistry;
 use App\Services\Format\Formatter;
 use App\Services\Format\RegionPreset;
 use App\Services\Format\RegionRegistry;
+use App\Support\Timezones;
 use App\Services\Extension\ModuleApiRegistrar;
 use App\Services\Extension\ModuleAssetRegistry;
 use App\Services\Extension\TwoFactorMethodRegistry;
@@ -262,6 +263,15 @@ class AppServiceProvider extends ServiceProvider
             if ($locale && app(LocaleRegistry::class)->has($locale)) {
                 App::setLocale($locale);
             }
+
+            // The installer has written display_timezone since 1.0, but
+            // config/app.php only ever read env('APP_DISPLAY_TIMEZONE'), so the
+            // setting was inert: an operator who picked their zone in the wizard
+            // still saw Europe/Berlin everywhere. Formatter::formatMoment() and
+            // Job::localStartedAt() both convert correctly and both read this
+            // config — one line repairs all of them at once.
+            // Applied at runtime, never baked into a config cache.
+            Timezones::apply();
 
             // The from-name must follow the brand when no operator-chosen name
             // exists — config/mail.php would otherwise fall back to APP_NAME

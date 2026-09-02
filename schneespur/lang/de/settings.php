@@ -38,6 +38,9 @@ return [
     'locale_title'               => 'Sprache & Format',
     'locale_default'             => 'Standard-Sprache',
     'locale_help'                => 'Legt die Anzeigesprache und das Datumsformat fest.',
+    'timezone_label'             => 'Zeitzone',
+    'timezone_help'              => 'Bestimmt, in welcher Zeit Einsätze eingegeben und angezeigt werden. Gespeichert wird unverändert in UTC.',
+    'timezone_invalid'           => 'Die gewählte Zeitzone ist keine gültige Kennung.',
     'brand_label'                => 'Produktname',
     'brand_help'                 => 'Name, unter dem die Software in Oberfläche, PWA und E-Mails erscheint. Wird bei der Installation aus der Sprache abgeleitet (Deutsch → Schneespur, sonst Wintertrace) und kann hier geändert werden.',
 

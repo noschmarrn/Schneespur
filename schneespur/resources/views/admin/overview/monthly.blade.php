@@ -70,7 +70,9 @@
                 $startDow = $firstDay->dayOfWeekIso;
                 $daysInMonth = $month->daysInMonth;
                 $leadingBlanks = $startDow - 1;
-                $today = now()->format('Y-m-d');
+                {{-- 'Today' in UTC is the wrong day west of Greenwich from the
+                     late afternoon onwards — the calendar marked the wrong cell. --}}
+                $today = now()->setTimezone(config('app.display_timezone'))->format('Y-m-d');
             @endphp
 
             {{-- Day name headers --}}

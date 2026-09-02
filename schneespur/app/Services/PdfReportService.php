@@ -324,7 +324,10 @@ class PdfReportService
 
     public function jobReportFilename(Job $job): string
     {
-        $date = $job->started_at->format('Y-m-d');
+        // The date inside the PDF goes through the Formatter and converts;
+        // the filename did not, so a job just after local midnight produced a
+        // file named after the previous day.
+        $date = $job->localStartedAt()->format('Y-m-d');
         $customer = str($job->customerObject?->customer?->name ?? $job->customer?->name ?? 'unknown')->slug();
         $object = $job->customerObject ? '-' . str($job->customerObject->name)->slug() : '';
         return str(__('job.pdf_filename_proof'))->slug()."-{$date}-{$customer}{$object}-{$job->id}.pdf";

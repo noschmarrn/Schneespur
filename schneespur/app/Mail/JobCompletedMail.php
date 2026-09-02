@@ -46,7 +46,9 @@ class JobCompletedMail extends Mailable implements ShouldQueue
         return new Envelope(
             subject: __($subjectKey, [
                 'customer' => $customerLabel,
-                'date' => $this->job->started_at->format(__('notification.date_format')),
+                // The body has used localStartedAt() all along; the subject
+                // did not, so on a night job the two named different days.
+                'date' => $this->job->localStartedAt()->format(__('notification.date_format')),
             ]),
         );
     }

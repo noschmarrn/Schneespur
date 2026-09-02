@@ -88,6 +88,9 @@ class BrandingTest extends TestCase
             'season_to' => '03-31',
             'alert_overdue_hours' => 4,
             'default_locale' => 'en',
+            // Required since 1.2.1 — without it validation fails on this
+            // field and the test silently stops testing what it names.
+            'display_timezone' => 'Europe/Berlin',
             'app_brand' => 'wintertrace',
         ]);
 
@@ -104,6 +107,9 @@ class BrandingTest extends TestCase
             'season_to' => '03-31',
             'alert_overdue_hours' => 4,
             'default_locale' => 'de',
+            // Required since 1.2.1 — without it validation fails on this
+            // field and the test silently stops testing what it names.
+            'display_timezone' => 'Europe/Berlin',
             'app_brand' => 'schneeflocke',
         ]);
 
@@ -120,6 +126,9 @@ class BrandingTest extends TestCase
             'season_to' => '03-31',
             'alert_overdue_hours' => 4,
             'default_locale' => 'de',
+            // Required since 1.2.1 — without it validation fails on this
+            // field and the test silently stops testing what it names.
+            'display_timezone' => 'Europe/Berlin',
         ]);
 
         $response->assertSessionHasNoErrors();

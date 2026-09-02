@@ -41,12 +41,17 @@
             <div>
                 <x-input-label for="timezone" :value="__('install.config_tz_label')" />
                 <select name="timezone" id="timezone" x-ref="tzSelect" x-model="timezone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                    <option value="Europe/Berlin">Europe/Berlin</option>
-                    <option value="Europe/Vienna">Europe/Vienna</option>
-                    <option value="Europe/Zurich">Europe/Zurich</option>
-                    <option value="Europe/London">Europe/London</option>
-                    <option value="Europe/Paris">Europe/Paris</option>
-                    <option value="UTC">UTC</option>
+                    {{-- The full IANA list, not an excerpt. The init() above only
+                         applies a detected zone that is already an option, so the
+                         six European entries this replaces meant an American
+                         install silently stayed on Europe/Berlin. --}}
+                    @foreach (\App\Support\Timezones::grouped() as $region => $zones)
+                        <optgroup label="{{ $region }}">
+                            @foreach ($zones as $identifier => $label)
+                                <option value="{{ $identifier }}">{{ $label }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
                 </select>
                 <p class="mt-1 text-xs text-gray-500">{{ __('install.config_tz_detected') }}</p>
                 <x-input-error :messages="$errors->get('timezone')" class="mt-2" />

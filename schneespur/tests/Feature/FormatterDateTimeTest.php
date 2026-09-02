@@ -76,12 +76,21 @@ class FormatterDateTimeTest extends TestCase
     }
 
     /**
-     * The layout hands three values to the browser. They come from the
-     * singleton, not from three fresh Setting::get() queries per page load,
+     * The layout hands four values to the browser. They come from the
+     * singleton, not from four fresh Setting::get() queries per page load,
      * and they carry the Formatter's own defaults so the two sides cannot
      * drift apart.
+     *
+     * It was three until 1.2.1. timeZone was added because it is the one
+     * value the browser cannot do without: the other three decide how a
+     * moment looks, timeZone decides which moment it is. Until then the
+     * running shift clock used the device's zone — right by accident on a
+     * correctly set phone, wrong on one that travelled.
+     *
+     * This test is the reason that addition had to be argued for rather than
+     * slipped in. Keep it that way.
      */
-    public function test_the_browser_gets_exactly_the_three_values_it_needs(): void
+    public function test_the_browser_gets_exactly_the_four_values_it_needs(): void
     {
         $f = $this->formatter([
             'time_format' => '12h',
@@ -93,6 +102,7 @@ class FormatterDateTimeTest extends TestCase
             'timeFormat' => '12h',
             'dateFormat' => 'mdy_slash',
             'numberFormat' => 'comma_dot',
+            'timeZone' => config('app.display_timezone'),
         ], $f->browserSettings());
     }
 
