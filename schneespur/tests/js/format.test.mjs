@@ -141,3 +141,41 @@ test('single digit days and months are padded', () => {
 
     assert.equal(formatDate(new Date(2026, 0, 2, 9, 0)), '01/02/2026');
 });
+
+// --- The operation's zone, not the device's (1.2.1) ---------------------------
+//
+// formatTime used date.getHours(), which reads whatever zone the phone is set
+// to. That is right by accident in Passau and wrong on a phone that travelled,
+// and wrong for every operation whose drivers are not in its own zone. The
+// server hands the zone down through window.schneespurFormat.timeZone.
+
+// 15 January 2026, 03:00 UTC. In Chicago that is the 14th at 21:00; in Berlin
+// the 15th at 04:00 — a different hour AND a different day.
+const utcMoment = () => new Date(Date.UTC(2026, 0, 15, 3, 0, 0));
+
+test('time is rendered in the configured zone, not the device zone', () => {
+    globalThis.window = { schneespurFormat: { timeFormat: '24h', timeZone: 'America/Chicago' } };
+    assert.equal(formatTime(utcMoment()), '21:00');
+
+    globalThis.window = { schneespurFormat: { timeFormat: '24h', timeZone: 'Europe/Berlin' } };
+    assert.equal(formatTime(utcMoment()), '04:00');
+});
+
+test('the date follows the zone across the day boundary', () => {
+    globalThis.window = { schneespurFormat: { dateFormat: 'iso', timeZone: 'America/Chicago' } };
+    assert.equal(formatDate(utcMoment()), '2026-01-14');
+
+    globalThis.window = { schneespurFormat: { dateFormat: 'iso', timeZone: 'Europe/Berlin' } };
+    assert.equal(formatDate(utcMoment()), '2026-01-15');
+});
+
+test('12h time uses the configured zone for AM/PM too', () => {
+    globalThis.window = { schneespurFormat: { timeFormat: '12h', timeZone: 'America/Chicago' } };
+    assert.equal(formatTime(utcMoment()), '9:00 PM');
+});
+
+test('midnight in the configured zone renders as 00, never 24', () => {
+    // 06:00 UTC is midnight in Chicago (UTC-6) on 15 January.
+    globalThis.window = { schneespurFormat: { timeFormat: '24h', timeZone: 'America/Chicago' } };
+    assert.equal(formatTime(new Date(Date.UTC(2026, 0, 15, 6, 0, 0))), '00:00');
+});

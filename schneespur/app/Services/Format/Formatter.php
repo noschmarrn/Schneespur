@@ -106,13 +106,21 @@ class Formatter
     }
 
     /**
-     * The three values the browser needs, handed to it by the layout.
+     * The four values the browser needs, handed to it by the layout.
      *
-     * Only three: the running clock on the driver dashboard and the updater's
+     * Only four: the running clock on the driver dashboard and the updater's
      * signed_at date are the sole places the server cannot render. Everything
      * else is formatted here — do not grow this list to "the settings".
      *
-     * @return array{timeFormat: string, dateFormat: string, numberFormat: string}
+     * timeZone joined in 1.2.1 and is the one entry that could not have been
+     * left out. The other three change how a value looks; this one changes
+     * which value it is. Without it the browser can only use the device's
+     * zone — right by accident in Passau, wrong on a phone still standing on
+     * the zone of the last holiday. It is spelled the way
+     * Intl.DateTimeFormat spells its option, on purpose: a second name at
+     * this seam would be nothing but a place to make a mistake.
+     *
+     * @return array{timeFormat: string, dateFormat: string, numberFormat: string, timeZone: string}
      */
     public function browserSettings(): array
     {
@@ -120,6 +128,7 @@ class Formatter
             'timeFormat' => $this->setting('time_format'),
             'dateFormat' => $this->setting('date_format'),
             'numberFormat' => $this->setting('number_format'),
+            'timeZone' => (string) config('app.display_timezone', 'UTC'),
         ];
     }
 
