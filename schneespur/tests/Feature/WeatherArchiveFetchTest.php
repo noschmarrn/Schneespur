@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Services\Weather\ArchiveWeatherProviderInterface;
+use App\Services\Weather\BrightSkyProvider;
 use App\Services\Weather\MetNorwayProvider;
 use App\Services\Weather\OpenMeteoFreeProvider;
 use Carbon\Carbon;
@@ -82,5 +83,44 @@ class WeatherArchiveFetchTest extends TestCase
     {
         $this->assertNotInstanceOf(ArchiveWeatherProviderInterface::class, new MetNorwayProvider());
         $this->assertInstanceOf(ArchiveWeatherProviderInterface::class, new OpenMeteoFreeProvider());
+    }
+
+    public function test_bright_sky_reads_the_requested_hour_from_its_history(): void
+    {
+        Http::fake([
+            'api.brightsky.dev/weather*' => Http::response([
+                'weather' => [
+                    [
+                        'timestamp' => '2026-01-15T08:00:00+00:00',
+                        'temperature' => 0.6,
+                        'precipitation' => 0.3,
+                        'wind_speed' => 6.8,
+                        'relative_humidity' => 98,
+                        'condition' => 'snow',
+                        'icon' => 'snow',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $data = (new BrightSkyProvider())
+            ->fetchAt(48.57, 13.46, Carbon::parse('2026-01-15 08:20:00', 'UTC'));
+
+        $this->assertNotNull($data);
+        $this->assertEqualsWithDelta(0.6, $data->temperature_c, 0.001);
+        $this->assertEqualsWithDelta(0.3, $data->precipitation_mm, 0.001);
+        $this->assertSame('snow', $data->condition);
+        $this->assertSame('brightsky', $data->provider);
+        $this->assertSame('2026-01-15T08:00:00+00:00', $data->observed_at->toIso8601String());
+    }
+
+    public function test_bright_sky_without_a_record_yields_nothing(): void
+    {
+        Http::fake(['api.brightsky.dev/weather*' => Http::response(['weather' => []])]);
+
+        $data = (new BrightSkyProvider())
+            ->fetchAt(48.57, 13.46, Carbon::parse('2026-01-15 08:00:00', 'UTC'));
+
+        $this->assertNull($data);
     }
 }

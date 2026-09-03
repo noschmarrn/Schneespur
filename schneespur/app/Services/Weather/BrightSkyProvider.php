@@ -3,12 +3,15 @@
 namespace App\Services\Weather;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class BrightSkyProvider implements WeatherProviderInterface
+class BrightSkyProvider implements WeatherProviderInterface, ArchiveWeatherProviderInterface
 {
     private const API_URL = 'https://api.brightsky.dev/current_weather';
+
+    private const HISTORY_URL = 'https://api.brightsky.dev/weather';
 
     private const TIMEOUT_SECONDS = 5;
 
@@ -63,6 +66,63 @@ class BrightSkyProvider implements WeatherProviderInterface
                 'error' => $e->getMessage(),
                 'lat' => $lat,
                 'lon' => $lon,
+            ]);
+
+            return null;
+        }
+    }
+
+    public function fetchAt(float $lat, float $lon, CarbonInterface $moment): ?WeatherData
+    {
+        // Carbon::parse statt ->copy(): WeatherData::$observed_at ist auf das
+        // veränderliche Carbon typisiert, und ein Aufrufer darf uns ein
+        // CarbonImmutable reichen.
+        $hour = Carbon::parse($moment)->utc()->startOfHour();
+
+        try {
+            $response = Http::timeout(self::TIMEOUT_SECONDS)
+                ->get(self::HISTORY_URL, [
+                    'lat' => $lat,
+                    'lon' => $lon,
+                    'date' => $hour->format('Y-m-d\TH:i'),
+                    'units' => 'dwd',
+                ]);
+
+            if ($response->failed()) {
+                Log::info('Weather archive returned non-success status', [
+                    'provider' => 'brightsky',
+                    'status' => $response->status(),
+                    'moment' => $hour->toIso8601String(),
+                ]);
+
+                return null;
+            }
+
+            // /weather liefert eine Reihe ab der verlangten Stunde; der erste
+            // Eintrag ist genau diese Stunde. Die Feldnamen weichen von
+            // /current_weather ab: dort precipitation_60 und wind_speed_10.
+            $entry = $response->json('weather.0');
+
+            if (! is_array($entry) || ($entry['temperature'] ?? null) === null) {
+                return null;
+            }
+
+            return new WeatherData(
+                temperature_c: (float) $entry['temperature'],
+                precipitation_mm: (float) ($entry['precipitation'] ?? 0),
+                snow_depth_cm: 0.0,
+                wind_kmh: (float) ($entry['wind_speed'] ?? 0),
+                humidity_percent: (int) ($entry['relative_humidity'] ?? 0),
+                condition: self::mapCondition($entry['condition'] ?? null, $entry['icon'] ?? null),
+                weather_code: null,
+                provider: 'brightsky',
+                observed_at: $hour,
+            );
+        } catch (\Throwable $e) {
+            Log::info('Weather archive request failed', [
+                'provider' => 'brightsky',
+                'error' => $e->getMessage(),
+                'moment' => $hour->toIso8601String(),
             ]);
 
             return null;
