@@ -397,6 +397,54 @@ class WeatherArchiveDispatchTest extends TestCase
         );
     }
 
+    /**
+     * Und wenn der erzwungene Lauf endgültig scheitert, schweigt er ebenso.
+     * failed() hatte den Wächter aus handle() nicht: die Kette
+     * force-Wiederholung → record() liefert null → RuntimeException → zwei
+     * Versuche → failed() → JobCompleted(weatherAvailable: false) →
+     * isWeatherUpdate ist wahr → SendJobCompletedNotification nimmt den
+     * Zweig ohne Entdopplung schickte dem Kunden ausgerechnet für den Klick,
+     * der nichts gefunden hat, einen neuen Nachweis samt PDF.
+     */
+    public function test_a_forced_run_that_fails_does_not_notify_the_customer_either(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+
+        $job = $this->job('2026-01-15 08:00:00', '2026-01-15 09:00:00');
+
+        Event::fake();
+
+        (new FetchWeather(
+            $job->id,
+            WeatherMoment::End,
+            48.57,
+            13.46,
+            Carbon::parse('2026-01-15 09:00:00', 'UTC'),
+            force: true,
+        ))->failed(new \RuntimeException('Weather fetch failed'));
+
+        Event::assertNotDispatched(JobCompleted::class);
+    }
+
+    /**
+     * Der Gegenbeweis zum Test darüber: ein regulärer, nicht erzwungener
+     * Auftrag muß beim endgültigen Fehlschlag weiterhin melden, damit der
+     * Kunde seinen Nachweis überhaupt bekommt — nur eben ohne Wetter.
+     */
+    public function test_an_ordinary_run_that_fails_still_completes_the_job(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+
+        $job = $this->job('2026-01-15 08:00:00', '2026-01-15 09:00:00');
+
+        Event::fake();
+
+        (new FetchWeather($job->id, WeatherMoment::End, 48.57, 13.46))
+            ->failed(new \RuntimeException('Weather fetch failed'));
+
+        Event::assertDispatched(JobCompleted::class, fn (JobCompleted $event) => $event->weatherAvailable === false);
+    }
+
     protected function tearDown(): void
     {
         Carbon::setTestNow();

@@ -104,6 +104,18 @@ class FetchWeather implements ShouldQueue
             'error' => $exception?->getMessage(),
         ]);
 
+        // Derselbe Wächter wie in handle(), und aus demselben Grund: $force
+        // setzt einzig der Wiederholen-Knopf im Admin. Ohne ihn schickte
+        // ausgerechnet der Klick, der nichts Brauchbares gefunden hat, dem
+        // Kunden einen frisch gerenderten „Aktualisierter Einsatznachweis"
+        // mit dem Vermerk, es lägen keine Wetterdaten vor — und zwar je
+        // Klick einmal, weil SendJobCompletedNotification den Zweig
+        // isWeatherUpdate nicht entdoppelt. Das ?? liest wie in handle() eine
+        // beim Update schon in der Warteschlange liegende Nutzlast mit.
+        if ($this->force ?? false) {
+            return;
+        }
+
         $this->fireJobCompletedIfEndMoment(weatherAvailable: false);
     }
 
