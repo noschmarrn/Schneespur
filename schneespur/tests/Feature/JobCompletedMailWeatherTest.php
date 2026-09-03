@@ -20,6 +20,30 @@ class JobCompletedMailWeatherTest extends TestCase
 
     public function test_the_completion_mail_names_the_snow_depth(): void
     {
+        $job = $this->jobWithWeatherSnapshot(15.0);
+
+        $rendered = (new JobCompletedMail($job->fresh(), true))->render();
+
+        $this->assertStringContainsString(format_snow_depth(15.0), $rendered);
+    }
+
+    /**
+     * The absence of snow is as much a matter of record as its presence on
+     * a gritting run — the value must still appear when it is zero. A future
+     * "tidy-up" wrapping the Blade line in `@if($weather->snow_depth)` would
+     * silently hide exactly this case; this test exists to catch that.
+     */
+    public function test_the_completion_mail_names_a_zero_snow_depth(): void
+    {
+        $job = $this->jobWithWeatherSnapshot(0.0);
+
+        $rendered = (new JobCompletedMail($job->fresh(), true))->render();
+
+        $this->assertStringContainsString(format_snow_depth(0.0), $rendered);
+    }
+
+    private function jobWithWeatherSnapshot(float $snowDepth): Job
+    {
         $driver = User::create([
             'name' => 'Driver',
             'email' => 'driver@test.local',
@@ -55,13 +79,11 @@ class JobCompletedMailWeatherTest extends TestCase
             'provider' => 'openmeteo_free',
             'temperature' => -3.2,
             'precipitation' => 0.4,
-            'snow_depth' => 15.0,
+            'snow_depth' => $snowDepth,
             'weather_code' => 71,
             'fetched_at' => '2026-01-15 09:00:00',
         ]);
 
-        $rendered = (new JobCompletedMail($job->fresh(), true))->render();
-
-        $this->assertStringContainsString(format_snow_depth(15.0), $rendered);
+        return $job;
     }
 }
