@@ -9,7 +9,6 @@ use App\Events\JobStarted;
 use App\Events\Shift\WorkShiftEnded;
 use App\Events\Shift\WorkShiftStarted;
 use App\Exceptions\JobLifecycleException;
-use App\Jobs\FetchWeather;
 use App\Models\CustomerObject;
 use App\Models\Job;
 use App\Models\User;
@@ -244,28 +243,15 @@ class JobLifecycleService
 
     private function dispatchWeather(int $jobId, WeatherMoment $moment, float $lat, float $lon, ?Carbon $at = null): void
     {
-        if ($this->isCronActive()) {
-            FetchWeather::dispatch($jobId, $moment, $lat, $lon, $at);
-
-            return;
-        }
-
-        $this->fetchWeatherSync($jobId, $moment, $lat, $lon, $at);
+        // Warteschlange oder sofort — die Entscheidung trifft der
+        // WeatherDispatcher, damit der Wiederholen-Knopf im Admin dieselbe
+        // trifft. Der Rückgabewert interessiert hier nicht: Wetter blockiert
+        // keinen Einsatz.
+        app(Weather\WeatherDispatcher::class)->dispatch($jobId, $moment, $lat, $lon, $at);
     }
 
     private function isCronActive(): bool
     {
-        $lastRun = cache()->get('cron.last_run');
-
-        return $lastRun && $lastRun->diffInMinutes(now()) < 5;
-    }
-
-    private function fetchWeatherSync(int $jobId, WeatherMoment $moment, float $lat, float $lon, ?Carbon $at = null): void
-    {
-        try {
-            app(Weather\WeatherFetcher::class)->record($jobId, $moment, $lat, $lon, $at);
-        } catch (\Throwable) {
-            // Weather is never blocking — silently fail
-        }
+        return app(Weather\WeatherDispatcher::class)->isCronActive();
     }
 }

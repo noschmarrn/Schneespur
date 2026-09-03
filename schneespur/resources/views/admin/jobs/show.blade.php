@@ -1,4 +1,5 @@
 @use('App\Services\Storage\StorageBackendRegistry')
+@use('App\Enums\WeatherMoment')
 <x-admin-layout>
     <x-slot name="header">
         <a href="{{ route('admin.jobs.index') }}" class="text-indigo-600 hover:text-indigo-900">&larr; {{ __('job.page_list') }}</a>
@@ -130,7 +131,21 @@
     <div class="mt-6 bg-white shadow-sm rounded-lg p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">{{ __('job.detail_weather') }}</h2>
 
-        @if ($job->weatherSnapshots->isNotEmpty())
+        @php
+            // Eine Zeile je Zeitpunkt, nicht je Schnappschuß. Fehlt der
+            // Schnappschuß ganz — genau der Fall, den ein nacherfaßter Einsatz
+            // ohne Archiv-Anbieter hinterläßt —, gäbe es sonst nichts, woran
+            // ein Wiederholen-Knopf hängen könnte, und die Tabelle bliebe
+            // unsichtbar. Zeitpunkte ohne Schnappschuß erscheinen erst, wenn
+            // der Einsatz beendet ist: vorher steht das Einsatzende noch gar
+            // nicht fest.
+            $weatherByMoment = $job->weatherSnapshots->keyBy(fn ($snapshot) => $snapshot->moment->value);
+            $weatherRows = collect(WeatherMoment::cases())
+                ->filter(fn ($moment) => $weatherByMoment->has($moment->value) || $job->ended_at !== null)
+                ->map(fn ($moment) => ['moment' => $moment, 'snapshot' => $weatherByMoment->get($moment->value)]);
+        @endphp
+
+        @if ($weatherRows->isNotEmpty())
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -144,13 +159,15 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('weather.col_humidity') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('weather.col_weather_code') }}</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('weather.col_fetched') }}</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('job.col_actions') }}</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach ($job->weatherSnapshots as $snapshot)
+                        @foreach ($weatherRows as $row)
+                            @php $snapshot = $row['snapshot']; @endphp
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $snapshot->moment->label() }}</td>
-                                @if ($snapshot->fetched_at)
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $row['moment']->label() }}</td>
+                                @if ($snapshot && $snapshot->fetched_at)
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">{{ $snapshot->providerLabel() }}</span>
                                     </td>
@@ -162,14 +179,19 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->weatherLabel() }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_datetime($snapshot->fetched_at) }}</td>
                                 @else
-                                    <td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ __('job.weather_not_fetched') }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                        <form method="POST" action="{{ route('admin.jobs.weather-retry', [$job, $snapshot->moment->value]) }}">
+                                    <td colspan="8" class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{{ __('job.weather_not_fetched') }}</td>
+                                @endif
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    {{-- Beim Einsatzende ohne ended_at weist der Controller die
+                                         Abfrage ohnehin ab; ein Knopf, der nur eine Fehlermeldung
+                                         erzeugen kann, gehört nicht hin. --}}
+                                    @if ($row['moment'] !== WeatherMoment::End || $job->ended_at !== null)
+                                        <form method="POST" action="{{ route('admin.jobs.weather-retry', [$job, $row['moment']->value]) }}">
                                             @csrf
                                             <button type="submit" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">{{ __('job.weather_retry_btn') }}</button>
                                         </form>
-                                    </td>
-                                @endif
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

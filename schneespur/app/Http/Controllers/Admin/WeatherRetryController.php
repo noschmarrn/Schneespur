@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\WeatherMoment;
 use App\Http\Controllers\Controller;
-use App\Jobs\FetchWeather;
 use App\Models\Job;
+use App\Services\Weather\WeatherDispatcher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 
@@ -51,8 +51,26 @@ class WeatherRetryController extends Controller
             ? $serviceJob->ended_at
             : $serviceJob->started_at;
 
-        FetchWeather::dispatch($serviceJob->id, $weatherMoment, $lat, $lon, $momentAt, true);
+        // Nicht FetchWeather::dispatch(): ohne laufenden Cron gibt es keinen
+        // Warteschlangen-Arbeiter, und die Zeile bliebe für immer in `jobs`
+        // liegen, während hier „angestoßen" gemeldet wird. Gewöhnliches
+        // Webhosting ohne Cron ist das harte Zielbild dieses Projekts.
+        $dispatcher = app(WeatherDispatcher::class);
 
-        return redirect()->back()->with('success', __('weather.retry_dispatched'));
+        if ($dispatcher->isCronActive()) {
+            $dispatcher->dispatch($serviceJob->id, $weatherMoment, $lat, $lon, $momentAt, true);
+
+            return redirect()->back()->with('success', __('weather.retry_dispatched'));
+        }
+
+        // Synchron geholt heißt: das Ergebnis steht schon fest, und der
+        // Betreiber erfährt es. Ein „wurde angestoßen" auf eine Abfrage, die
+        // gerade nichts gefunden hat, wäre bei einem Nachweis die falsche
+        // Auskunft.
+        $recorded = $dispatcher->dispatch($serviceJob->id, $weatherMoment, $lat, $lon, $momentAt, true);
+
+        return $recorded
+            ? redirect()->back()->with('success', __('weather.retry_fetched'))
+            : redirect()->back()->with('error', __('weather.retry_failed'));
     }
 }

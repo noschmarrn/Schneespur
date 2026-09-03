@@ -4,6 +4,8 @@ return [
     'moment_start' => 'At job start',
     'moment_end' => 'At job end',
     'retry_dispatched' => 'Weather fetch has been re-queued.',
+    'retry_fetched' => 'Weather has been fetched again.',
+    'retry_failed' => 'Weather fetch failed – the selected provider has no data for that moment.',
     'retry_no_coordinates' => 'No coordinates available – weather fetch not possible.',
     'retry_job_not_ended' => 'Job has not ended yet – weather fetch for job end not possible.',
     'fetch_failed' => 'Weather fetch failed.',
