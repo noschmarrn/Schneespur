@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\WeatherMoment;
+use App\Events\JobCompleted;
+use App\Jobs\FetchWeather;
 use App\Models\Customer;
 use App\Models\CustomerObject;
 use App\Models\Job;
@@ -61,15 +63,20 @@ class WeatherArchiveDispatchTest extends TestCase
     private function fakeArchive(): void
     {
         Http::fake([
+            // Drei Stunden in einer Reihe: Beginn und Ende des Januar-
+            // Einsatzes und die Stunde, die die Grenzwert-Tests knapp
+            // jenseits des Frischefensters treffen. parseArchiveResponse
+            // sucht die verlangte Stunde exakt heraus, die übrigen stören
+            // also nicht.
             'archive-api.open-meteo.com/*' => Http::response([
                 'hourly' => [
-                    'time' => ['2026-01-15T08:00'],
-                    'temperature_2m' => [-3.2],
-                    'precipitation' => [0.4],
-                    'snow_depth' => [0.15],
-                    'weather_code' => [71],
-                    'wind_speed_10m' => [12.0],
-                    'relative_humidity_2m' => [92],
+                    'time' => ['2026-01-15T08:00', '2026-01-15T09:00', '2026-09-03T10:00'],
+                    'temperature_2m' => [-3.2, -2.8, 7.7],
+                    'precipitation' => [0.4, 0.1, 0.0],
+                    'snow_depth' => [0.15, 0.16, 0.0],
+                    'weather_code' => [71, 71, 3],
+                    'wind_speed_10m' => [12.0, 11.0, 4.0],
+                    'relative_humidity_2m' => [92, 90, 55],
                 ],
             ]),
             'api.open-meteo.com/*' => Http::response([
@@ -129,6 +136,10 @@ class WeatherArchiveDispatchTest extends TestCase
         $snapshot = WeatherSnapshot::where('job_id', $job->id)->first();
 
         $this->assertEqualsWithDelta(24.7, (float) $snapshot->temperature, 0.001);
+
+        // Spiegelbild zur Behauptung in Test 1: für einen laufenden Einsatz
+        // bleibt das Archiv unberührt.
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'archive-api.open-meteo.com'));
     }
 
     public function test_a_provider_without_an_archive_leaves_the_weather_empty_rather_than_wrong(): void
@@ -254,6 +265,136 @@ class WeatherArchiveDispatchTest extends TestCase
         $this->assertEqualsWithDelta(-2.8, (float) $end->temperature, 0.001);
 
         Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.open-meteo.com/v1/forecast'));
+    }
+
+    /**
+     * Die Kante des Frischefensters. Sie ist der Grund, weshalb laufende
+     * Einsätze sich unverändert verhalten — ein Vertun um eine Minute leitete
+     * jeden laufenden Einsatz still ins Archiv um, und keiner der übrigen
+     * Tests käme dem nahe genug, um es zu merken.
+     */
+    public function test_a_moment_just_inside_the_fresh_window_still_reads_live(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+        $this->fakeArchive();
+
+        $job = $this->job('2026-09-03 11:01:00', '2026-09-03 11:30:00');
+
+        app(WeatherFetcher::class)->record(
+            $job->id,
+            WeatherMoment::Start,
+            48.57,
+            13.46,
+            Carbon::parse('2026-09-03 11:01:00', 'UTC'),
+        );
+
+        $this->assertEqualsWithDelta(
+            24.7,
+            (float) WeatherSnapshot::where('job_id', $job->id)->value('temperature'),
+            0.001,
+        );
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'archive-api.open-meteo.com'));
+    }
+
+    public function test_a_moment_just_outside_the_fresh_window_reads_the_archive(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+        $this->fakeArchive();
+
+        $job = $this->job('2026-09-03 10:59:00', '2026-09-03 11:30:00');
+
+        app(WeatherFetcher::class)->record(
+            $job->id,
+            WeatherMoment::Start,
+            48.57,
+            13.46,
+            Carbon::parse('2026-09-03 10:59:00', 'UTC'),
+        );
+
+        // 10:59 fällt auf die Archivstunde 10:00 — dort steht 7.7, nicht die
+        // 24.7 der Live-Messung.
+        $this->assertEqualsWithDelta(
+            7.7,
+            (float) WeatherSnapshot::where('job_id', $job->id)->value('temperature'),
+            0.001,
+        );
+        Http::assertNotSent(fn ($request) => str_contains($request->url(), 'api.open-meteo.com/v1/forecast'));
+    }
+
+    /**
+     * Der Warteschlangen-Auftrag steigt bei vorhandenem Schnappschuß aus,
+     * BEVOR er JobCompleted feuern könnte. Täte er es doch, bekäme der Kunde
+     * bei jedem weiteren Anlauf eine zweite Nachweis-Mail. Ohne diesen Test
+     * ließen sich die acht Zeilen in handle() umstellen und die Suite bliebe
+     * grün.
+     */
+    public function test_a_second_queue_attempt_on_an_existing_snapshot_stays_silent(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+        $this->fakeArchive();
+
+        $job = $this->job('2026-01-15 08:00:00', '2026-01-15 09:00:00');
+
+        WeatherSnapshot::create([
+            'job_id' => $job->id,
+            'moment' => WeatherMoment::End,
+            'provider' => 'openmeteo_free',
+            'temperature' => 99.0,
+            'fetched_at' => now(),
+        ]);
+
+        Event::fake();
+
+        (new FetchWeather($job->id, WeatherMoment::End, 48.57, 13.46))
+            ->handle(app(WeatherFetcher::class));
+
+        Event::assertNotDispatched(JobCompleted::class);
+        Http::assertNothingSent();
+        $this->assertEqualsWithDelta(
+            99.0,
+            (float) WeatherSnapshot::where('job_id', $job->id)->value('temperature'),
+            0.001,
+        );
+    }
+
+    /**
+     * Und der erzwungene Lauf ersetzt zwar den Schnappschuß, schweigt aber
+     * ebenso. $force setzt einzig der Wiederholen-Knopf im Admin; ein Knopf
+     * mit der Aufschrift „Wetter erneut holen" darf nicht bei jedem Klick
+     * Post an den Kunden auslösen.
+     */
+    public function test_a_forced_run_replaces_the_snapshot_without_notifying_the_customer(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+        $this->fakeArchive();
+
+        $job = $this->job('2026-01-15 08:00:00', '2026-01-15 09:00:00');
+
+        WeatherSnapshot::create([
+            'job_id' => $job->id,
+            'moment' => WeatherMoment::End,
+            'provider' => 'openmeteo_free',
+            'temperature' => 99.0,
+            'fetched_at' => now(),
+        ]);
+
+        Event::fake();
+
+        (new FetchWeather(
+            $job->id,
+            WeatherMoment::End,
+            48.57,
+            13.46,
+            Carbon::parse('2026-01-15 09:00:00', 'UTC'),
+            force: true,
+        ))->handle(app(WeatherFetcher::class));
+
+        Event::assertNotDispatched(JobCompleted::class);
+        $this->assertEqualsWithDelta(
+            -2.8,
+            (float) WeatherSnapshot::where('job_id', $job->id)->value('temperature'),
+            0.001,
+        );
     }
 
     protected function tearDown(): void
