@@ -3,12 +3,15 @@
 namespace App\Services\Weather;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-abstract class OpenMeteoBase implements WeatherProviderInterface
+abstract class OpenMeteoBase implements WeatherProviderInterface, ArchiveWeatherProviderInterface
 {
     protected const API_URL = 'https://api.open-meteo.com/v1/forecast';
+
+    protected const ARCHIVE_URL = 'https://archive-api.open-meteo.com/v1/archive';
 
     protected const CURRENT_PARAMS = 'temperature_2m,precipitation,snow_depth,weather_code,wind_speed_10m,relative_humidity_2m';
 
@@ -46,6 +49,92 @@ abstract class OpenMeteoBase implements WeatherProviderInterface
 
             return null;
         }
+    }
+
+    public function fetchAt(float $lat, float $lon, CarbonInterface $moment): ?WeatherData
+    {
+        // Carbon::parse statt ->copy(): WeatherData::$observed_at ist auf das
+        // veränderliche Carbon typisiert, und ein Aufrufer darf uns ein
+        // CarbonImmutable reichen.
+        $hour = Carbon::parse($moment)->utc()->startOfHour();
+
+        try {
+            $response = Http::timeout(static::TIMEOUT_SECONDS)
+                ->get(static::ARCHIVE_URL, $this->buildArchiveQuery($lat, $lon, $hour));
+
+            if ($response->failed()) {
+                Log::info('Weather archive returned non-success status', [
+                    'provider' => $this->providerSlug(),
+                    'status' => $response->status(),
+                    'moment' => $hour->toIso8601String(),
+                ]);
+
+                return null;
+            }
+
+            return $this->parseArchiveResponse($response->json(), $hour);
+        } catch (\Throwable $e) {
+            Log::info('Weather archive request failed', [
+                'provider' => $this->providerSlug(),
+                'error' => $e->getMessage(),
+                'moment' => $hour->toIso8601String(),
+            ]);
+
+            return null;
+        }
+    }
+
+    protected function buildArchiveQuery(float $lat, float $lon, CarbonInterface $hour): array
+    {
+        return [
+            'latitude' => $lat,
+            'longitude' => $lon,
+            'hourly' => static::CURRENT_PARAMS,
+            'start_date' => $hour->format('Y-m-d'),
+            'end_date' => $hour->format('Y-m-d'),
+            'timezone' => 'UTC',
+        ];
+    }
+
+    /**
+     * Die Archiv-Antwort führt jede Größe als eigene Reihe parallel zu
+     * hourly.time. Gesucht ist der Index der verlangten Stunde; fehlt er oder
+     * steht dort null, gibt es für diesen Einsatz kein Wetter — und das ist
+     * ein besseres Ergebnis als das Wetter von heute.
+     */
+    protected function parseArchiveResponse(array $data, CarbonInterface $hour): ?WeatherData
+    {
+        $times = $data['hourly']['time'] ?? null;
+
+        if (! is_array($times)) {
+            return null;
+        }
+
+        $index = array_search($hour->format('Y-m-d\TH:i'), $times, true);
+
+        if ($index === false) {
+            return null;
+        }
+
+        $at = fn (string $key) => $data['hourly'][$key][$index] ?? null;
+
+        if ($at('temperature_2m') === null) {
+            return null;
+        }
+
+        $code = $at('weather_code');
+
+        return new WeatherData(
+            temperature_c: (float) $at('temperature_2m'),
+            precipitation_mm: (float) ($at('precipitation') ?? 0),
+            snow_depth_cm: (float) ($at('snow_depth') ?? 0) * 100,
+            wind_kmh: (float) ($at('wind_speed_10m') ?? 0),
+            humidity_percent: (int) ($at('relative_humidity_2m') ?? 0),
+            condition: ConditionMapper::fromWmoCode($code),
+            weather_code: $code === null ? null : (int) $code,
+            provider: $this->providerSlug(),
+            observed_at: $hour,
+        );
     }
 
     public function testConnection(float $lat, float $lon): array
