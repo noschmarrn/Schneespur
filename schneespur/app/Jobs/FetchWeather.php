@@ -4,11 +4,11 @@ namespace App\Jobs;
 
 use App\Enums\WeatherMoment;
 use App\Events\JobCompleted;
-use App\Events\WeatherSnapshotCreated;
 use App\Models\Job;
 use App\Models\WeatherSnapshot;
 use App\Services\NotificationLogService;
-use App\Services\Weather\WeatherProviderRegistry;
+use App\Services\Weather\WeatherFetcher;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -26,48 +26,50 @@ class FetchWeather implements ShouldQueue
         public readonly WeatherMoment $moment,
         public readonly float $latitude,
         public readonly float $longitude,
+        // Der Zeitpunkt, dessen Wetter gemeint ist. null heißt „jetzt" — so
+        // verhalten sich laufende Einsätze wie bisher. Vorgabewert, damit ein
+        // beim Update noch in der Warteschlange liegender Auftrag mit vier
+        // Argumenten weiterhin deserialisiert.
+        public readonly ?CarbonInterface $momentAt = null,
+        // Setzt der Wiederholen-Knopf: ein vorhandener Schnappschuß mit
+        // falschem Zeitpunkt soll dann ersetzt werden dürfen.
+        public readonly bool $force = false,
     ) {}
 
-    public function handle(WeatherProviderRegistry $registry): void
+    public function handle(WeatherFetcher $fetcher): void
     {
-        $provider = $registry->resolve();
-        $result = $provider->fetchCurrent($this->latitude, $this->longitude);
-
-        if ($result === null) {
-            throw new \RuntimeException(
-                "Weather fetch failed for job {$this->jobId} ({$this->moment->value}) via {$provider->name()}"
-            );
-        }
-
-        $existing = WeatherSnapshot::where('job_id', $this->jobId)
-            ->where('moment', $this->moment)
-            ->first();
-
-        if ($existing && $existing->fetched_at !== null) {
+        // Reihenfolge wie bisher: liegt schon ein geholter Schnappschuß vor,
+        // endet der Auftrag stillschweigend und feuert KEIN JobCompleted.
+        // Täte er es doch, bekäme der Kunde bei jedem zweiten Queue-Anlauf
+        // eine weitere Nachweis-Mail.
+        if (! $this->force && $this->weatherAlreadyOnRecord()) {
             return;
         }
 
-        $snapshot = WeatherSnapshot::updateOrCreate(
-            [
-                'job_id' => $this->jobId,
-                'moment' => $this->moment,
-            ],
-            [
-                'provider' => $result->provider,
-                'temperature' => $result->temperature_c,
-                'precipitation' => $result->precipitation_mm,
-                'snow_depth' => $result->snow_depth_cm,
-                'wind_speed' => $result->wind_kmh,
-                'humidity' => $result->humidity_percent,
-                'weather_code' => $result->weather_code,
-                'raw_response' => $result->toArray(),
-                'fetched_at' => now(),
-            ]
+        $snapshot = $fetcher->record(
+            $this->jobId,
+            $this->moment,
+            $this->latitude,
+            $this->longitude,
+            $this->momentAt,
+            $this->force,
         );
 
-        WeatherSnapshotCreated::dispatch($snapshot);
+        if ($snapshot === null) {
+            throw new \RuntimeException(
+                "Weather fetch failed for job {$this->jobId} ({$this->moment->value})"
+            );
+        }
 
         $this->fireJobCompletedIfEndMoment(weatherAvailable: true);
+    }
+
+    private function weatherAlreadyOnRecord(): bool
+    {
+        return WeatherSnapshot::where('job_id', $this->jobId)
+            ->where('moment', $this->moment)
+            ->whereNotNull('fetched_at')
+            ->exists();
     }
 
     public function failed(?\Throwable $exception): void
