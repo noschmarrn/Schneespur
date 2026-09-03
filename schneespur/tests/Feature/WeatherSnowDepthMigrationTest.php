@@ -53,13 +53,20 @@ class WeatherSnowDepthMigrationTest extends TestCase
         ]);
     }
 
-    private function snapshot(string $provider, float $snowDepth): int
+    /**
+     * @param  array<string, mixed>  $rawResponse  Standardmäßig eine Zeile im
+     *   Format des alten Codes (Schlüssel snowfall_mm) — das ist der
+     *   Diskriminator, an dem die Migration erkennt, daß eine Zeile noch im
+     *   falschen Maßstab steht.
+     */
+    private function snapshot(string $provider, float $snowDepth, array $rawResponse = ['snowfall_mm' => 0.15]): int
     {
         return DB::table('weather_snapshots')->insertGetId([
             'job_id' => $this->job()->id,
             'moment' => 'start',
             'provider' => $provider,
             'snow_depth' => $snowDepth,
+            'raw_response' => json_encode($rawResponse),
             'fetched_at' => '2026-01-15 08:00:00',
             'created_at' => '2026-01-15 08:00:00',
             'updated_at' => '2026-01-15 08:00:00',
@@ -81,12 +88,12 @@ class WeatherSnowDepthMigrationTest extends TestCase
 
     public function test_rows_from_other_providers_are_left_alone(): void
     {
-        $id = $this->snapshot('met_norway', 0.0);
+        $id = $this->snapshot('met_norway', 1.23);
 
         $this->migration()->up();
 
         $this->assertEqualsWithDelta(
-            0.0,
+            1.23,
             (float) DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'),
             0.001,
         );
@@ -101,6 +108,19 @@ class WeatherSnowDepthMigrationTest extends TestCase
 
         $this->assertEqualsWithDelta(
             0.15,
+            (float) DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'),
+            0.001,
+        );
+    }
+
+    public function test_rows_already_written_by_the_corrected_code_are_not_scaled_again(): void
+    {
+        $id = $this->snapshot('openmeteo_free', 15.0, ['snow_depth_cm' => 15.0, 'provider' => 'openmeteo_free']);
+
+        $this->migration()->up();
+
+        $this->assertEqualsWithDelta(
+            15.0,
             (float) DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'),
             0.001,
         );

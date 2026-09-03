@@ -12,6 +12,14 @@ use Illuminate\Support\Facades\DB;
  * und MET Norway haben immer 0.0 geschrieben — mal hundert bleibt das null,
  * aber sie auszulassen macht down() exakt umkehrbar und erfaßt einen von einem
  * Modul registrierten Anbieter nicht versehentlich mit.
+ *
+ * Die zweite Bedingung auf raw_response prüft, welcher Code die Zeile
+ * geschrieben hat: der alte Stand legt dort den Schlüssel snowfall_mm ab, der
+ * korrigierte seit Task 1 snow_depth_cm. Ohne diese Unterscheidung würde die
+ * Migration eine Zeile, die zwischen Deploy des Codes und Lauf der Migration
+ * (z. B. bei einem manuellen Datei-Kopier-Update ohne den Wartungsfenster-Schutz
+ * des Self-Updaters) bereits vom korrigierten Code in Zentimetern geschrieben
+ * wurde, ein zweites Mal verhundertfachen.
  */
 return new class extends Migration
 {
@@ -21,6 +29,7 @@ return new class extends Migration
     {
         DB::table('weather_snapshots')
             ->whereIn('provider', self::PROVIDERS)
+            ->where('raw_response', 'like', '%snowfall_mm%')
             ->update(['snow_depth' => DB::raw('snow_depth * 100')]);
     }
 
@@ -31,6 +40,7 @@ return new class extends Migration
         // Ganzzahldivision, und 15 / 100 würde zu 0 statt 0.15 abschneiden.
         DB::table('weather_snapshots')
             ->whereIn('provider', self::PROVIDERS)
+            ->where('raw_response', 'like', '%snowfall_mm%')
             ->update(['snow_depth' => DB::raw('snow_depth / 100.0')]);
     }
 };
