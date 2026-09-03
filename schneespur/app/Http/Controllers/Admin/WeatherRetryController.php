@@ -36,7 +36,15 @@ class WeatherRetryController extends Controller
             return redirect()->back()->with('error', __('weather.retry_no_coordinates'));
         }
 
-        FetchWeather::dispatch($serviceJob->id, $weatherMoment, $lat, $lon);
+        // Der Zeitpunkt, um dessen Wetter es geht — sonst holt der Knopf das
+        // Wetter des Tages, an dem er gedrückt wurde. force, weil bei einem
+        // nacherfaßten Einsatz genau der falsche Schnappschuß bereits liegt
+        // und der Auftrag ihn sonst als „schon erledigt" stehen ließe.
+        $momentAt = $weatherMoment === WeatherMoment::End
+            ? $serviceJob->ended_at
+            : $serviceJob->started_at;
+
+        FetchWeather::dispatch($serviceJob->id, $weatherMoment, $lat, $lon, $momentAt, true);
 
         return redirect()->back()->with('success', __('weather.retry_dispatched'));
     }
