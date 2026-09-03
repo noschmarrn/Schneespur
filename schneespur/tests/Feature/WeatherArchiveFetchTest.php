@@ -114,6 +114,71 @@ class WeatherArchiveFetchTest extends TestCase
         $this->assertSame('2026-01-15T08:00:00+00:00', $data->observed_at->toIso8601String());
     }
 
+    /**
+     * Element 0 auf Treu und Glauben zu nehmen war still falsch: liefert
+     * Bright Sky eine Reihe, die nicht bei der verlangten Stunde beginnt,
+     * stand die Temperatur einer fremden Stunde unter dem richtigen
+     * Zeitstempel im Einsatznachweis. Die Attrappe des Tests darüber hätte
+     * das nie gezeigt — sie antwortet mit 08:00 auf eine Anfrage für 08:20
+     * und wäre mit 00:00 genauso grün gewesen.
+     */
+    public function test_bright_sky_refuses_a_row_from_another_hour(): void
+    {
+        Http::fake([
+            'api.brightsky.dev/weather*' => Http::response([
+                'weather' => [
+                    [
+                        'timestamp' => '2026-01-15T00:00:00+00:00',
+                        'temperature' => 4.9,
+                        'precipitation' => 0.0,
+                        'wind_speed' => 3.0,
+                        'relative_humidity' => 80,
+                        'condition' => 'dry',
+                        'icon' => 'clear-night',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $data = (new BrightSkyProvider())
+            ->fetchAt(48.57, 13.46, Carbon::parse('2026-01-15 08:20:00', 'UTC'));
+
+        $this->assertNull($data);
+    }
+
+    public function test_bright_sky_finds_the_requested_hour_further_down_the_series(): void
+    {
+        Http::fake([
+            'api.brightsky.dev/weather*' => Http::response([
+                'weather' => [
+                    [
+                        'timestamp' => '2026-01-15T06:00:00+00:00',
+                        'temperature' => 4.9,
+                        'condition' => 'dry',
+                    ],
+                    [
+                        'timestamp' => '2026-01-15T07:00:00+00:00',
+                        'temperature' => 3.1,
+                        'condition' => 'dry',
+                    ],
+                    [
+                        'timestamp' => '2026-01-15T08:00:00+00:00',
+                        'temperature' => 0.6,
+                        'condition' => 'snow',
+                        'icon' => 'snow',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $data = (new BrightSkyProvider())
+            ->fetchAt(48.57, 13.46, Carbon::parse('2026-01-15 08:20:00', 'UTC'));
+
+        $this->assertNotNull($data);
+        $this->assertEqualsWithDelta(0.6, $data->temperature_c, 0.001);
+        $this->assertSame('2026-01-15T08:00:00+00:00', $data->observed_at->toIso8601String());
+    }
+
     public function test_bright_sky_without_a_record_yields_nothing(): void
     {
         Http::fake(['api.brightsky.dev/weather*' => Http::response(['weather' => []])]);

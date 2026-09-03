@@ -98,12 +98,18 @@ class BrightSkyProvider implements WeatherProviderInterface, ArchiveWeatherProvi
                 return null;
             }
 
-            // /weather liefert eine Reihe ab der verlangten Stunde; der erste
-            // Eintrag ist genau diese Stunde. Die Feldnamen weichen von
-            // /current_weather ab: dort precipitation_60 und wind_speed_10.
-            $entry = $response->json('weather.0');
+            // /weather liefert eine Reihe ab der verlangten Stunde. Element 0
+            // auf Treu und Glauben zu nehmen wäre still falsch, sobald die
+            // Reihe woanders beginnt (geänderter Parameter, `date` als
+            // Tagesbeginn ausgelegt, Stationslücke): die Temperatur einer
+            // fremden Stunde landete dann unter dem richtigen Zeitstempel in
+            // einem Einsatznachweis. Also wird die verlangte Stunde gesucht —
+            // so, wie der Open-Meteo-Pfad es über hourly.time tut. Die
+            // Feldnamen weichen von /current_weather ab: dort
+            // precipitation_60 und wind_speed_10.
+            $entry = $this->entryForHour($response->json('weather'), $hour);
 
-            if (! is_array($entry) || ($entry['temperature'] ?? null) === null) {
+            if ($entry === null || ($entry['temperature'] ?? null) === null) {
                 return null;
             }
 
@@ -127,6 +133,40 @@ class BrightSkyProvider implements WeatherProviderInterface, ArchiveWeatherProvi
 
             return null;
         }
+    }
+
+    /**
+     * Der Eintrag, dessen Zeitstempel genau auf die verlangte Stunde fällt.
+     *
+     * null, wenn die Antwort ihn nicht enthält — bei einem Nachweis ist eine
+     * Lücke besser als der Wert einer anderen Stunde.
+     *
+     * @param  mixed  $rows
+     * @return array<string, mixed>|null
+     */
+    private function entryForHour(mixed $rows, CarbonInterface $hour): ?array
+    {
+        if (! is_array($rows)) {
+            return null;
+        }
+
+        foreach ($rows as $candidate) {
+            if (! is_array($candidate) || ! isset($candidate['timestamp'])) {
+                continue;
+            }
+
+            try {
+                $stamp = Carbon::parse($candidate['timestamp'])->utc()->startOfHour();
+            } catch (\Throwable) {
+                continue;
+            }
+
+            if ($stamp->equalTo($hour)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     public function testConnection(float $lat, float $lon): array
