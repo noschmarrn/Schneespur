@@ -99,6 +99,26 @@ class WeatherFetcher
         return $snapshot;
     }
 
+    /**
+     * Ob für diesen Zeitpunkt beim eingestellten Anbieter überhaupt eine
+     * Abfrage möglich ist.
+     *
+     * record() liefert null für drei verschiedene Dinge: einen schon
+     * vorhandenen Schnappschuß, einen Anbieter ohne Archiv und einen echten
+     * Fehlschlag. Der mittlere Fall ist erwartet und deterministisch —
+     * Wiederholen ändert daran nichts. Der Aufrufer braucht ihn darum
+     * unterscheidbar; das Frischefenster bleibt dabei an der einen Stelle,
+     * an der es ohnehin steht.
+     */
+    public function canFetch(?CarbonInterface $at = null): bool
+    {
+        if (! $this->isPast($at)) {
+            return true;
+        }
+
+        return $this->registry->resolve() instanceof ArchiveWeatherProviderInterface;
+    }
+
     private function isPast(?CarbonInterface $at): bool
     {
         return $at !== null && $at->lessThan(now()->subMinutes(self::FRESH_WINDOW_MINUTES));

@@ -398,6 +398,59 @@ class WeatherArchiveDispatchTest extends TestCase
     }
 
     /**
+     * „Dieser Anbieter hat kein Archiv" ist ein erwartetes, deterministisches
+     * Ergebnis und kein Fehlschlag. Als RuntimeException kostete es auf einer
+     * MET-Norway-Installation bei jedem nacherfaßten Einsatz zwei Versuche,
+     * 30 Sekunden Rückfallzeit, eine „permanently failed"-Warnung und ebenso
+     * lange Verzug, bis der Kunde seinen Nachweis bekam.
+     */
+    public function test_a_provider_without_an_archive_completes_the_job_instead_of_failing(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+        Setting::set('weather_provider', 'met_norway');
+        Http::fake(['*' => Http::response([], 200)]);
+
+        $job = $this->job('2026-01-15 08:00:00', '2026-01-15 09:00:00');
+
+        Event::fake();
+
+        (new FetchWeather(
+            $job->id,
+            WeatherMoment::End,
+            48.57,
+            13.46,
+            Carbon::parse('2026-01-15 09:00:00', 'UTC'),
+        ))->handle(app(WeatherFetcher::class));
+
+        Event::assertDispatched(JobCompleted::class, fn (JobCompleted $event) => $event->weatherAvailable === false);
+        Http::assertNothingSent();
+    }
+
+    /**
+     * Der Gegenbeweis: ein Anbieter MIT Archiv, der für die Stunde nichts
+     * hat, ist weiterhin ein Fehlschlag und darf wiederholt werden.
+     */
+    public function test_a_gap_in_a_real_archive_is_still_a_failure(): void
+    {
+        Carbon::setTestNow('2026-09-03 12:00:00');
+        Http::fake(['archive-api.open-meteo.com/*' => Http::response(['hourly' => ['time' => []]])]);
+
+        $job = $this->job('2026-01-15 08:00:00', '2026-01-15 09:00:00');
+
+        Event::fake();
+
+        $this->expectException(\RuntimeException::class);
+
+        (new FetchWeather(
+            $job->id,
+            WeatherMoment::End,
+            48.57,
+            13.46,
+            Carbon::parse('2026-01-15 09:00:00', 'UTC'),
+        ))->handle(app(WeatherFetcher::class));
+    }
+
+    /**
      * Und wenn der erzwungene Lauf endgültig scheitert, schweigt er ebenso.
      * failed() hatte den Wächter aus handle() nicht: die Kette
      * force-Wiederholung → record() liefert null → RuntimeException → zwei

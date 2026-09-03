@@ -67,6 +67,22 @@ class FetchWeather implements ShouldQueue
         );
 
         if ($snapshot === null) {
+            // Ein Anbieter ohne Archiv ist kein Fehlschlag, sondern ein
+            // erwartetes Ergebnis: die Ausnahme kostete auf einer
+            // MET-Norway-Installation bei JEDEM nacherfaßten Einsatz zwei
+            // Versuche, 30 Sekunden Rückfallzeit, eine „permanently failed"-
+            // Warnung, die wie ein Vorfall aussieht, und ebenso lange Verzug,
+            // bis der Kunde seinen Nachweis bekommt. Der Nachweis geht darum
+            // gleich hier raus — ohne Wetter, was die vorhandene
+            // Datenqualitätswarnung ohnehin sichtbar macht.
+            if (! $fetcher->canFetch($momentAt)) {
+                if (! $force) {
+                    $this->fireJobCompletedIfEndMoment(weatherAvailable: false);
+                }
+
+                return;
+            }
+
             throw new \RuntimeException(
                 "Weather fetch failed for job {$this->jobId} ({$this->moment->value})"
             );
