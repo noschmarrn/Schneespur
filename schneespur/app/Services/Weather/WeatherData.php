@@ -9,8 +9,14 @@ final readonly class WeatherData
     public function __construct(
         public float $temperature_c,
         public float $precipitation_mm,
-        /** Schneehöhe in Zentimetern. */
-        public float $snow_depth_cm,
+        /**
+         * Schneehöhe in Zentimetern, null wenn der Anbieter sie nicht meldet.
+         *
+         * Nicht 0.0: das hieße „kein Schnee" und wäre bei einem
+         * Einsatznachweis eine Behauptung, für die es keine Messung gibt.
+         * Bright Sky (DWD) und MET Norway melden keine Schneehöhe.
+         */
+        public ?float $snow_depth_cm,
         public float $wind_kmh,
         public int $humidity_percent,
         public string $condition,

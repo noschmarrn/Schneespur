@@ -127,7 +127,7 @@ abstract class OpenMeteoBase implements WeatherProviderInterface, ArchiveWeather
         return new WeatherData(
             temperature_c: (float) $at('temperature_2m'),
             precipitation_mm: (float) ($at('precipitation') ?? 0),
-            snow_depth_cm: (float) ($at('snow_depth') ?? 0) * 100,
+            snow_depth_cm: $at('snow_depth') === null ? null : (float) $at('snow_depth') * 100,
             wind_kmh: (float) ($at('wind_speed_10m') ?? 0),
             humidity_percent: (int) ($at('relative_humidity_2m') ?? 0),
             condition: ConditionMapper::fromWmoCode($code),
@@ -194,8 +194,9 @@ abstract class OpenMeteoBase implements WeatherProviderInterface, ArchiveWeather
             precipitation_mm: (float) ($current['precipitation'] ?? 0),
             // Open-Meteo liefert snow_depth in Metern — die Antwort sagt es
             // selbst in hourly_units/current_units. Gespeichert und angezeigt
-            // wird die Höhe in Zentimetern.
-            snow_depth_cm: (float) ($current['snow_depth'] ?? 0) * 100,
+            // wird die Höhe in Zentimetern. Fehlt der Wert ganz, ist er
+            // unbekannt und nicht null Zentimeter.
+            snow_depth_cm: ($current['snow_depth'] ?? null) === null ? null : (float) $current['snow_depth'] * 100,
             wind_kmh: (float) ($current['wind_speed_10m'] ?? 0),
             humidity_percent: (int) ($current['relative_humidity_2m'] ?? 0),
             condition: ConditionMapper::fromWmoCode($code),

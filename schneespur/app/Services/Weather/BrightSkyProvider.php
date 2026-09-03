@@ -47,7 +47,11 @@ class BrightSkyProvider implements WeatherProviderInterface, ArchiveWeatherProvi
             return new WeatherData(
                 temperature_c: (float) ($weather['temperature'] ?? 0),
                 precipitation_mm: (float) ($weather['precipitation_60'] ?? 0),
-                snow_depth_cm: 0.0,
+                // Bright Sky (DWD) meldet keine Schneehöhe. null heißt
+                // „nicht gemessen" und wird als Platzhalter angezeigt; 0.0
+                // hieße „kein Schnee" — mitten im Schneetreiben eine falsche
+                // Angabe in einem Nachweis.
+                snow_depth_cm: null,
                 wind_kmh: (float) ($weather['wind_speed_10'] ?? 0),
                 humidity_percent: (int) ($weather['relative_humidity'] ?? 0),
                 condition: self::mapCondition(
@@ -116,7 +120,8 @@ class BrightSkyProvider implements WeatherProviderInterface, ArchiveWeatherProvi
             return new WeatherData(
                 temperature_c: (float) $entry['temperature'],
                 precipitation_mm: (float) ($entry['precipitation'] ?? 0),
-                snow_depth_cm: 0.0,
+                // Siehe fetchCurrent(): nicht gemessen, nicht null Zentimeter.
+                snow_depth_cm: null,
                 wind_kmh: (float) ($entry['wind_speed'] ?? 0),
                 humidity_percent: (int) ($entry['relative_humidity'] ?? 0),
                 condition: self::mapCondition($entry['condition'] ?? null, $entry['icon'] ?? null),

@@ -173,7 +173,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_temperature($snapshot->temperature) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_precipitation((float) $snapshot->precipitation) }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_snow_depth((float) $snapshot->snow_depth) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_snow_depth($snapshot->snow_depth) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ format_speed($snapshot->wind_speed) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->humidity !== null ? $snapshot->humidity . ' %' : '–' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $snapshot->weatherLabel() }}</td>

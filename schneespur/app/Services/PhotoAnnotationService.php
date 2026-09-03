@@ -106,9 +106,11 @@ class PhotoAnnotationService
 
         $weather = $job->weatherSnapshots->first();
         if ($weather && $weather->fetched_at) {
+            // Über den Formatter, nicht roh: eine nie gemessene Schneehöhe
+            // ist null und stünde sonst als „ cm Schnee" im Bild.
             $lines[] = 'Wetter: ' . format_temperature($weather->temperature) . ', '
-                . $weather->precipitation . 'mm, '
-                . $weather->snow_depth . 'cm Schnee';
+                . format_precipitation($weather->precipitation) . ', '
+                . format_snow_depth($weather->snow_depth) . ' Schnee';
         }
 
         if ($object?->lat && $object?->lon) {

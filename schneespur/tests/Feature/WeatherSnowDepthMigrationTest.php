@@ -73,6 +73,11 @@ class WeatherSnowDepthMigrationTest extends TestCase
         ]);
     }
 
+    private function blankMigration(): object
+    {
+        return require base_path('database/migrations/2026_09_03_110000_blank_never_measured_snow_depth.php');
+    }
+
     public function test_open_meteo_rows_are_multiplied_by_one_hundred(): void
     {
         $id = $this->snapshot('openmeteo_free', 0.15);
@@ -108,6 +113,61 @@ class WeatherSnowDepthMigrationTest extends TestCase
 
         $this->assertEqualsWithDelta(
             0.15,
+            (float) DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'),
+            0.001,
+        );
+    }
+
+    /**
+     * Bright Sky und MET Norway melden keine Schneehöhe und schrieben doch
+     * 0.0 — was in jedem Nachweis als „0,0 cm Schnee" erschien, also als
+     * Behauptung ohne Messung.
+     */
+    public function test_a_never_measured_zero_from_bright_sky_becomes_blank(): void
+    {
+        $id = $this->snapshot('brightsky', 0.0);
+
+        $this->blankMigration()->up();
+
+        $this->assertNull(DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'));
+    }
+
+    public function test_a_never_measured_zero_from_met_norway_becomes_blank(): void
+    {
+        $id = $this->snapshot('met_norway', 0.0);
+
+        $this->blankMigration()->up();
+
+        $this->assertNull(DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'));
+    }
+
+    /**
+     * Bei einem Anbieter, der die Größe wirklich mißt, ist die Null ein
+     * Nachweis für sich — beim Streudienst ist die Abwesenheit von Schnee
+     * der Punkt. Diese Zeilen bleiben stehen.
+     */
+    public function test_a_measured_zero_is_kept(): void
+    {
+        $id = $this->snapshot('openmeteo_free', 0.0, ['snow_depth_cm' => 0.0]);
+
+        $this->blankMigration()->up();
+
+        $this->assertEqualsWithDelta(
+            0.0,
+            (float) DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'),
+            0.001,
+        );
+        $this->assertNotNull(DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'));
+    }
+
+    public function test_a_non_zero_value_under_those_providers_is_left_alone(): void
+    {
+        $id = $this->snapshot('brightsky', 3.5);
+
+        $this->blankMigration()->up();
+
+        $this->assertEqualsWithDelta(
+            3.5,
             (float) DB::table('weather_snapshots')->where('id', $id)->value('snow_depth'),
             0.001,
         );

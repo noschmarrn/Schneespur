@@ -42,7 +42,25 @@ class JobCompletedMailWeatherTest extends TestCase
         $this->assertStringContainsString(format_snow_depth(0.0), $rendered);
     }
 
-    private function jobWithWeatherSnapshot(float $snowDepth): Job
+    /**
+     * Und der Fall, den es vorher gar nicht geben konnte: nie gemessen.
+     * Bright Sky (DWD) und MET Norway melden keine Schneehöhe; sie schrieben
+     * dafür 0.0, und der Kunde eines deutschen Bright-Sky-Betreibers las in
+     * jedem Nachweis „0,0 cm Schnee", auch mitten im Schneetreiben. Jetzt
+     * steht dort der Platzhalter — bei einem Nachweis ist leer besser als
+     * still falsch.
+     */
+    public function test_a_snow_depth_that_was_never_measured_shows_the_placeholder(): void
+    {
+        $job = $this->jobWithWeatherSnapshot(null);
+
+        $rendered = (new JobCompletedMail($job->fresh(), true))->render();
+
+        $this->assertStringContainsString(format_snow_depth(null), $rendered);
+        $this->assertStringNotContainsString(format_snow_depth(0.0), $rendered);
+    }
+
+    private function jobWithWeatherSnapshot(?float $snowDepth): Job
     {
         $driver = User::create([
             'name' => 'Driver',

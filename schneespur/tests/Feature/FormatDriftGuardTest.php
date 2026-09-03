@@ -44,6 +44,26 @@ class FormatDriftGuardTest extends TestCase
         return str_replace(base_path().'/', '', $path);
     }
 
+    /**
+     * Die Schneehöhe ist seit 1.2.1 nullable: Bright Sky (DWD) und MET Norway
+     * melden sie gar nicht, und „nie gemessen" darf in einem Einsatznachweis
+     * nicht als „0,0 cm" erscheinen. Genau das macht ein (float)-Cast vor dem
+     * Formatter wieder — er wandelt das null zurück in eine Null. Fünf
+     * Anzeigestellen hatten ihn; keine darf ihn zurückbekommen.
+     */
+    public function test_no_display_site_casts_a_missing_snow_depth_to_zero(): void
+    {
+        $offenders = [];
+
+        foreach ($this->sources() as $path) {
+            if (preg_match('/format_snow_depth\(\s*\(float\)/', (string) file_get_contents($path))) {
+                $offenders[] = $this->relative($path);
+            }
+        }
+
+        $this->assertSame([], $offenders, 'A (float) cast turns a never-measured snow depth back into "0.0 cm"');
+    }
+
     public function test_no_hardcoded_german_date_format_outside_the_formatter(): void
     {
         $offenders = [];

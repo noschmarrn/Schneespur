@@ -24,7 +24,7 @@
 {{ __('notification.weather_summary', [
     'temperature' => format_temperature((float) $weather->temperature),
     'precipitation' => format_precipitation((float) $weather->precipitation),
-    'snow_depth' => format_snow_depth((float) $weather->snow_depth),
+    'snow_depth' => format_snow_depth($weather->snow_depth),
 ]) }}
 @endif
 @else

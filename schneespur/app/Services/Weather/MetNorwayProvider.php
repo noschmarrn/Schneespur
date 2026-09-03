@@ -56,7 +56,10 @@ class MetNorwayProvider implements WeatherProviderInterface
             return new WeatherData(
                 temperature_c: (float) ($details['air_temperature'] ?? 0),
                 precipitation_mm: $precipitationMm,
-                snow_depth_cm: 0.0,
+                // MET Norway meldet keine Schneehöhe. null heißt „nicht
+                // gemessen"; 0.0 hieße „kein Schnee" und wäre in einem
+                // Einsatznachweis eine Behauptung ohne Messung.
+                snow_depth_cm: null,
                 wind_kmh: $windKmh,
                 humidity_percent: (int) ($details['relative_humidity'] ?? 0),
                 condition: $symbolCode
