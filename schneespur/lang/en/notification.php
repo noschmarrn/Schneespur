@@ -6,8 +6,9 @@ return [
     'greeting' => 'Dear :name,',
     'job_completed_body' => 'a service operation (:type) was performed for you on :date. Time: :time_start – :time_end. Driver: :driver.',
     // The unit comes with the value — the operator's setting decides whether
-    // that is "1.2 mm" or "0.05 in".
-    'weather_summary' => 'Weather: :temperature, :precipitation of precipitation',
+    // that is "1.2 mm" or "0.05 in". The same applies to :snow_depth, whose
+    // unit swaps between cm and in via the same unit_distance setting.
+    'weather_summary' => 'Weather: :temperature, :precipitation of precipitation, :snow_depth of snow',
     'weather_unavailable' => 'Weather data was not available at the time of the service operation.',
     'weather_update_note' => 'This is an updated service report with weather data now available.',
     'pdf_attached' => 'Please find the complete service report attached as a PDF.',

@@ -3,12 +3,15 @@
 namespace App\Services\Weather;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class BrightSkyProvider implements WeatherProviderInterface
+class BrightSkyProvider implements WeatherProviderInterface, ArchiveWeatherProviderInterface
 {
     private const API_URL = 'https://api.brightsky.dev/current_weather';
+
+    private const HISTORY_URL = 'https://api.brightsky.dev/weather';
 
     private const TIMEOUT_SECONDS = 5;
 
@@ -44,7 +47,11 @@ class BrightSkyProvider implements WeatherProviderInterface
             return new WeatherData(
                 temperature_c: (float) ($weather['temperature'] ?? 0),
                 precipitation_mm: (float) ($weather['precipitation_60'] ?? 0),
-                snowfall_mm: 0.0,
+                // Bright Sky (DWD) meldet keine Schneehöhe. null heißt
+                // „nicht gemessen" und wird als Platzhalter angezeigt; 0.0
+                // hieße „kein Schnee" — mitten im Schneetreiben eine falsche
+                // Angabe in einem Nachweis.
+                snow_depth_cm: null,
                 wind_kmh: (float) ($weather['wind_speed_10'] ?? 0),
                 humidity_percent: (int) ($weather['relative_humidity'] ?? 0),
                 condition: self::mapCondition(
@@ -67,6 +74,104 @@ class BrightSkyProvider implements WeatherProviderInterface
 
             return null;
         }
+    }
+
+    public function fetchAt(float $lat, float $lon, CarbonInterface $moment): ?WeatherData
+    {
+        // Carbon::parse statt ->copy(): WeatherData::$observed_at ist auf das
+        // veränderliche Carbon typisiert, und ein Aufrufer darf uns ein
+        // CarbonImmutable reichen.
+        $hour = Carbon::parse($moment)->utc()->startOfHour();
+
+        try {
+            $response = Http::timeout(self::TIMEOUT_SECONDS)
+                ->get(self::HISTORY_URL, [
+                    'lat' => $lat,
+                    'lon' => $lon,
+                    'date' => $hour->format('Y-m-d\TH:i'),
+                    'units' => 'dwd',
+                ]);
+
+            if ($response->failed()) {
+                Log::info('Weather archive returned non-success status', [
+                    'provider' => 'brightsky',
+                    'status' => $response->status(),
+                    'moment' => $hour->toIso8601String(),
+                ]);
+
+                return null;
+            }
+
+            // /weather liefert eine Reihe ab der verlangten Stunde. Element 0
+            // auf Treu und Glauben zu nehmen wäre still falsch, sobald die
+            // Reihe woanders beginnt (geänderter Parameter, `date` als
+            // Tagesbeginn ausgelegt, Stationslücke): die Temperatur einer
+            // fremden Stunde landete dann unter dem richtigen Zeitstempel in
+            // einem Einsatznachweis. Also wird die verlangte Stunde gesucht —
+            // so, wie der Open-Meteo-Pfad es über hourly.time tut. Die
+            // Feldnamen weichen von /current_weather ab: dort
+            // precipitation_60 und wind_speed_10.
+            $entry = $this->entryForHour($response->json('weather'), $hour);
+
+            if ($entry === null || ($entry['temperature'] ?? null) === null) {
+                return null;
+            }
+
+            return new WeatherData(
+                temperature_c: (float) $entry['temperature'],
+                precipitation_mm: (float) ($entry['precipitation'] ?? 0),
+                // Siehe fetchCurrent(): nicht gemessen, nicht null Zentimeter.
+                snow_depth_cm: null,
+                wind_kmh: (float) ($entry['wind_speed'] ?? 0),
+                humidity_percent: (int) ($entry['relative_humidity'] ?? 0),
+                condition: self::mapCondition($entry['condition'] ?? null, $entry['icon'] ?? null),
+                weather_code: null,
+                provider: 'brightsky',
+                observed_at: $hour,
+            );
+        } catch (\Throwable $e) {
+            Log::info('Weather archive request failed', [
+                'provider' => 'brightsky',
+                'error' => $e->getMessage(),
+                'moment' => $hour->toIso8601String(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Der Eintrag, dessen Zeitstempel genau auf die verlangte Stunde fällt.
+     *
+     * null, wenn die Antwort ihn nicht enthält — bei einem Nachweis ist eine
+     * Lücke besser als der Wert einer anderen Stunde.
+     *
+     * @param  mixed  $rows
+     * @return array<string, mixed>|null
+     */
+    private function entryForHour(mixed $rows, CarbonInterface $hour): ?array
+    {
+        if (! is_array($rows)) {
+            return null;
+        }
+
+        foreach ($rows as $candidate) {
+            if (! is_array($candidate) || ! isset($candidate['timestamp'])) {
+                continue;
+            }
+
+            try {
+                $stamp = Carbon::parse($candidate['timestamp'])->utc()->startOfHour();
+            } catch (\Throwable) {
+                continue;
+            }
+
+            if ($stamp->equalTo($hour)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     public function testConnection(float $lat, float $lon): array

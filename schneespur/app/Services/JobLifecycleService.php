@@ -8,9 +8,7 @@ use App\Events\JobCompleted;
 use App\Events\JobStarted;
 use App\Events\Shift\WorkShiftEnded;
 use App\Events\Shift\WorkShiftStarted;
-use App\Events\WeatherSnapshotCreated;
 use App\Exceptions\JobLifecycleException;
-use App\Jobs\FetchWeather;
 use App\Models\CustomerObject;
 use App\Models\Job;
 use App\Models\User;
@@ -102,7 +100,7 @@ class JobLifecycleService
         JobStarted::dispatch($job);
 
         if ($customerObject->lat !== null && $customerObject->lon !== null) {
-            $this->dispatchWeather($job->id, WeatherMoment::Start, (float) $customerObject->lat, (float) $customerObject->lon);
+            $this->dispatchWeather($job->id, WeatherMoment::Start, (float) $customerObject->lat, (float) $customerObject->lon, $job->started_at);
         }
 
         return $job;
@@ -144,7 +142,7 @@ class JobLifecycleService
         }
 
         if ($lat !== null && $lon !== null) {
-            $this->dispatchWeather($job->id, WeatherMoment::End, $lat, $lon);
+            $this->dispatchWeather($job->id, WeatherMoment::End, $lat, $lon, $job->ended_at);
             if (! $this->isCronActive()) {
                 JobCompleted::dispatch($job, WeatherSnapshot::where('job_id', $job->id)->where('moment', WeatherMoment::End)->exists());
             }
@@ -189,8 +187,8 @@ class JobLifecycleService
         JobStarted::dispatch($job);
 
         if ($customerObject->lat !== null && $customerObject->lon !== null) {
-            $this->dispatchWeather($job->id, WeatherMoment::Start, (float) $customerObject->lat, (float) $customerObject->lon);
-            $this->dispatchWeather($job->id, WeatherMoment::End, (float) $customerObject->lat, (float) $customerObject->lon);
+            $this->dispatchWeather($job->id, WeatherMoment::Start, (float) $customerObject->lat, (float) $customerObject->lon, $job->started_at);
+            $this->dispatchWeather($job->id, WeatherMoment::End, (float) $customerObject->lat, (float) $customerObject->lon, $job->ended_at);
             if (! $this->isCronActive()) {
                 JobCompleted::dispatch($job, WeatherSnapshot::where('job_id', $job->id)->where('moment', WeatherMoment::End)->exists());
             }
@@ -243,53 +241,17 @@ class JobLifecycleService
         }
     }
 
-    private function dispatchWeather(int $jobId, WeatherMoment $moment, float $lat, float $lon): void
+    private function dispatchWeather(int $jobId, WeatherMoment $moment, float $lat, float $lon, ?Carbon $at = null): void
     {
-        if ($this->isCronActive()) {
-            FetchWeather::dispatch($jobId, $moment, $lat, $lon);
-
-            return;
-        }
-
-        $this->fetchWeatherSync($jobId, $moment, $lat, $lon);
+        // Warteschlange oder sofort — die Entscheidung trifft der
+        // WeatherDispatcher, damit der Wiederholen-Knopf im Admin dieselbe
+        // trifft. Der Rückgabewert interessiert hier nicht: Wetter blockiert
+        // keinen Einsatz.
+        app(Weather\WeatherDispatcher::class)->dispatch($jobId, $moment, $lat, $lon, $at);
     }
 
     private function isCronActive(): bool
     {
-        $lastRun = cache()->get('cron.last_run');
-
-        return $lastRun && $lastRun->diffInMinutes(now()) < 5;
-    }
-
-    private function fetchWeatherSync(int $jobId, WeatherMoment $moment, float $lat, float $lon): void
-    {
-        try {
-            $registry = app(Weather\WeatherProviderRegistry::class);
-            $provider = $registry->resolve();
-            $result = $provider->fetchCurrent($lat, $lon);
-
-            if ($result === null) {
-                return;
-            }
-
-            $snapshot = WeatherSnapshot::updateOrCreate(
-                ['job_id' => $jobId, 'moment' => $moment],
-                [
-                    'provider' => $result->provider,
-                    'temperature' => $result->temperature_c,
-                    'precipitation' => $result->precipitation_mm,
-                    'snow_depth' => $result->snowfall_mm,
-                    'wind_speed' => $result->wind_kmh,
-                    'humidity' => $result->humidity_percent,
-                    'weather_code' => $result->weather_code,
-                    'raw_response' => $result->toArray(),
-                    'fetched_at' => now(),
-                ]
-            );
-
-            WeatherSnapshotCreated::dispatch($snapshot);
-        } catch (\Throwable) {
-            // Weather is never blocking — silently fail
-        }
+        return app(Weather\WeatherDispatcher::class)->isCronActive();
     }
 }

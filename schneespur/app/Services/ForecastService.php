@@ -49,7 +49,7 @@ class ForecastService
         return [
             'temperature' => $data->temperature_c,
             'precipitation' => $data->precipitation_mm,
-            'snow_depth' => $data->snowfall_mm,
+            'snow_depth' => $data->snow_depth_cm,
             'weather_code' => $data->weather_code ?? 0,
             'wind_speed' => $data->wind_kmh,
             'humidity' => $data->humidity_percent,
