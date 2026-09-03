@@ -9,7 +9,8 @@ final readonly class WeatherData
     public function __construct(
         public float $temperature_c,
         public float $precipitation_mm,
-        public float $snowfall_mm,
+        /** Schneehöhe in Zentimetern. */
+        public float $snow_depth_cm,
         public float $wind_kmh,
         public int $humidity_percent,
         public string $condition,
@@ -23,7 +24,7 @@ final readonly class WeatherData
         return [
             'temperature_c' => $this->temperature_c,
             'precipitation_mm' => $this->precipitation_mm,
-            'snowfall_mm' => $this->snowfall_mm,
+            'snow_depth_cm' => $this->snow_depth_cm,
             'wind_kmh' => $this->wind_kmh,
             'humidity_percent' => $this->humidity_percent,
             'condition' => $this->condition,

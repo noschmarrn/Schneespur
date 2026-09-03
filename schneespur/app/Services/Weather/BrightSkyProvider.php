@@ -44,7 +44,7 @@ class BrightSkyProvider implements WeatherProviderInterface
             return new WeatherData(
                 temperature_c: (float) ($weather['temperature'] ?? 0),
                 precipitation_mm: (float) ($weather['precipitation_60'] ?? 0),
-                snowfall_mm: 0.0,
+                snow_depth_cm: 0.0,
                 wind_kmh: (float) ($weather['wind_speed_10'] ?? 0),
                 humidity_percent: (int) ($weather['relative_humidity'] ?? 0),
                 condition: self::mapCondition(

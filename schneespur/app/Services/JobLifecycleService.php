@@ -278,7 +278,7 @@ class JobLifecycleService
                     'provider' => $result->provider,
                     'temperature' => $result->temperature_c,
                     'precipitation' => $result->precipitation_mm,
-                    'snow_depth' => $result->snowfall_mm,
+                    'snow_depth' => $result->snow_depth_cm,
                     'wind_speed' => $result->wind_kmh,
                     'humidity' => $result->humidity_percent,
                     'weather_code' => $result->weather_code,

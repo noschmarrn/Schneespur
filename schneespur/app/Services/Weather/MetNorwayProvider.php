@@ -56,7 +56,7 @@ class MetNorwayProvider implements WeatherProviderInterface
             return new WeatherData(
                 temperature_c: (float) ($details['air_temperature'] ?? 0),
                 precipitation_mm: $precipitationMm,
-                snowfall_mm: 0.0,
+                snow_depth_cm: 0.0,
                 wind_kmh: $windKmh,
                 humidity_percent: (int) ($details['relative_humidity'] ?? 0),
                 condition: $symbolCode

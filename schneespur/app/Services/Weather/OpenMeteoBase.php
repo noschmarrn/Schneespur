@@ -103,7 +103,10 @@ abstract class OpenMeteoBase implements WeatherProviderInterface
         return new WeatherData(
             temperature_c: (float) ($current['temperature_2m'] ?? 0),
             precipitation_mm: (float) ($current['precipitation'] ?? 0),
-            snowfall_mm: (float) ($current['snow_depth'] ?? 0),
+            // Open-Meteo liefert snow_depth in Metern — die Antwort sagt es
+            // selbst in hourly_units/current_units. Gespeichert und angezeigt
+            // wird die Höhe in Zentimetern.
+            snow_depth_cm: (float) ($current['snow_depth'] ?? 0) * 100,
             wind_kmh: (float) ($current['wind_speed_10m'] ?? 0),
             humidity_percent: (int) ($current['relative_humidity_2m'] ?? 0),
             condition: ConditionMapper::fromWmoCode($code),
