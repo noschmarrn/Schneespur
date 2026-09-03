@@ -91,4 +91,112 @@ class WeatherRetryTest extends TestCase
                 && $queued->force === true;
         });
     }
+
+    public function test_the_end_moment_resolves_from_ended_at_not_started_at(): void
+    {
+        Queue::fake();
+
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin@test.local',
+            'password' => Hash::make('password'),
+        ]);
+        $admin->assignRole('admin');
+        $admin = $admin->fresh();
+
+        $driver = User::create([
+            'name' => 'Driver',
+            'email' => 'driver@test.local',
+            'password' => Hash::make('password'),
+        ]);
+
+        $customer = Customer::create(['name' => 'Test Customer']);
+
+        $object = CustomerObject::create([
+            'customer_id' => $customer->id,
+            'name' => 'Test Object',
+            'lat' => 48.57,
+            'lon' => 13.46,
+        ]);
+
+        $shift = WorkShift::create([
+            'user_id' => $driver->id,
+            'started_at' => '2026-01-15 08:00:00',
+            'ended_at' => '2026-01-15 09:00:00',
+        ]);
+
+        $job = Job::create([
+            'work_shift_id' => $shift->id,
+            'user_id' => $driver->id,
+            'customer_id' => $customer->id,
+            'customer_object_id' => $object->id,
+            'type' => 'raumen',
+            'started_at' => '2026-01-15 08:00:00',
+            'ended_at' => '2026-01-15 09:00:00',
+            'is_manual' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.jobs.weather-retry', [$job->id, 'end']))
+            ->assertRedirect();
+
+        Queue::assertPushed(FetchWeather::class, function (FetchWeather $queued) use ($job) {
+            return $queued->jobId === $job->id
+                && $queued->moment === WeatherMoment::End
+                && $queued->momentAt?->toDateTimeString() === '2026-01-15 09:00:00'
+                && $queued->force === true;
+        });
+    }
+
+    public function test_the_end_moment_on_a_job_that_has_not_ended_is_refused(): void
+    {
+        Queue::fake();
+
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'admin@test.local',
+            'password' => Hash::make('password'),
+        ]);
+        $admin->assignRole('admin');
+        $admin = $admin->fresh();
+
+        $driver = User::create([
+            'name' => 'Driver',
+            'email' => 'driver@test.local',
+            'password' => Hash::make('password'),
+        ]);
+
+        $customer = Customer::create(['name' => 'Test Customer']);
+
+        $object = CustomerObject::create([
+            'customer_id' => $customer->id,
+            'name' => 'Test Object',
+            'lat' => 48.57,
+            'lon' => 13.46,
+        ]);
+
+        $shift = WorkShift::create([
+            'user_id' => $driver->id,
+            'started_at' => '2026-01-15 08:00:00',
+            'ended_at' => null,
+        ]);
+
+        $job = Job::create([
+            'work_shift_id' => $shift->id,
+            'user_id' => $driver->id,
+            'customer_id' => $customer->id,
+            'customer_object_id' => $object->id,
+            'type' => 'raumen',
+            'started_at' => '2026-01-15 08:00:00',
+            'ended_at' => null,
+            'is_manual' => true,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('admin.jobs.weather-retry', [$job->id, 'end']))
+            ->assertRedirect()
+            ->assertSessionHas('error');
+
+        Queue::assertNotPushed(FetchWeather::class);
+    }
 }

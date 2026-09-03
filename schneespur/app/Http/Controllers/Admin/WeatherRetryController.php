@@ -36,6 +36,13 @@ class WeatherRetryController extends Controller
             return redirect()->back()->with('error', __('weather.retry_no_coordinates'));
         }
 
+        // Ohne ended_at würde der Zweig unten auf "jetzt" zurückfallen und mit
+        // force=true genau den falschen Schnappschuß erzeugen, den diese
+        // Aufgabe eigentlich verhindern soll.
+        if ($weatherMoment === WeatherMoment::End && $serviceJob->ended_at === null) {
+            return redirect()->back()->with('error', __('weather.retry_job_not_ended'));
+        }
+
         // Der Zeitpunkt, um dessen Wetter es geht — sonst holt der Knopf das
         // Wetter des Tages, an dem er gedrückt wurde. force, weil bei einem
         // nacherfaßten Einsatz genau der falsche Schnappschuß bereits liegt

@@ -5,6 +5,7 @@ return [
     'moment_end' => 'Bei Einsatzende',
     'retry_dispatched' => 'Wetterabfrage wurde erneut angestoßen.',
     'retry_no_coordinates' => 'Keine Koordinaten verfügbar – Wetterabfrage nicht möglich.',
+    'retry_job_not_ended' => 'Einsatz noch nicht beendet – Wetterabfrage für das Einsatzende nicht möglich.',
     'fetch_failed' => 'Wetterabfrage fehlgeschlagen.',
     'snapshot_start' => 'Wetter bei Einsatzbeginn',
     'snapshot_end' => 'Wetter bei Einsatzende',

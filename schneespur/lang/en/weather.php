@@ -5,6 +5,7 @@ return [
     'moment_end' => 'At job end',
     'retry_dispatched' => 'Weather fetch has been re-queued.',
     'retry_no_coordinates' => 'No coordinates available – weather fetch not possible.',
+    'retry_job_not_ended' => 'Job has not ended yet – weather fetch for job end not possible.',
     'fetch_failed' => 'Weather fetch failed.',
     'snapshot_start' => 'Weather at job start',
     'snapshot_end' => 'Weather at job end',
