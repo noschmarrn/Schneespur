@@ -183,17 +183,31 @@ class FormatDriftGuardTest extends TestCase
      * ließ sich auf ein US-Format umstellen. Die elfte darf nicht wieder so
      * anfangen.
      *
-     * Zwei Zusammensetzungsmuster zählen: ein Blade-Echo, das zip oder city
-     * direkt ausgibt (`{{ $o->zip }}`), und eine JS/Alpine-Zusammensetzung
-     * über Punktzugriff (`obj.city`), wie sie ein x-text mit .join()
-     * zusammenklebt. Der Zugriff im @if ($object->zip) ist erlaubt — die
-     * Frage "gibt es hier eine Adresse?" ist keine Formatierung.
+     * Drei Zusammensetzungsmuster zählen — die vier historischen Schreibweisen,
+     * die 331664c ersetzt hat, brauchen zwei Blade-Muster plus das
+     * JS/Alpine-Muster, um alle zu treffen:
+     * - ein Blade-Echo mit Pfeilzugriff auf zip/city, egal ob direkt
+     *   (`{{ $o->zip }}`), verschachtelt in implode()/array_filter() oder
+     *   sonst irgendwo innerhalb desselben `{{ … }}` (`{{[^}]*->(zip|city)`);
+     * - ein Blade-Echo einer bloßen $companyZip/$companyCity-Variable, wie
+     *   sie die PDF-Kopfzeile vor 331664c benutzte (`{{[^}]*\$\w*(Zip|City)`);
+     * - eine JS/Alpine-Zusammensetzung über Punktzugriff (`obj.city`), wie
+     *   sie ein x-text mit .join() zusammenklebt.
+     * Der Zugriff im @if ($object->zip) ist erlaubt — die Frage "gibt es
+     * hier eine Adresse?" ist keine Formatierung, und ohne `{{` feuert
+     * keines der beiden Blade-Muster.
+     *
+     * (trim("$street, $zip $city", ', ') — die elfte, in app/helpers.php —
+     * bleibt hier bewußt außen vor: kein Blade-Echo, und dieser Test prüft
+     * nur resources/views/.)
      *
      * Die Ausnahme wirkt zeilenweise über einen Fingerabdruck (den genauen
-     * Zeilentext), nicht dateiweit: eine neue, echte Adressausgabe in einer
-     * teilweise ausgenommenen Datei fällt trotzdem auf. Verschwindet ein
-     * gelisteter Fingerabdruck aus seiner Datei — etwa weil die Zeile
-     * umgeschrieben wurde —, meldet dieser Test die Ausnahme als
+     * Text des bekannten Ausschnitts), nicht dateiweit: der Fingerabdruck
+     * wird aus der Zeile herausgeschnitten, bevor die Zeile auf ein
+     * Erkennungsmuster geprüft wird — eine zweite, neue Zusammensetzung auf
+     * derselben Zeile wie eine bekannte Ausnahme fällt dadurch trotzdem auf.
+     * Verschwindet ein gelisteter Fingerabdruck aus seiner Datei — etwa weil
+     * die Zeile umgeschrieben wurde —, meldet dieser Test die Ausnahme als
      * Karteileiche.
      */
     public function test_no_view_composes_an_address_by_hand(): void
@@ -212,30 +226,35 @@ class FormatDriftGuardTest extends TestCase
             $lines = explode("\n", (string) file_get_contents($path));
 
             foreach ($lines as $line) {
-                $isOffense = preg_match('/->(zip|city)\s*\}\}/', $line) === 1
-                    || preg_match('/\.(zip|city)\b/', $line) === 1;
-
-                if (! $isOffense) {
-                    continue;
-                }
-
-                $exempted = false;
+                // Bekannte Fingerabdrücke aus der Zeile herausschneiden, bevor
+                // sie geprüft wird — sonst würde ein zweiter, neuer Verstoß
+                // auf derselben Zeile stillschweigend mit durchrutschen.
+                $remainder = $line;
 
                 foreach ($allowedHere as $fingerprint => $because) {
-                    if (str_contains($line, $fingerprint)) {
+                    if (str_contains($remainder, $fingerprint)) {
                         $matchedFingerprints["{$relative}\0{$fingerprint}"] = true;
-                        $exempted = true;
-                        break;
+                        $remainder = str_replace($fingerprint, '', $remainder);
                     }
                 }
 
-                if (! $exempted) {
-                    $offenders[] = $relative;
+                $isOffense = preg_match('/\{\{[^}]*->(zip|city)\b/', $remainder) === 1
+                    || preg_match('/\{\{[^}]*\$\w*(Zip|City)\b/', $remainder) === 1
+                    || preg_match('/\.(zip|city)\b/', $remainder) === 1;
+
+                if ($isOffense) {
+                    $offenders[] = "{$relative}: ".trim($line);
                 }
             }
         }
 
-        $this->assertSame([], $offenders, 'Use format_address()/format_address_lines() instead of composing an address in the view');
+        $this->assertSame(
+            [],
+            $offenders,
+            'Use format_address()/format_address_lines() instead of composing an address in the view. '
+                .'Known-safe partial compositions are listed in ADDRESS_ALLOWED with their reasons — '
+                .'if this line is one of them, add or update its fingerprint there instead of silencing the test.'
+        );
 
         // Ein Eintrag in ADDRESS_ALLOWED, der auf nichts mehr paßt, ist eine
         // Karteileiche — die Begründung ist dann für eine Zeile geschrieben,
@@ -273,11 +292,21 @@ class FormatDriftGuardTest extends TestCase
         $this->assertSame(0, preg_match('/\}\}\s*(mm|cm)\b/', '{{-- a comment --}}'));
         $this->assertSame(0, preg_match('/\'\s(mm|cm)\'/', '@page { margin: 15mm 15mm 18mm 15mm; }'));
 
-        // Das Adressmuster muß auf einem echten Verstoß feuern und beim @if
-        // schweigen, das nur fragt, ob überhaupt eine Adresse da ist.
-        $this->assertSame(1, preg_match('/->(zip|city)\s*\}\}/', '{{ $object->zip }} {{ $object->city }}'));
-        $this->assertSame(1, preg_match('/->(zip|city)\s*\}\}/', '{{ $o->city }}</span>'));
-        $this->assertSame(0, preg_match('/->(zip|city)\s*\}\}/', '@if ($object->zip || $object->city)'));
+        // Das Pfeilzugriff-Muster muß auf dem direkten Echo feuern, auf der
+        // verschachtelten implode()/array_filter()-Schreibweise (die alte,
+        // schmalere Fassung hätte das übersehen), und beim @if schweigen, das
+        // nur fragt, ob überhaupt eine Adresse da ist — ohne `{{` feuert es
+        // gar nicht erst.
+        $this->assertSame(1, preg_match('/\{\{[^}]*->(zip|city)\b/', '{{ $object->zip }} {{ $object->city }}'));
+        $this->assertSame(1, preg_match('/\{\{[^}]*->(zip|city)\b/', '{{ $o->city }}</span>'));
+        $this->assertSame(1, preg_match('/\{\{[^}]*->(zip|city)\b/', "{{ implode(' ', array_filter([\$object->zip, \$object->city])) }}"));
+        $this->assertSame(0, preg_match('/\{\{[^}]*->(zip|city)\b/', '@if ($object->zip || $object->city)'));
+
+        // Die bloße-Variable-Schreibweise der PDF-Kopfzeile vor 331664c
+        // ($companyZip/$companyCity) hat keinen Pfeilzugriff und braucht ein
+        // eigenes Muster.
+        $this->assertSame(1, preg_match('/\{\{[^}]*\$\w*(Zip|City)\b/', '{{ $companyZip }} {{ $companyCity }}'));
+        $this->assertSame(0, preg_match('/\{\{[^}]*\$\w*(Zip|City)\b/', '{{ $customer->name }}'));
 
         // Die JS/Alpine-Variante über Punktzugriff muß auf einer echten
         // Zusammensetzung feuern und bei einem bloß ähnlich aussehenden
