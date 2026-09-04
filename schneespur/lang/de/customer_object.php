@@ -25,7 +25,7 @@ return [
     'field_price_unit'         => 'Einheit',
     'field_lat'                => 'Breitengrad (optional)',
     'field_lon'                => 'Längengrad (optional)',
-    'field_plow_threshold'     => 'Räumen ab (cm)',
+    'field_plow_threshold'     => 'Räumen ab (:unit)',
     'field_salt_enabled'       => 'Salz verwenden',
     'field_site_notes'         => 'Einsatz-Notizen',
     'field_access_notes'       => 'Zufahrt / Zugang',
@@ -60,6 +60,7 @@ return [
     'geocode_address_required' => 'Bitte füllen Sie Straße, PLZ und Ort aus.',
     'validation_notification_email_required' => 'Das Feld Benachrichtigungs-E-Mail ist erforderlich, wenn Automatische Benachrichtigung aktiviert ist.',
     'validation_price_amount_invalid' => 'Der Preis konnte nicht gelesen werden. Bitte eine gültige, nicht negative Zahl eingeben.',
+    'validation_plow_threshold_invalid' => 'Bitte eine Zahl zwischen 0 und 999,99 eingeben.',
     'btn_objects'              => 'Objekte',
     'objects_count'            => ':count Objekt(e)',
 ];

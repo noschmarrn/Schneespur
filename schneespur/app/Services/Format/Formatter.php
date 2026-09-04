@@ -289,6 +289,26 @@ class Formatter
     }
 
     /**
+     * Die Einheit für Schneehöhen und Räumschwellen: 'cm' oder 'in'.
+     *
+     * Sie folgt unit_distance und hat bewußt keine eigene Einstellung — siehe
+     * die Begründung an snowDepth(). Diese Methode ist der Ort, an dem diese
+     * Entscheidung einmal steht, statt an jeder Stelle neu getroffen zu werden.
+     */
+    public function snowUnit(): string
+    {
+        return $this->setting('unit_distance') === 'imperial' ? 'in' : 'cm';
+    }
+
+    /** Die übersetzte Abkürzung derselben Einheit, für Feldbeschriftungen. */
+    public function snowUnitLabel(): string
+    {
+        return $this->snowUnit() === 'in'
+            ? __('format.unit_inch')
+            : __('format.unit_centimetre');
+    }
+
+    /**
      * Snow depth, stored in centimetres.
      *
      * Follows unit_distance rather than carrying a setting of its own: nobody
@@ -302,7 +322,7 @@ class Formatter
             return self::PLACEHOLDER;
         }
 
-        return $this->setting('unit_distance') === 'imperial'
+        return $this->snowUnit() === 'in'
             ? $this->number($centimetres / 2.54, 1) . ' ' . __('format.unit_inch')
             : $this->number($centimetres, 1) . ' ' . __('format.unit_centimetre');
     }

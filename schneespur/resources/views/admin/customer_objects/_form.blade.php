@@ -84,9 +84,10 @@
         <legend class="text-base font-semibold text-gray-900">{{ __('customer_object.fieldset_operations') }}</legend>
         <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-                <x-input-label for="plow_threshold_cm" :value="__('customer_object.field_plow_threshold')" />
-                <x-text-input id="plow_threshold_cm" name="plow_threshold_cm" type="number" min="0" max="255" step="1" class="mt-1 block w-full" :value="old('plow_threshold_cm', $object->plow_threshold_cm ?? '')" />
-                <x-input-error :messages="$errors->get('plow_threshold_cm')" class="mt-2" />
+                <x-input-label for="plow_threshold" :value="__('customer_object.field_plow_threshold', ['unit' => app(\App\Services\Format\Formatter::class)->snowUnitLabel()])" />
+                <x-text-input id="plow_threshold" name="plow_threshold" type="text" inputmode="decimal" class="mt-1 block w-full"
+                              :value="old('plow_threshold', $object->plow_threshold_value !== null ? format_number((float) $object->plow_threshold_value, 1) : '')" />
+                <x-input-error :messages="$errors->get('plow_threshold')" class="mt-2" />
             </div>
 
             <div class="flex items-center pt-6">

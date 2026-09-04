@@ -55,7 +55,24 @@ class StoreCustomerObjectRequest extends FormRequest
             ],
             'price_unit' => ['nullable', 'string', 'in:per_job,monthly,seasonal'],
             'site_notes' => ['nullable', 'string'],
-            'plow_threshold_cm' => ['nullable', 'integer', 'min:0', 'max:255'],
+            // Textfeld, nicht 'numeric': parseDecimal liest "5,1" im deutschen
+            // und "5.1" im englischen Zahlenformat. Genau wie price_amount
+            // zwanzig Zeilen weiter oben.
+            'plow_threshold' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    $parsed = app(Formatter::class)->parseDecimal((string) $value);
+
+                    if ($parsed === null || $parsed < 0 || $parsed > 999.99) {
+                        $fail(__('customer_object.validation_plow_threshold_invalid'));
+                    }
+                },
+            ],
             'salt_enabled' => ['boolean'],
             'access_notes' => ['nullable', 'string'],
             'lat' => ['nullable', 'numeric', 'between:-90,90'],
@@ -83,6 +100,16 @@ class StoreCustomerObjectRequest extends FormRequest
             unset($data['price_amount']);
         }
 
+        if ($key === null && array_key_exists('plow_threshold', $data)) {
+            $parsed = app(Formatter::class)->parseDecimal((string) $data['plow_threshold']);
+
+            $data['plow_threshold_value'] = $parsed;
+            // Keine Einheit ohne Wert: 'cm' bei leerem Feld stünde für eine
+            // Angabe, die niemand gemacht hat.
+            $data['plow_threshold_unit'] = $parsed === null ? null : app(Formatter::class)->snowUnit();
+            unset($data['plow_threshold']);
+        }
+
         return $data;
     }
 
@@ -102,7 +129,7 @@ class StoreCustomerObjectRequest extends FormRequest
             'price_amount' => __('customer_object.field_price_amount'),
             'price_unit' => __('customer_object.field_price_unit'),
             'site_notes' => __('customer_object.field_site_notes'),
-            'plow_threshold_cm' => __('customer_object.field_plow_threshold'),
+            'plow_threshold' => __('customer_object.field_plow_threshold', ['unit' => app(Formatter::class)->snowUnitLabel()]),
             'salt_enabled' => __('customer_object.field_salt_enabled'),
             'access_notes' => __('customer_object.field_access_notes'),
             'lat' => __('customer_object.field_lat'),

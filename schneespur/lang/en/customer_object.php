@@ -25,7 +25,7 @@ return [
     'field_price_unit'         => 'Unit',
     'field_lat'                => 'Latitude (optional)',
     'field_lon'                => 'Longitude (optional)',
-    'field_plow_threshold'     => 'Plow threshold (cm)',
+    'field_plow_threshold'     => 'Plow threshold (:unit)',
     'field_salt_enabled'       => 'Use salt',
     'field_site_notes'         => 'Job Notes',
     'field_access_notes'       => 'Access / Entrance',
@@ -60,6 +60,7 @@ return [
     'geocode_address_required' => 'Please fill in street, postal code and city.',
     'validation_notification_email_required' => 'The notification email field is required when automatic notification is enabled.',
     'validation_price_amount_invalid' => 'The price could not be read. Enter a valid, non-negative number.',
+    'validation_plow_threshold_invalid' => 'Please enter a number between 0 and 999.99.',
     'btn_objects'              => 'Objects',
     'objects_count'            => ':count object(s)',
 ];
