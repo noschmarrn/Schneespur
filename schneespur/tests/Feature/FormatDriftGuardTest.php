@@ -21,6 +21,37 @@ class FormatDriftGuardTest extends TestCase
         'lang/en/format.php',
     ];
 
+    /**
+     * Bekannte Adress-Teilzusammensetzungen außerhalb des Formatters — je mit
+     * dem genauen Text der betroffenen Zeile statt ihrer Nummer, denn die
+     * Nummer verschiebt sich mit jeder Änderung darüber, der Text nicht.
+     * Verschwindet ein gelisteter Text aus seiner Datei, meldet der Test die
+     * Ausnahme als Karteileiche — dann gehört sie entfernt, nicht
+     * stehengelassen. Eine ganze Datei freizuzeichnen wäre der falsche
+     * Hebel: dann würde eine spätere, echte Adressausgabe in derselben Datei
+     * lautlos durchrutschen.
+     *
+     * driver/dashboard.blade.php enthält daneben zwei weitere Stellen, die
+     * bewußt nur Teile einer Adresse anfassen, aber unten keinen Eintrag
+     * brauchen, weil kein Erkennungsmuster auf sie feuert: Zeile ~92 gibt in
+     * einer auf 120px beschnittenen Zeile nur die Straße aus (zip/city
+     * kommen dort gar nicht vor — eine vollständige Adresse wäre falsch,
+     * nicht richtiger), und Zeile ~337 trägt street/city in ein PHP-Array für
+     * ein JS-Array — Datentransport, keine Ausgabe. Sie stehen hier nur
+     * schriftlich, damit ihre Abwesenheit in der Liste nicht wie eine Lücke
+     * aussieht.
+     */
+    private const ADDRESS_ALLOWED = [
+        'resources/views/driver/dashboard.blade.php' => [
+            "x-text=\"[obj.street, obj.city].filter(Boolean).join(', ')\""
+                => 'street, city ist regionsneutral — der gemeinsame Anfang aller drei '
+                    .'Adressmuster, kein regionaler Unterschied wird hier sichtbar; die Zeile '
+                    .'ist auf 160px beschnitten, wo die volle Adresse den Ort aus dem '
+                    .'Sichtfeld drängen und die Objekt-Auswahl des Fahrers in jeder Region '
+                    .'verschlechtern würde.',
+        ],
+    ];
+
     /** @return list<string> */
     private function sources(): array
     {
@@ -147,6 +178,82 @@ class FormatDriftGuardTest extends TestCase
     }
 
     /**
+     * Zehn Views setzten die Adresse vor 1.2.1 jede für sich zusammen, in
+     * vier verschiedenen Schreibweisen — keine kannte den Bundesstaat, keine
+     * ließ sich auf ein US-Format umstellen. Die elfte darf nicht wieder so
+     * anfangen.
+     *
+     * Zwei Zusammensetzungsmuster zählen: ein Blade-Echo, das zip oder city
+     * direkt ausgibt (`{{ $o->zip }}`), und eine JS/Alpine-Zusammensetzung
+     * über Punktzugriff (`obj.city`), wie sie ein x-text mit .join()
+     * zusammenklebt. Der Zugriff im @if ($object->zip) ist erlaubt — die
+     * Frage "gibt es hier eine Adresse?" ist keine Formatierung.
+     *
+     * Die Ausnahme wirkt zeilenweise über einen Fingerabdruck (den genauen
+     * Zeilentext), nicht dateiweit: eine neue, echte Adressausgabe in einer
+     * teilweise ausgenommenen Datei fällt trotzdem auf. Verschwindet ein
+     * gelisteter Fingerabdruck aus seiner Datei — etwa weil die Zeile
+     * umgeschrieben wurde —, meldet dieser Test die Ausnahme als
+     * Karteileiche.
+     */
+    public function test_no_view_composes_an_address_by_hand(): void
+    {
+        $offenders = [];
+        $matchedFingerprints = [];
+
+        foreach ($this->sources() as $path) {
+            $relative = $this->relative($path);
+
+            if (! str_starts_with($relative, 'resources/views/')) {
+                continue;
+            }
+
+            $allowedHere = self::ADDRESS_ALLOWED[$relative] ?? [];
+            $lines = explode("\n", (string) file_get_contents($path));
+
+            foreach ($lines as $line) {
+                $isOffense = preg_match('/->(zip|city)\s*\}\}/', $line) === 1
+                    || preg_match('/\.(zip|city)\b/', $line) === 1;
+
+                if (! $isOffense) {
+                    continue;
+                }
+
+                $exempted = false;
+
+                foreach ($allowedHere as $fingerprint => $because) {
+                    if (str_contains($line, $fingerprint)) {
+                        $matchedFingerprints["{$relative}\0{$fingerprint}"] = true;
+                        $exempted = true;
+                        break;
+                    }
+                }
+
+                if (! $exempted) {
+                    $offenders[] = $relative;
+                }
+            }
+        }
+
+        $this->assertSame([], $offenders, 'Use format_address()/format_address_lines() instead of composing an address in the view');
+
+        // Ein Eintrag in ADDRESS_ALLOWED, der auf nichts mehr paßt, ist eine
+        // Karteileiche — die Begründung ist dann für eine Zeile geschrieben,
+        // die es nicht mehr gibt.
+        $stale = [];
+
+        foreach (self::ADDRESS_ALLOWED as $relative => $fingerprints) {
+            foreach ($fingerprints as $fingerprint => $because) {
+                if (! isset($matchedFingerprints["{$relative}\0{$fingerprint}"])) {
+                    $stale[] = "{$relative}: '{$fingerprint}' no longer found — remove or update this exception (was: {$because})";
+                }
+            }
+        }
+
+        $this->assertSame([], $stale, 'A listed address exception has gone stale');
+    }
+
+    /**
      * The guard is only worth having if it actually fires. This proves the
      * pattern matches what it claims to match, so a future refactor cannot
      * quietly turn the assertions above into "no files, therefore green".
@@ -165,5 +272,17 @@ class FormatDriftGuardTest extends TestCase
         $this->assertSame(1, preg_match('/:\w+\s(mm|cm)\b/', 'Wetter: :precipitation mm Niederschlag'));
         $this->assertSame(0, preg_match('/\}\}\s*(mm|cm)\b/', '{{-- a comment --}}'));
         $this->assertSame(0, preg_match('/\'\s(mm|cm)\'/', '@page { margin: 15mm 15mm 18mm 15mm; }'));
+
+        // Das Adressmuster muß auf einem echten Verstoß feuern und beim @if
+        // schweigen, das nur fragt, ob überhaupt eine Adresse da ist.
+        $this->assertSame(1, preg_match('/->(zip|city)\s*\}\}/', '{{ $object->zip }} {{ $object->city }}'));
+        $this->assertSame(1, preg_match('/->(zip|city)\s*\}\}/', '{{ $o->city }}</span>'));
+        $this->assertSame(0, preg_match('/->(zip|city)\s*\}\}/', '@if ($object->zip || $object->city)'));
+
+        // Die JS/Alpine-Variante über Punktzugriff muß auf einer echten
+        // Zusammensetzung feuern und bei einem bloß ähnlich aussehenden
+        // Bezeichner ("...pacity") stillbleiben, der kein Punkt-Präfix hat.
+        $this->assertSame(1, preg_match('/\.(zip|city)\b/', "[obj.street, obj.city].filter(Boolean).join(', ')"));
+        $this->assertSame(0, preg_match('/\.(zip|city)\b/', '{{ $object->capacity }}'));
     }
 }
