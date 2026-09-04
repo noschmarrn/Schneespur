@@ -33,10 +33,9 @@
                                     <td class="px-6 py-4 text-sm text-gray-500">
                                         @php $firstObject = $customer->objects->first(); @endphp
                                         @if ($firstObject)
-                                            @if ($firstObject->street)
-                                                <span class="block">{{ $firstObject->street }}</span>
-                                            @endif
-                                            <span>{{ implode(' ', array_filter([$firstObject->zip, $firstObject->city])) }}</span>
+                                            @foreach (format_address_lines($firstObject) as $line)
+                                                <span class="block">{{ $line }}</span>
+                                            @endforeach
                                             @if ($customer->objects->count() > 1)
                                                 <span class="text-xs text-gray-400">(+{{ $customer->objects->count() - 1 }})</span>
                                             @endif

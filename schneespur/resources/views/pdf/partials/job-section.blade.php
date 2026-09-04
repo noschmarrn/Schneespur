@@ -23,8 +23,9 @@
             <tr>
                 <td class="label">{{ __('job.pdf_address') }}</td>
                 <td class="value">
-                    {{ $addrSource->street }}@if($addrSource->street && ($addrSource->zip || $addrSource->city)),@endif
-                    {{ $addrSource->zip }} {{ $addrSource->city }}
+                    @foreach (format_address_lines($addrSource) as $line)
+                        {{ $line }}@if(! $loop->last)<br>@endif
+                    @endforeach
                 </td>
             </tr>
         @endif

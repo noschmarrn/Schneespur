@@ -145,6 +145,91 @@ class Formatter
         return $this->setting('address_format');
     }
 
+    /**
+     * Eine Adresse als Liste von Zeilen — die Wahrheit, aus der die einzeilige
+     * Form entsteht.
+     *
+     * Zehn Views setzten das vorher jede für sich zusammen, in vier
+     * verschiedenen Schreibweisen, und keine kannte den Bundesstaat.
+     *
+     * Rückgabe ist ein leeres Array, kein PLACEHOLDER: die Views entscheiden
+     * mit ihrem eigenen @if, ob sie etwas zeigen.
+     *
+     * @param  array<string, ?string>|object|null  $source  Ein Model, ein Array
+     *   mit street/zip/city/state, oder null.
+     * @return list<string>
+     */
+    public function addressLines(mixed $source): array
+    {
+        $parts = $this->addressParts($source);
+
+        $street = trim((string) ($parts['street'] ?? ''));
+        $zip = trim((string) ($parts['zip'] ?? ''));
+        $city = trim((string) ($parts['city'] ?? ''));
+        $state = trim((string) ($parts['state'] ?? ''));
+
+        $lines = [];
+
+        if ($street !== '') {
+            $lines[] = $street;
+        }
+
+        $locality = match ($this->addressFormat()) {
+            // "Minneapolis, MN 55401" — aber ohne Bundesstaat bliebe sonst ein
+            // hängendes Komma stehen: "Minneapolis, 55401".
+            'street_city_state_zip' => $state === ''
+                ? trim($city.' '.$zip)
+                : implode(', ', array_filter([$city, trim($state.' '.$zip)])),
+            // "London SW1A 2AA" — kein Komma vor der Postleitzahl.
+            'street_city_zip' => trim($city.' '.$zip),
+            // "94032 Passau"
+            default => trim($zip.' '.$city),
+        };
+
+        if ($locality !== '') {
+            $lines[] = $locality;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Die einzeilige Form. Sie ist genau das Verbinden der Zeilen mit ", " —
+     * in jedem der drei Muster steht die Straße auf einer eigenen Zeile und
+     * der Rest gehört zusammen.
+     *
+     * @param  array<string, ?string>|object|null  $source
+     */
+    public function address(mixed $source): string
+    {
+        return implode(', ', $this->addressLines($source));
+    }
+
+    /**
+     * @param  array<string, ?string>|object|null  $source
+     * @return array<string, ?string>
+     */
+    private function addressParts(mixed $source): array
+    {
+        if (is_array($source)) {
+            return $source;
+        }
+
+        if ($source === null) {
+            return [];
+        }
+
+        // Duck-typed statt gegen CustomerObject getypt: dieselbe Methode
+        // formatiert die Betriebsadresse aus den Einstellungen und, ab Phase 4,
+        // die Kundenadresse.
+        return [
+            'street' => $source->street ?? null,
+            'zip' => $source->zip ?? null,
+            'city' => $source->city ?? null,
+            'state' => $source->state ?? null,
+        ];
+    }
+
     public function csvDelimiter(): string
     {
         return $this->setting('csv_delimiter');

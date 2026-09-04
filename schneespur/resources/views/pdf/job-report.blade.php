@@ -52,6 +52,7 @@
         $companyStreet = \App\Models\Setting::get('company_street', '');
         $companyZip = \App\Models\Setting::get('company_zip', '');
         $companyCity = \App\Models\Setting::get('company_city', '');
+        $companyState = \App\Models\Setting::get('company_state', '');
         $companyPhone = \App\Models\Setting::get('company_phone', '');
         $companyEmail = \App\Models\Setting::get('company_email', '');
         $logoPath = \App\Models\Setting::get('company_logo_path');
@@ -75,12 +76,14 @@
                 @if ($companyName)
                     <td style="text-align: right;">
                         <div class="company" style="font-size: 10pt; font-weight: bold; color: #1e293b;">{{ $companyName }}</div>
-                        @if ($companyStreet)
-                            <div class="company">{{ $companyStreet }}</div>
-                        @endif
-                        @if ($companyZip || $companyCity)
-                            <div class="company">{{ $companyZip }} {{ $companyCity }}</div>
-                        @endif
+                        @foreach (format_address_lines([
+                            'street' => $companyStreet,
+                            'zip' => $companyZip,
+                            'city' => $companyCity,
+                            'state' => $companyState,
+                        ]) as $line)
+                            <div class="company">{{ $line }}</div>
+                        @endforeach
                         @if ($companyPhone)
                             <div class="company">{{ $companyPhone }}</div>
                         @endif
@@ -116,8 +119,9 @@
                 <tr>
                     <td class="label">{{ __('job.pdf_address') }}</td>
                     <td class="value">
-                        {{ $addrSource->street }}@if($addrSource->street && ($addrSource->zip || $addrSource->city)),@endif
-                        {{ $addrSource->zip }} {{ $addrSource->city }}
+                        @foreach (format_address_lines($addrSource) as $line)
+                            {{ $line }}@if(! $loop->last)<br>@endif
+                        @endforeach
                     </td>
                 </tr>
             @endif

@@ -35,10 +35,9 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $object->name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500">
-                                        @if ($object->street)
-                                            <span class="block">{{ $object->street }}</span>
-                                        @endif
-                                        <span>{{ implode(' ', array_filter([$object->zip, $object->city])) }}</span>
+                                        @foreach (format_address_lines($object) as $line)
+                                            <span class="block">{{ $line }}</span>
+                                        @endforeach
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $object->contact_name }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">

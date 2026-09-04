@@ -33,7 +33,7 @@
             @if($job->customerObject?->street)
                 <div>
                     <p class="text-xs text-gray-500">{{ __('driver.history_detail_address') }}</p>
-                    <p class="text-sm text-gray-300">{{ $job->customerObject->street }}, {{ $job->customerObject->zip }} {{ $job->customerObject->city }}</p>
+                    <p class="text-sm text-gray-300">{{ format_address($job->customerObject) }}</p>
                 </div>
             @endif
         </div>

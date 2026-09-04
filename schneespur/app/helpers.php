@@ -72,11 +72,12 @@ function dsgvo_apply_company_placeholders(string $text): string
     $street = Setting::get('company_street', '');
     $zip = Setting::get('company_zip', '');
     $city = Setting::get('company_city', '');
+    $state = Setting::get('company_state', '');
     $email = Setting::get('company_email', '');
     $dpo = Setting::get('dpo_contact', '');
     $dpoEmail = Setting::get('dpo_email', '');
 
-    $address = trim("$street, $zip $city", ', ');
+    $address = format_address(['street' => $street, 'zip' => $zip, 'city' => $city, 'state' => $state]);
 
     $map = [
         // German placeholders (default-template.blade.php)
@@ -176,4 +177,21 @@ function format_precipitation(?float $millimetres): string
 function format_weight(?float $kilograms): string
 {
     return app(\App\Services\Format\Formatter::class)->weight($kilograms);
+}
+
+/**
+ * @param  array<string, ?string>|object|null  $source
+ */
+function format_address(mixed $source): string
+{
+    return app(\App\Services\Format\Formatter::class)->address($source);
+}
+
+/**
+ * @param  array<string, ?string>|object|null  $source
+ * @return list<string>
+ */
+function format_address_lines(mixed $source): array
+{
+    return app(\App\Services\Format\Formatter::class)->addressLines($source);
 }
