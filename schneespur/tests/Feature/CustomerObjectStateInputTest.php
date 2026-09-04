@@ -89,6 +89,14 @@ class CustomerObjectStateInputTest extends TestCase
         $this->assertSame('BY', $object->state);
     }
 
+    /**
+     * This guards the controller side only (CustomerController::geocode()
+     * validating and forwarding a posted `state`) — it does NOT prove the
+     * form actually sends one. That half is covered separately below by
+     * rendering the form and inspecting its markup and inline script;
+     * this test alone would still pass if the JavaScript never sent
+     * `state` at all.
+     */
     public function test_the_geocode_endpoint_receives_and_forwards_the_state(): void
     {
         Http::fake([
@@ -107,5 +115,70 @@ class CustomerObjectStateInputTest extends TestCase
             ->assertOk();
 
         Http::assertSent(fn ($request) => str_contains($request->url(), 'state=MN'));
+    }
+
+    public function test_the_create_form_renders_a_state_input_with_its_label(): void
+    {
+        $customer = Customer::create(['name' => 'Kunde']);
+
+        $response = $this->actingAs($this->admin())
+            ->get("/admin/customers/{$customer->id}/objects/create")
+            ->assertOk();
+
+        // Specific enough to fail if the field were removed or renamed —
+        // not just "the word state appears somewhere on the page".
+        $response->assertSee('id="state"', false);
+        $response->assertSee('name="state"', false);
+        $response->assertSee(__('customer_object.field_state'), false);
+    }
+
+    public function test_the_edit_form_renders_a_state_input_with_its_label(): void
+    {
+        $customer = Customer::create(['name' => 'Kunde']);
+        $object = CustomerObject::create([
+            'customer_id' => $customer->id,
+            'name' => 'Hofeinfahrt',
+        ]);
+
+        $response = $this->actingAs($this->admin())
+            ->get("/admin/customers/{$customer->id}/objects/{$object->id}/edit")
+            ->assertOk();
+
+        $response->assertSee('id="state"', false);
+        $response->assertSee('name="state"', false);
+        $response->assertSee(__('customer_object.field_state'), false);
+    }
+
+    /**
+     * The rendered inline script builds the geocode request body as
+     * `JSON.stringify({ street, zip, city, state })`. Matching the whole
+     * line verbatim would break on ordinary reformatting (spacing,
+     * trailing comma, line wrap), so this pulls out the object literal
+     * passed to JSON.stringify(...) with a regex and asserts `state` is
+     * one of its keys, alongside street/zip/city — durable against
+     * reformatting, but red the moment `state` is dropped from the body.
+     */
+    public function test_the_create_forms_geocode_request_body_includes_the_state_key(): void
+    {
+        $customer = Customer::create(['name' => 'Kunde']);
+
+        $response = $this->actingAs($this->admin())
+            ->get("/admin/customers/{$customer->id}/objects/create")
+            ->assertOk();
+
+        $matched = preg_match(
+            '/JSON\.stringify\(\{\s*([^}]*?)\s*\}\)/',
+            $response->getContent(),
+            $matches
+        );
+
+        $this->assertSame(1, $matched, 'Expected a JSON.stringify({ ... }) call in the rendered form.');
+
+        $keys = array_map('trim', explode(',', $matches[1]));
+
+        $this->assertContains('street', $keys);
+        $this->assertContains('zip', $keys);
+        $this->assertContains('city', $keys);
+        $this->assertContains('state', $keys);
     }
 }
