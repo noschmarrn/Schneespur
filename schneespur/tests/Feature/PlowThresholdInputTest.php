@@ -108,21 +108,35 @@ class PlowThresholdInputTest extends TestCase
         $this->assertSame(50.8, $object->plowThresholdMm());
     }
 
-    public function test_an_empty_threshold_stores_neither_value_nor_unit(): void
+    /**
+     * Gibt der Nullbehandlung Zähne: eine frisch angelegte Zeile ist ohnehin
+     * null (beide Spalten sind nullable, ohne Default), also kann ein Test,
+     * der nur anlegt, gar nicht scheitern, egal ob validated() die Schlüssel
+     * überhaupt anfaßt. Erst das Löschen eines zuvor gesetzten Werts über den
+     * Update-Pfad beweist, daß ein leeres Feld die Spalten aktiv auf null
+     * setzt statt sie unberührt zu lassen.
+     */
+    public function test_clearing_a_previously_set_threshold_nulls_both_columns_on_update(): void
     {
         $this->region(['unit_distance' => 'metric']);
 
         $customer = Customer::create(['name' => 'Kunde']);
+        $object = CustomerObject::create([
+            'customer_id' => $customer->id,
+            'name' => 'Mit Schwelle',
+            'plow_threshold_value' => 5,
+            'plow_threshold_unit' => 'cm',
+        ]);
 
         $this->actingAs($this->admin())
-            ->post("/admin/customers/{$customer->id}/objects", [
-                'name' => 'Ohne Schwelle',
+            ->put("/admin/customers/{$customer->id}/objects/{$object->id}", [
+                'name' => 'Mit Schwelle',
                 'plow_threshold' => '',
                 'notify_recipients' => 'customer',
             ])
             ->assertSessionHasNoErrors();
 
-        $object = CustomerObject::where('name', 'Ohne Schwelle')->firstOrFail();
+        $object->refresh();
 
         $this->assertNull($object->plow_threshold_value);
         $this->assertNull($object->plow_threshold_unit);
@@ -153,5 +167,72 @@ class PlowThresholdInputTest extends TestCase
             ->get("/admin/customers/{$customer->id}/objects/create")
             ->assertSee('(in)', escape: false)
             ->assertDontSee('(cm)', escape: false);
+    }
+
+    /**
+     * I1: ein Objekt wurde in Zoll angelegt, der Betrieb ist seither auf
+     * metrisch umgestellt. Das Bearbeiten-Formular muß den gespeicherten
+     * Wert in die jetzt gültige Einheit umrechnen (2 in -> 5,08 cm) statt
+     * die rohe Spalte unter der neuen Beschriftung anzuzeigen — sonst
+     * stimmt Beschriftung und Zahl nicht überein, und ein unverändertes
+     * erneutes Speichern würde 50 mm zu 127 mm machen.
+     */
+    public function test_the_edit_form_converts_the_stored_threshold_into_the_current_unit(): void
+    {
+        $this->region(['unit_distance' => 'imperial', 'number_format' => 'comma_dot']);
+
+        $customer = Customer::create(['name' => 'Customer']);
+        $object = CustomerObject::create([
+            'customer_id' => $customer->id,
+            'name' => 'Parking lot',
+            'plow_threshold_value' => 2,
+            'plow_threshold_unit' => 'in',
+        ]);
+
+        $this->region(['unit_distance' => 'metric', 'number_format' => 'dot_comma']);
+
+        $this->actingAs($this->admin())
+            ->get("/admin/customers/{$customer->id}/objects/{$object->id}/edit")
+            ->assertSee('5,08', escape: false)
+            ->assertDontSee('value="2"', escape: false);
+    }
+
+    /**
+     * I2: 999,99 ist der dokumentierte Höchstwert (decimal(5,2)). Bei nur
+     * einer Nachkommastelle würde er als "1.000,0" angezeigt, und ein
+     * unverändertes erneutes Absenden schlüge fehl — an einem Wert, den das
+     * System selbst ins Feld geschrieben hat. Zwei Nachkommastellen bei der
+     * Anzeige machen den Rückweg verlustfrei.
+     */
+    public function test_the_edit_form_round_trips_full_precision_without_mutation(): void
+    {
+        $this->region(['unit_distance' => 'metric', 'number_format' => 'dot_comma']);
+
+        $customer = Customer::create(['name' => 'Kunde']);
+        $object = CustomerObject::create([
+            'customer_id' => $customer->id,
+            'name' => 'Präzise',
+            'plow_threshold_value' => 999.99,
+            'plow_threshold_unit' => 'cm',
+        ]);
+
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->get("/admin/customers/{$customer->id}/objects/{$object->id}/edit")
+            ->assertSee('999,99', escape: false)
+            ->assertDontSee('1.000,0', escape: false);
+
+        $this->actingAs($admin)
+            ->put("/admin/customers/{$customer->id}/objects/{$object->id}", [
+                'name' => 'Präzise',
+                'plow_threshold' => '999,99',
+                'notify_recipients' => 'customer',
+            ])
+            ->assertSessionHasNoErrors();
+
+        $object->refresh();
+
+        $this->assertSame(999.99, (float) $object->plow_threshold_value);
     }
 }

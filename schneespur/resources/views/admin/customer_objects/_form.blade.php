@@ -83,10 +83,31 @@
     <fieldset>
         <legend class="text-base font-semibold text-gray-900">{{ __('customer_object.fieldset_operations') }}</legend>
         <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            @php
+                // Der gespeicherte Wert steht in der Einheit, in der er
+                // eingegeben wurde ($object->plow_threshold_unit) — die
+                // Beschriftung aber nennt die aktuelle Einstellung
+                // (snowUnit()). Beide müssen dieselbe Zahl meinen: der
+                // millimetergenaue Zwischenwert wird deshalb neu in die
+                // aktuelle Einheit umgerechnet, statt den rohen Spaltenwert
+                // unter einer möglicherweise anderen Einheit anzuzeigen.
+                // plowThresholdMm() liefert null sowohl ohne Schwelle als
+                // auch bei unbekannter Einheit — in beiden Fällen bleibt das
+                // Feld leer.
+                $plowThresholdMm = $object->plowThresholdMm();
+                $plowThresholdDisplay = $plowThresholdMm === null
+                    ? ''
+                    : format_number(
+                        app(\App\Services\Format\Formatter::class)->snowUnit() === 'in'
+                            ? $plowThresholdMm / 25.4
+                            : $plowThresholdMm / 10,
+                        2
+                    );
+            @endphp
             <div>
                 <x-input-label for="plow_threshold" :value="__('customer_object.field_plow_threshold', ['unit' => app(\App\Services\Format\Formatter::class)->snowUnitLabel()])" />
                 <x-text-input id="plow_threshold" name="plow_threshold" type="text" inputmode="decimal" class="mt-1 block w-full"
-                              :value="old('plow_threshold', $object->plow_threshold_value !== null ? format_number((float) $object->plow_threshold_value, 1) : '')" />
+                              :value="old('plow_threshold', $plowThresholdDisplay)" />
                 <x-input-error :messages="$errors->get('plow_threshold')" class="mt-2" />
             </div>
 
