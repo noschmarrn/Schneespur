@@ -80,6 +80,9 @@ class FormatSettingsTest extends TestCase
             'unit_distance' => 'metric',
             'unit_temperature' => 'celsius',
             'unit_weight' => 'imperial',
+            'address_format' => 'street_city_state_zip',
+            'csv_delimiter' => ',',
+            'week_starts_on' => '7',
         ])->assertSessionHasNoErrors();
 
         $this->assertSame('metric', Setting::get('unit_distance'));
@@ -105,6 +108,9 @@ class FormatSettingsTest extends TestCase
                 'unit_distance' => 'metric',
                 'unit_temperature' => 'celsius',
                 'unit_weight' => 'metric',
+                'address_format' => 'street_zip_city',
+                'csv_delimiter' => ';',
+                'week_starts_on' => '1',
             ])
             ->assertSessionHasErrors('currency_position');
     }

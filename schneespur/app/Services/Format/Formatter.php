@@ -30,6 +30,9 @@ class Formatter
         'unit_distance' => 'metric',
         'unit_temperature' => 'celsius',
         'unit_weight' => 'metric',
+        'address_format' => 'street_zip_city',
+        'csv_delimiter' => ';',
+        'week_starts_on' => '1',
     ];
 
     private const DATE_PATTERNS = [
@@ -130,6 +133,27 @@ class Formatter
             'numberFormat' => $this->setting('number_format'),
             'timeZone' => (string) config('app.display_timezone', 'UTC'),
         ];
+    }
+
+    /**
+     * Die drei regionalen Einstellungen, die keine Zahl formatieren, aber
+     * denselben Weg gehen: Preset füllt sie, der Betrieb darf sie ändern, und
+     * genau eine Klasse liest sie.
+     */
+    public function addressFormat(): string
+    {
+        return $this->setting('address_format');
+    }
+
+    public function csvDelimiter(): string
+    {
+        return $this->setting('csv_delimiter');
+    }
+
+    /** 1 = Montag, 7 = Sonntag. Der einzige Ort, an dem der Text zur Zahl wird. */
+    public function weekStartsOn(): int
+    {
+        return $this->setting('week_starts_on') === '7' ? 7 : 1;
     }
 
     public function dateTime(?DateTimeInterface $moment, bool $withSeconds = false): string
