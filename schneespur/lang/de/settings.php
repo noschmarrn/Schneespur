@@ -8,13 +8,14 @@ return [
     'company_street'             => 'Straße & Hausnummer',
     'company_zip'                => 'PLZ',
     'company_city'               => 'Ort',
+    'company_state'              => 'Bundesland / Kanton',
     'company_phone'              => 'Telefon',
     'company_email'              => 'E-Mail',
     'company_lat'                => 'Breitengrad',
     'company_lon'                => 'Längengrad',
     'company_geocode_success'    => 'Adresse erfolgreich aufgelöst.',
-    'company_geocode_fail'       => 'Adresse konnte nicht aufgelöst werden. Bitte Koordinaten manuell eingeben.',
-    'company_geocode_manual_hint' => 'Koordinaten werden automatisch aus der Adresse ermittelt. Falls die Auflösung fehlschlägt, können Sie Breiten- und Längengrad manuell eintragen.',
+    'company_geocode_fail'       => 'Adresse konnte nicht aufgelöst werden. Bitte Straße, PLZ und Ort prüfen.',
+    'company_geocode_manual_hint' => 'Koordinaten werden automatisch aus der Adresse ermittelt.',
 
     // Datenschutzbeauftragter
     'dpo_title'                  => 'Datenschutzbeauftragter',

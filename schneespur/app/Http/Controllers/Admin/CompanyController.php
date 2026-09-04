@@ -23,6 +23,7 @@ class CompanyController extends Controller
             'company_street' => Setting::get('company_street', ''),
             'company_zip' => Setting::get('company_zip', ''),
             'company_city' => Setting::get('company_city', ''),
+            'company_state' => Setting::get('company_state', ''),
             'company_phone' => Setting::get('company_phone', ''),
             'company_email' => Setting::get('company_email', ''),
             'company_lat' => Setting::get('company_lat'),
@@ -50,6 +51,7 @@ class CompanyController extends Controller
             'company_street' => ['nullable', 'string', 'max:255'],
             'company_zip' => ['nullable', 'string', 'max:10'],
             'company_city' => ['nullable', 'string', 'max:255'],
+            'company_state' => ['nullable', 'string', 'max:64'],
             'company_phone' => ['nullable', 'string', 'max:50'],
             'company_email' => ['nullable', 'email', 'max:255'],
             'dpo_contact' => ['nullable', 'string', 'max:255'],
@@ -75,6 +77,7 @@ class CompanyController extends Controller
         Setting::set('company_street', $validated['company_street'] ?? '');
         Setting::set('company_zip', $validated['company_zip'] ?? '');
         Setting::set('company_city', $validated['company_city'] ?? '');
+        Setting::set('company_state', $validated['company_state'] ?? '');
         Setting::set('company_phone', $validated['company_phone'] ?? '');
         Setting::set('company_email', $validated['company_email'] ?? '');
         Setting::set('dpo_contact', $validated['dpo_contact'] ?? '');
@@ -92,13 +95,10 @@ class CompanyController extends Controller
         $street = $validated['company_street'] ?? '';
         $zip = $validated['company_zip'] ?? '';
         $city = $validated['company_city'] ?? '';
+        $state = $validated['company_state'] ?? '';
 
         if ($street !== '' && $zip !== '' && $city !== '') {
-            $oldStreet = Setting::get('company_street', '');
-            $oldZip = Setting::get('company_zip', '');
-            $oldCity = Setting::get('company_city', '');
-
-            $result = $geocoding->resolve($street, $zip, $city);
+            $result = $geocoding->resolve($street, $zip, $city, $state);
 
             if ($result) {
                 Setting::set('company_lat', (string) $result['lat']);
