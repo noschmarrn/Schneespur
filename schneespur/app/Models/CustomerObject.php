@@ -69,9 +69,14 @@ class CustomerObject extends Model
 
         $value = (float) $this->plow_threshold_value;
 
-        return $this->plow_threshold_unit === 'in'
-            ? round($value * 25.4, 2)
-            : round($value * 10, 2);
+        return match ($this->plow_threshold_unit) {
+            'in' => round($value * 25.4, 2),
+            'cm' => round($value * 10, 2),
+            // Eine Einheit, die weder cm noch in ist, ist keine Angabe, aus der
+            // sich räumen läßt. Sie still als Zentimeter zu lesen ergäbe ein
+            // Vielfaches daneben — dieselbe Falle wie 0.0 statt „unbekannt".
+            default => null,
+        };
     }
 
     public function customer(): BelongsTo

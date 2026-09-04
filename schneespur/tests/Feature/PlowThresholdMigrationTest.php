@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\CustomerObject;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -112,15 +113,69 @@ class PlowThresholdMigrationTest extends TestCase
         $this->assertSame(255, (int) DB::table('customer_objects')->find($id)->plow_threshold_cm);
     }
 
-    public function test_up_is_repeatable_after_a_broken_run(): void
+    /**
+     * Shared Hosting ohne CLI: der Web-Request kann mitten in der Migration
+     * enden. Der nächste Aufruf muß dort weitermachen, wo der erste aufhörte —
+     * und zwar auch dann, wenn er mitten zwischen zwei ALTER-Statements endete.
+     */
+    public function test_up_finishes_a_run_that_died_after_the_state_column(): void
     {
-        // Shared Hosting ohne CLI: der Web-Request kann mitten in der Migration
-        // enden. Ein zweiter Aufruf darf dann nicht an "column already exists"
-        // scheitern.
-        $this->migration()->up();
-        $this->migration()->up();
+        $m = $this->migration();
+        $m->down();
+
+        Schema::table('customer_objects', fn (Blueprint $t) => $t->string('state', 64)->nullable());
+        // Hier stirbt der Request: state da, die zwei Schwellen-Spalten fehlen,
+        // plow_threshold_cm steht noch.
+
+        $m->up();
 
         $this->assertTrue(Schema::hasColumn('customer_objects', 'plow_threshold_value'));
+        $this->assertTrue(Schema::hasColumn('customer_objects', 'plow_threshold_unit'));
+        $this->assertFalse(Schema::hasColumn('customer_objects', 'plow_threshold_cm'));
+    }
+
+    /**
+     * Der Fall, der den Wächter je Spalte erzwingt: ein Schema::table() mit
+     * zwei Spalten sind zwei ALTER-Statements, und der Request kann zwischen
+     * ihnen enden.
+     */
+    public function test_up_finishes_a_run_that_died_between_the_two_threshold_columns(): void
+    {
+        $m = $this->migration();
+        $m->down();
+
+        Schema::table('customer_objects', fn (Blueprint $t) => $t->string('state', 64)->nullable());
+        Schema::table('customer_objects', fn (Blueprint $t) => $t->decimal('plow_threshold_value', 5, 2)->nullable());
+        // Hier stirbt der Request: die Einheiten-Spalte fehlt noch.
+
+        $m->up();
+
+        $this->assertTrue(Schema::hasColumn('customer_objects', 'plow_threshold_unit'));
+        $this->assertFalse(Schema::hasColumn('customer_objects', 'plow_threshold_cm'));
+    }
+
+    public function test_up_moves_a_measured_zero_across_as_zero_not_as_empty(): void
+    {
+        // Die alte Spalte erlaubte min:0. Eine gemessene Null ist eine Angabe,
+        // keine fehlende — dieselbe Grenze, die die Schneehöhe in Phase 2 zog.
+        $m = $this->migration();
+        $m->down();
+
+        $id = DB::table('customer_objects')->insertGetId([
+            'customer_id' => $this->customerId(),
+            'name' => 'Gemessene Null',
+            'plow_threshold_cm' => 0,
+            'notify_recipients' => 'customer',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $m->up();
+
+        $row = DB::table('customer_objects')->find($id);
+
+        $this->assertSame(0.0, (float) $row->plow_threshold_value);
+        $this->assertSame('cm', $row->plow_threshold_unit);
     }
 
     public function test_the_accessor_converts_both_units_to_millimetres(): void
@@ -154,6 +209,21 @@ class PlowThresholdMigrationTest extends TestCase
 
         // Nicht 0.0: "keine Schwelle gesetzt" heißt nicht "räume ab 0 mm".
         // Dieselbe Unterscheidung, die Phase 2 für die Schneehöhe erzwang.
+        $this->assertNull($object->plowThresholdMm());
+    }
+
+    public function test_the_accessor_is_null_for_an_unknown_unit(): void
+    {
+        // plow_threshold_unit ist ein ungeprüfter string(4). Eine Einheit, die
+        // weder 'cm' noch 'in' ist, still als Zentimeter zu lesen ergäbe ein
+        // Vielfaches daneben — derselbe Fehlertyp wie 0.0 statt "unbekannt".
+        $object = CustomerObject::create([
+            'customer_id' => $this->customerId(),
+            'name' => 'Unbekannte Einheit',
+            'plow_threshold_value' => 5.00,
+            'plow_threshold_unit' => 'xx',
+        ]);
+
         $this->assertNull($object->plowThresholdMm());
     }
 }

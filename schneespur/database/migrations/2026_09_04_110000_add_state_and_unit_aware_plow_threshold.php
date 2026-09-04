@@ -43,6 +43,15 @@ return new class extends Migration
                 // 5,2 trägt 999,99 — mehr als jede reale Räumschwelle, in
                 // Zentimetern wie in Zoll.
                 $table->decimal('plow_threshold_value', 5, 2)->nullable();
+            });
+        }
+
+        if (! Schema::hasColumn('customer_objects', 'plow_threshold_unit')) {
+            // Eigener Wächter, eigenes Schema::table(): ein Blueprint mit zwei
+            // Spalten baut zwei getrennte ALTER-Statements. Stirbt der
+            // Web-Request zwischen ihnen, muß der nächste Aufruf erkennen
+            // können, daß genau diese Spalte noch fehlt.
+            Schema::table('customer_objects', function (Blueprint $table) {
                 $table->string('plow_threshold_unit', 4)->nullable();
             });
         }
@@ -92,7 +101,18 @@ return new class extends Migration
                 });
 
             Schema::table('customer_objects', function (Blueprint $table) {
-                $table->dropColumn(['plow_threshold_value', 'plow_threshold_unit']);
+                $table->dropColumn('plow_threshold_value');
+            });
+        }
+
+        if (Schema::hasColumn('customer_objects', 'plow_threshold_unit')) {
+            // Eigener, von 'plow_threshold_value' unabhängiger Wächter: das
+            // alte dropColumn(['value', 'unit']) war ein zweites
+            // ALTER-Statement. Stirbt der Request dazwischen, existiert 'unit'
+            // verwaist weiter, obwohl 'value' schon weg ist — dieser Block muß
+            // sie unabhängig vom Value-Zustand finden und aufräumen können.
+            Schema::table('customer_objects', function (Blueprint $table) {
+                $table->dropColumn('plow_threshold_unit');
             });
         }
 
