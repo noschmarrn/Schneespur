@@ -297,14 +297,14 @@ class AppServiceProvider extends ServiceProvider
         $registry = $this->app->make(RegionRegistry::class);
 
         foreach ([
-            // code  label                currency  pos       number           date          time   dist        temp          weight
-            ['de',   'Deutschland',       'EUR',    'after',  'dot_comma',     'dmy_dot',    '24h', 'metric',   'celsius',    'metric'],
-            ['at',   'Österreich',        'EUR',    'after',  'dot_comma',     'dmy_dot',    '24h', 'metric',   'celsius',    'metric'],
-            ['ch',   'Schweiz',           'CHF',    'before', 'apostrophe_dot', 'dmy_dot',   '24h', 'metric',   'celsius',    'metric'],
-            ['us',   'United States',     'USD',    'before', 'comma_dot',     'mdy_slash',  '12h', 'imperial', 'fahrenheit', 'imperial'],
-            ['ca',   'Canada',            'CAD',    'before', 'comma_dot',     'dmy_slash',  '12h', 'metric',   'celsius',    'metric'],
-            ['gb',   'United Kingdom',    'GBP',    'before', 'comma_dot',     'dmy_slash',  '24h', 'imperial', 'celsius',    'metric'],
-        ] as [$code, $label, $cur, $pos, $num, $date, $time, $dist, $temp, $weight]) {
+            // code  label              currency  pos       number            date         time   dist        temp          weight       address                   csv  week
+            ['de',   'Deutschland',     'EUR',    'after',  'dot_comma',      'dmy_dot',   '24h', 'metric',   'celsius',    'metric',    'street_zip_city',        ';', 1],
+            ['at',   'Österreich',      'EUR',    'after',  'dot_comma',      'dmy_dot',   '24h', 'metric',   'celsius',    'metric',    'street_zip_city',        ';', 1],
+            ['ch',   'Schweiz',         'CHF',    'before', 'apostrophe_dot', 'dmy_dot',   '24h', 'metric',   'celsius',    'metric',    'street_zip_city',        ';', 1],
+            ['us',   'United States',   'USD',    'before', 'comma_dot',      'mdy_slash', '12h', 'imperial', 'fahrenheit', 'imperial',  'street_city_state_zip',  ',', 7],
+            ['ca',   'Canada',          'CAD',    'before', 'comma_dot',      'dmy_slash', '12h', 'metric',   'celsius',    'metric',    'street_city_state_zip',  ',', 7],
+            ['gb',   'United Kingdom',  'GBP',    'before', 'comma_dot',      'dmy_slash', '24h', 'imperial', 'celsius',    'metric',    'street_city_zip',        ',', 1],
+        ] as [$code, $label, $cur, $pos, $num, $date, $time, $dist, $temp, $weight, $addr, $csv, $week]) {
             $registry->add(new RegionPreset(
                 code: $code,
                 label: $label,
@@ -316,6 +316,9 @@ class AppServiceProvider extends ServiceProvider
                 unitDistance: $dist,
                 unitTemperature: $temp,
                 unitWeight: $weight,
+                addressFormat: $addr,
+                csvDelimiter: $csv,
+                weekStartsOn: $week,
             ));
         }
     }
