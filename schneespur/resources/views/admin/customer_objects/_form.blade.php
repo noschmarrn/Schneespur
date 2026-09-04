@@ -26,6 +26,12 @@
                 <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $object->city ?? '')" />
                 <x-input-error :messages="$errors->get('city')" class="mt-2" />
             </div>
+
+            <div>
+                <x-input-label for="state" :value="__('customer_object.field_state')" />
+                <x-text-input id="state" name="state" type="text" class="mt-1 block w-full" :value="old('state', $object->state ?? '')" maxlength="64" />
+                <x-input-error :messages="$errors->get('state')" class="mt-2" />
+            </div>
         </div>
     </fieldset>
 
@@ -171,6 +177,7 @@
                     const street = document.getElementById('street')?.value?.trim();
                     const zip = document.getElementById('zip')?.value?.trim();
                     const city = document.getElementById('city')?.value?.trim();
+                    const state = document.getElementById('state')?.value?.trim();
                     if (!street || !zip || !city) {
                         this.success = false;
                         this.message = @json(__('customer_object.geocode_address_required'));
@@ -186,7 +193,7 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                                 'Accept': 'application/json',
                             },
-                            body: JSON.stringify({ street, zip, city }),
+                            body: JSON.stringify({ street, zip, city, state }),
                         });
                         const data = await resp.json();
                         if (resp.ok) {

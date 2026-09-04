@@ -18,6 +18,7 @@ return [
     'field_street'             => 'Straße',
     'field_zip'                => 'PLZ',
     'field_city'               => 'Ort',
+    'field_state'              => 'Bundesland / Kanton',
     'field_contact_name'       => 'Kontaktperson',
     'field_contact_email'      => 'E-Mail',
     'field_contact_phone'      => 'Telefon',

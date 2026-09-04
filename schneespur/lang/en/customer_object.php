@@ -18,6 +18,7 @@ return [
     'field_street'             => 'Street',
     'field_zip'                => 'Postal Code',
     'field_city'               => 'City',
+    'field_state'              => 'State / Province',
     'field_contact_name'       => 'Contact Person',
     'field_contact_email'      => 'Email',
     'field_contact_phone'      => 'Phone',
