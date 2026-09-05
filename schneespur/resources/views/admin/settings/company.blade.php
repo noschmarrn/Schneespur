@@ -31,7 +31,9 @@
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-4 gap-4">
+                {{-- Vier Spalten erst ab sm: auf 375px blieben PLZ und Bundesland
+                     sonst rund 70px breit. --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
                         <label for="company_zip" class="block text-sm font-medium text-gray-700">{{ __('settings.company_zip') }}</label>
                         <input type="text" name="company_zip" id="company_zip"
