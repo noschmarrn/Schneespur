@@ -11,6 +11,7 @@ use App\Models\WorkShift;
 use App\Services\CsvExportService;
 use App\Services\Format\Formatter;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -102,5 +103,15 @@ class CsvDelimiterTest extends TestCase
         $this->assertStringContainsString(__('export.csv_col_object_state'), $csv);
         $this->assertStringContainsString('Objekt-Bundesland / Kanton', $csv);
         $this->assertStringContainsString('MN', $csv);
+
+        // Die App läuft standardmäßig unter 'de' (config/app.php), das löst
+        // direkt auf und berührt den 'en'-Fallback nie. Ohne diese zweite
+        // Zusicherung könnte lang/en/export.php den Schlüssel verlieren, ohne
+        // daß es ein Test hier bemerkt — ein US-Betrieb bekäme dann den rohen
+        // Schlüssel als Spaltenkopf.
+        App::setLocale('en');
+        $csvEn = $this->csv(';');
+
+        $this->assertStringContainsString('Site State / Province', $csvEn);
     }
 }
