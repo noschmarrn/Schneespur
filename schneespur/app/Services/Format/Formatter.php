@@ -3,6 +3,7 @@
 namespace App\Services\Format;
 
 use App\Models\Setting;
+use Carbon\Carbon;
 use DateTimeInterface;
 use DateTimeZone;
 
@@ -247,6 +248,21 @@ class Formatter
     public function weekStartsOn(): int
     {
         return $this->setting('week_starts_on') === '7' ? 7 : 1;
+    }
+
+    /**
+     * Derselbe Wochenanfang in Carbons Zählung — die Zahl, die
+     * startOfWeek() erwartet.
+     *
+     * Carbon zählt NICHT nach ISO: Carbon::SUNDAY ist 0, nicht 7. Ein direkt
+     * durchgereichtes weekStartsOn() wäre für die Sonntagswoche stillschweigend
+     * falsch — startOfWeek(7) ist außerhalb des Bereichs 0–6, und „diese Woche"
+     * spränge auf einen falschen Tag, ohne daß irgendetwas bricht. Die
+     * Umrechnung steht deshalb hier einmal, statt an jeder Aufrufstelle neu.
+     */
+    public function weekStartsOnCarbon(): int
+    {
+        return $this->weekStartsOn() === 7 ? Carbon::SUNDAY : Carbon::MONDAY;
     }
 
     public function dateTime(?DateTimeInterface $moment, bool $withSeconds = false): string

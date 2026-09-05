@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Job;
+use App\Services\Format\Formatter;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -108,7 +109,13 @@ class CustomerReportController extends Controller
 
         return [
             'week' => [
-                'from' => $now->copy()->startOfWeek()->format('Y-m-d'),
+                // Carbons Zählung, nicht ISO: Carbon::SUNDAY ist 0. Der
+                // Formatter rechnet das um — sonst zeigte ein US-Betrieb einen
+                // sonntags beginnenden Kalender neben einem montags
+                // beginnenden „This week"-Knopf.
+                'from' => $now->copy()
+                    ->startOfWeek(app(Formatter::class)->weekStartsOnCarbon())
+                    ->format('Y-m-d'),
                 'to' => $now->format('Y-m-d'),
             ],
             'month' => [
