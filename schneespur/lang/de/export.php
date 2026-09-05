@@ -9,7 +9,7 @@ return [
     'csv_col_object_street' => 'Objekt-Straße',
     'csv_col_object_zip'   => 'Objekt-PLZ',
     'csv_col_object_city'  => 'Objekt-Ort',
-    'csv_col_object_state' => 'Objekt-Bundesland',
+    'csv_col_object_state' => 'Objekt-Bundesland / Kanton',
     'csv_col_type'         => 'Art',
     'csv_col_start'        => 'Beginn',
     'csv_col_end'          => 'Ende',

@@ -87,7 +87,7 @@ class CsvDelimiterTest extends TestCase
         $csv = $this->csv(',');
 
         $this->assertStringContainsString('"Summit Snow",', $csv);
-        $this->assertStringNotContainsString('Summit Snow;', $csv);
+        $this->assertStringNotContainsString('"Summit Snow";', $csv);
     }
 
     public function test_the_state_has_its_own_column(): void
@@ -96,7 +96,11 @@ class CsvDelimiterTest extends TestCase
 
         $csv = $this->csv(';');
 
+        // Literaltext statt bloß __() gegen sich selbst: fehlte der Schlüssel
+        // in beiden Sprachdateien, gäbe __() auf beiden Seiten den rohen
+        // Schlüssel zurück und die Zusicherung bliebe trotzdem grün.
         $this->assertStringContainsString(__('export.csv_col_object_state'), $csv);
+        $this->assertStringContainsString('Objekt-Bundesland / Kanton', $csv);
         $this->assertStringContainsString('MN', $csv);
     }
 }
