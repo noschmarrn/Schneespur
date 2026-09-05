@@ -9,6 +9,7 @@ return [
     'csv_col_object_street' => 'Site Street',
     'csv_col_object_zip'   => 'Site Zip',
     'csv_col_object_city'  => 'Site City',
+    'csv_col_object_state' => 'Object State',
     'csv_col_type'         => 'Type',
     'csv_col_start'        => 'Start',
     'csv_col_end'          => 'End',
