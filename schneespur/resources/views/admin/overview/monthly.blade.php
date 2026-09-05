@@ -67,17 +67,25 @@
         <div x-data="{ expandedDay: null, dayHtml: '', loading: false }" class="bg-white overflow-hidden shadow-sm rounded-lg">
             @php
                 $firstDay = $month->copy()->startOfMonth();
+                $weekStart = app(\App\Services\Format\Formatter::class)->weekStartsOn();
                 $startDow = $firstDay->dayOfWeekIso;
                 $daysInMonth = $month->daysInMonth;
-                $leadingBlanks = $startDow - 1;
-                {{-- 'Today' in UTC is the wrong day west of Greenwich from the
-                     late afternoon onwards — the calendar marked the wrong cell. --}}
+                // Für die Montagswoche ist das exakt das frühere $startDow - 1;
+                // für die Sonntagswoche verschiebt es um genau einen Tag.
+                $leadingBlanks = ($startDow - $weekStart + 7) % 7;
+                // 'Today' in UTC is the wrong day west of Greenwich from the
+                // late afternoon onwards — the calendar marked the wrong cell.
                 $today = now()->setTimezone(config('app.display_timezone'))->format('Y-m-d');
+
+                $dayKeys = ['day_mo', 'day_di', 'day_mi', 'day_do', 'day_fr', 'day_sa', 'day_so'];
+                if ($weekStart === 7) {
+                    array_unshift($dayKeys, array_pop($dayKeys));
+                }
             @endphp
 
             {{-- Day name headers --}}
             <div class="grid grid-cols-7 border-b border-gray-200">
-                @foreach(['day_mo', 'day_di', 'day_mi', 'day_do', 'day_fr', 'day_sa', 'day_so'] as $dayKey)
+                @foreach($dayKeys as $dayKey)
                     <div class="py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         {{ __('overview.' . $dayKey) }}
                     </div>
