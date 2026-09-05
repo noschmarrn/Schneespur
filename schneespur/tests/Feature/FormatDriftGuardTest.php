@@ -52,6 +52,14 @@ class FormatDriftGuardTest extends TestCase
         ],
     ];
 
+    /**
+     * Eine Adreß-Zusammensetzung in reinem PHP: ein Zugriff auf zip oder city,
+     * an den auf derselben Zeile eine Zeichenketten-Verkettung grenzt — davor
+     * (`$line .= ', ' . trim(($o->zip …`) oder dahinter (`$o->city . ', '`).
+     * Der bloße Zugriff bleibt erlaubt; siehe die Begründung am Test.
+     */
+    private const PHP_ADDRESS_PATTERN = '/(?:\.\s*[^;]{0,40}->(?:zip|city)\b|->(?:zip|city)\b[^;]{0,40}\s\.\s)/';
+
     /** @return list<string> */
     private function sources(): array
     {
@@ -197,9 +205,11 @@ class FormatDriftGuardTest extends TestCase
      * hier eine Adresse?" ist keine Formatierung, und ohne `{{` feuert
      * keines der beiden Blade-Muster.
      *
-     * (trim("$street, $zip $city", ', ') — die elfte, in app/helpers.php —
-     * bleibt hier bewußt außen vor: kein Blade-Echo, und dieser Test prüft
-     * nur resources/views/.)
+     * (trim("$street, $zip $city", ', ') in app/helpers.php und die
+     * Bildunterschrift in app/Services/PhotoAnnotationService.php bleiben
+     * hier bewußt außen vor: kein Blade-Echo, und dieser Test prüft nur
+     * resources/views/. Für PHP-Quelltext unter app/ gibt es den eigenen
+     * Test darunter.)
      *
      * Die Ausnahme wirkt zeilenweise über einen Fingerabdruck (den genauen
      * Text des bekannten Ausschnitts), nicht dateiweit: der Fingerabdruck
@@ -273,6 +283,63 @@ class FormatDriftGuardTest extends TestCase
     }
 
     /**
+     * Das Muster für PHP-Quelltext unter app/ — die Lücke, durch die die
+     * zwölfte Zusammensetzung fiel.
+     *
+     * `PhotoAnnotationService::buildMetadataLines()` klebte die Adresse in
+     * fester deutscher Reihenfolge und ohne Bundesstaat zusammen und brannte
+     * sie in jedes hochgeladene Einsatzfoto. Der Test darüber sah sie aus
+     * zwei Gründen nicht: er steigt bei allem aus, was nicht unter
+     * resources/views/ liegt, und seine drei Muster verlangen alle ein `{{`
+     * oder einen Punktzugriff — `$object->zip` in reinem PHP trifft keines.
+     *
+     * Das Muster hier ist bewußt eng: es feuert nicht auf den bloßen Zugriff
+     * (`$job->customerObject?->zip ?? ''` als eigene CSV-Spalte ist richtig
+     * so, und `$geocoding->resolve($request->zip, …)` gibt die Teile bewußt
+     * einzeln weiter), sondern nur, wenn auf derselben Zeile eine
+     * Zeichenketten-Verkettung an den Zugriff grenzt — also genau dann, wenn
+     * aus Teilen eine Adresse zusammengesetzt statt weitergereicht wird.
+     *
+     * Straße allein steht nicht in der Alternation, aus demselben Grund wie
+     * oben: sie ist regionsneutral. Wer die Adresse wieder von Hand baut,
+     * braucht Ort oder Postleitzahl dazu, und spätestens die fallen auf.
+     *
+     * Eine Ausnahmeliste gibt es hier nicht, weil es im heutigen Baum keine
+     * einzige legitime Fundstelle gibt. Kommt eine dazu, gehört sie
+     * zeilengenau ausgenommen — wie ADDRESS_ALLOWED es vormacht —, nicht
+     * dateiweit.
+     */
+    public function test_no_php_source_composes_an_address_by_hand(): void
+    {
+        $offenders = [];
+
+        foreach ($this->sources() as $path) {
+            $relative = $this->relative($path);
+
+            if (! str_starts_with($relative, 'app/')) {
+                continue;
+            }
+
+            if ($relative === 'app/Services/Format/Formatter.php') {
+                continue;
+            }
+
+            foreach (explode("\n", (string) file_get_contents($path)) as $number => $line) {
+                if (preg_match(self::PHP_ADDRESS_PATTERN, $line) === 1) {
+                    $offenders[] = "{$relative}:".($number + 1).': '.trim($line);
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            'Use format_address()/format_address_lines() instead of concatenating an address in PHP. '
+                .'A photo caption composed this way was burned into every uploaded job photo.'
+        );
+    }
+
+    /**
      * The guard is only worth having if it actually fires. This proves the
      * pattern matches what it claims to match, so a future refactor cannot
      * quietly turn the assertions above into "no files, therefore green".
@@ -313,5 +380,30 @@ class FormatDriftGuardTest extends TestCase
         // Bezeichner ("...pacity") stillbleiben, der kein Punkt-Präfix hat.
         $this->assertSame(1, preg_match('/\.(zip|city)\b/', "[obj.street, obj.city].filter(Boolean).join(', ')"));
         $this->assertSame(0, preg_match('/\.(zip|city)\b/', '{{ $object->capacity }}'));
+
+        // Das PHP-Muster muß die Zeile treffen, die es künftig verhindern
+        // soll — wörtlich so, wie sie bis 1.2.1 in
+        // PhotoAnnotationService::buildMetadataLines() stand (git show
+        // 2560962:schneespur/app/Services/PhotoAnnotationService.php, Zeile
+        // 98). Ohne diese Zusicherung wäre der Test darüber nur deshalb grün,
+        // weil das Muster nie feuert.
+        $this->assertSame(1, preg_match(
+            self::PHP_ADDRESS_PATTERN,
+            "            \$customerLine .= ', ' . trim((\$object->zip ?? '') . ' ' . (\$object->city ?? ''));"
+        ));
+
+        // Und die einfachere Schreibweise, in die ein Rückfall eher kippt.
+        $this->assertSame(1, preg_match(self::PHP_ADDRESS_PATTERN, "\$line = \$o->zip . ' ' . \$o->city;"));
+        $this->assertSame(1, preg_match(self::PHP_ADDRESS_PATTERN, "\$line .= \$o->city . ', ' . \$o->state;"));
+
+        // Stillbleiben muß es bei den beiden echten Stellen im heutigen Baum,
+        // die zip/city bewußt einzeln weitergeben statt sie zu verkleben: die
+        // CSV-Spalten und der Geocoder-Aufruf.
+        $this->assertSame(0, preg_match(self::PHP_ADDRESS_PATTERN, "                \$job->customerObject?->zip ?? '',"));
+        $this->assertSame(0, preg_match(self::PHP_ADDRESS_PATTERN, "                \$job->customerObject?->city ?? '',"));
+        $this->assertSame(0, preg_match(
+            self::PHP_ADDRESS_PATTERN,
+            '        $result = $geocoding->resolve($request->street, $request->zip, $request->city, $request->state);'
+        ));
     }
 }

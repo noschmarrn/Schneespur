@@ -90,13 +90,20 @@ class PhotoAnnotationService
         $lines[] = 'Einsatz: #' . $job->id . ' — ' . ($job->type?->label() ?? '');
 
         $object = $job->customerObject;
-        $customerLine = $job->customer?->name ?? '';
-        if ($object?->street) {
-            $customerLine .= ', ' . $object->street;
-        }
-        if ($object?->zip || $object?->city) {
-            $customerLine .= ', ' . trim(($object->zip ?? '') . ' ' . ($object->city ?? ''));
-        }
+
+        // Die einzeilige Form, nicht die Zeilenliste: der Streifen unter dem
+        // Foto hat je Angabe genau eine Zeile, und der Kundenname steht schon
+        // davor. Über den Formatter, weil diese Adresse unwiderruflich in die
+        // Pixel gebrannt wird — eine deutsch geordnete Zusammensetzung wäre in
+        // einem US-Betrieb nicht nur falsch, sondern nicht mehr korrigierbar.
+        // array_filter mit explizitem Vergleich statt der Kurzform: ohne
+        // Adresse darf kein hängendes Komma stehenbleiben, und ein Kunde
+        // namens "0" darf nicht verschwinden.
+        $customerLine = implode(', ', array_filter(
+            [$job->customer?->name ?? '', format_address($object)],
+            static fn (string $part): bool => $part !== '',
+        ));
+
         if ($object?->name && $object->name !== $job->customer?->name) {
             $customerLine .= ' (' . $object->name . ')';
         }
