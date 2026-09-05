@@ -230,9 +230,17 @@ class Formatter
         ];
     }
 
+    /**
+     * Mit `?:` statt `??`, wie date() und time(): fromSettings() schreibt
+     * `(string) (Setting::get($key) ?? $fallback)`, und ein leer gespeicherter
+     * Wert überlebt diesen Rückfall als ''. League\Csv::setDelimiter('')
+     * wirft dann InvalidArgument und macht aus dem CSV-Export eine 500er-Seite.
+     * Über die Oberfläche ist das nicht erreichbar (Rule::in([';', ','])), über
+     * ein Modul mit eigenem RegionPreset schon.
+     */
     public function csvDelimiter(): string
     {
-        return $this->setting('csv_delimiter');
+        return $this->setting('csv_delimiter') ?: ';';
     }
 
     /** 1 = Montag, 7 = Sonntag. Der einzige Ort, an dem der Text zur Zahl wird. */

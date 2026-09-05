@@ -91,6 +91,25 @@ class CsvDelimiterTest extends TestCase
         $this->assertStringNotContainsString('"Summit Snow";', $csv);
     }
 
+    /**
+     * fromSettings() schreibt `(string) (Setting::get($key) ?? $fallback)` —
+     * ein leer gespeicherter Wert überlebt diesen Rückfall als ''. date() und
+     * time() fangen das mit einem eigenen `??` ab; csvDelimiter() tat es
+     * nicht, und League\Csv::setDelimiter('') wirft InvalidArgument: aus dem
+     * Export wurde eine 500er-Seite. Über die Oberfläche ist das nicht
+     * erreichbar (Rule::in([';', ','])), über ein Modul mit eigenem
+     * RegionPreset schon.
+     */
+    public function test_an_empty_delimiter_falls_back_to_the_semicolon(): void
+    {
+        $this->seedOneJob();
+
+        $csv = $this->csv('');
+
+        $this->assertStringContainsString('"Summit Snow";', $csv);
+        $this->assertSame(';', app(Formatter::class)->csvDelimiter());
+    }
+
     public function test_the_state_has_its_own_column(): void
     {
         $this->seedOneJob();
