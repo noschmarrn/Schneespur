@@ -186,10 +186,10 @@ class FormatDriftGuardTest extends TestCase
     }
 
     /**
-     * Zehn Views setzten die Adresse vor 1.2.1 jede für sich zusammen, in
-     * vier verschiedenen Schreibweisen — keine kannte den Bundesstaat, keine
-     * ließ sich auf ein US-Format umstellen. Die elfte darf nicht wieder so
-     * anfangen.
+     * Elf Stellen in neun Views setzten die Adresse vor 1.2.1 jede für sich
+     * zusammen, in vier verschiedenen Schreibweisen — keine kannte den
+     * Bundesstaat, keine ließ sich auf ein US-Format umstellen. Die nächste
+     * darf nicht wieder so anfangen.
      *
      * Drei Zusammensetzungsmuster zählen — die vier historischen Schreibweisen,
      * die 331664c ersetzt hat, brauchen zwei Blade-Muster plus das
