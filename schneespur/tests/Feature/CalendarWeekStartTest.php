@@ -112,9 +112,34 @@ class CalendarWeekStartTest extends TestCase
     private function dayHeaderRow(string $html): string
     {
         $start = strpos($html, 'grid grid-cols-7 border-b border-gray-200');
+        $this->assertNotFalse($start, 'Kopfzeilen-Marker nicht gefunden — Markup geändert?');
+
         $end = strpos($html, 'grid grid-cols-7"', $start);
+        $this->assertNotFalse($end, 'Tageszellen-Marker nicht gefunden — Markup geändert?');
 
         return substr($html, $start, $end - $start);
+    }
+
+    /**
+     * Zählt die Leerzellen zwischen dem Gitter-Anfang und der ersten
+     * Tageszelle — das ist der Vorlauf, den ($startDow - $weekStart + 7) % 7
+     * bestimmt. Anders als eine nachgebaute Kopie der Formel mißt das am
+     * tatsächlich gerenderten Markup: Leerzellen tragen die Klasse
+     * "min-h-[4rem] border-b border-r border-gray-100 bg-gray-50", Tageszellen
+     * dagegen "min-h-[4rem] p-2 border-b border-r border-gray-100" (mit "p-2"
+     * und ohne "bg-gray-50") — beide Marker kommen im Dokument sonst nicht vor.
+     */
+    private function leadingBlankCellCount(string $html): int
+    {
+        $gridStart = strpos($html, 'grid-cols-7">');
+        $this->assertNotFalse($gridStart, 'Tageszellen-Gitter nicht gefunden — Markup geändert?');
+
+        $firstDayCell = strpos($html, 'min-h-[4rem] p-2 border-b border-r border-gray-100', $gridStart);
+        $this->assertNotFalse($firstDayCell, 'Erste Tageszelle nicht gefunden — Markup geändert?');
+
+        $leadingHtml = substr($html, $gridStart, $firstDayCell - $gridStart);
+
+        return substr_count($leadingHtml, 'min-h-[4rem] border-b border-r border-gray-100 bg-gray-50');
     }
 
     /**
@@ -138,13 +163,19 @@ class CalendarWeekStartTest extends TestCase
     {
         $this->seedJobInMonth('2026-01');
 
-        $header = $this->dayHeaderRow($this->calendar('7', '2026-01-01'));
+        $html = $this->calendar('7', '2026-01-01');
+        $header = $this->dayHeaderRow($html);
 
         // … und hier steht Sonntag vor Montag.
         $this->assertLessThan(
             strpos($header, __('overview.day_mo')),
             strpos($header, __('overview.day_so'))
         );
+
+        // Und der Vorlauf selbst muß am Gitter stimmen — nicht nur die
+        // Kopfzeile. Ein Rückfall auf die alte Formel ($startDow - 1, ohne
+        // $weekStart) läge hier bei 3, richtig sind 4 (So Mo Di Mi).
+        $this->assertSame(4, $this->leadingBlankCellCount($html));
     }
 
     /**
