@@ -117,4 +117,50 @@ class DriverObjectHintsTest extends TestCase
             ->assertOk()
             ->assertJsonPath('job.object_id', $object->id);
     }
+
+    /**
+     * /dashboard fällt für einen Benutzer ohne Rolle in dieselbe Ansicht wie
+     * der Fahrer. Seit die Ansicht die Objekthinweise (Torcodes) einbettet,
+     * darf dieser Zweig keinerlei Kunden- oder Objektdaten mehr liefern.
+     */
+    public function test_a_user_without_a_role_gets_no_customer_or_site_data_on_the_dashboard(): void
+    {
+        $customer = Customer::create(['name' => 'Hausverwaltung Rollenlos']);
+        CustomerObject::create([
+            'customer_id' => $customer->id,
+            'name' => 'Wohnanlage Rollenlos',
+            'street' => 'Geheimgasse 17',
+            'access_notes' => 'Hoftor Torcode 2408',
+            'site_notes' => 'Kein Salz auf dem Innenhofpflaster',
+        ]);
+
+        $nobody = User::create([
+            'name' => 'Nobody',
+            'email' => 'hints-nobody@test.local',
+            'password' => Hash::make('password'),
+        ]);
+        $nobody->dsgvo_informed_at = now();
+        $nobody->confirmed_version = 99;
+        $nobody->save();
+        $nobody = $nobody->fresh();
+
+        $this->assertFalse($nobody->isAdmin());
+        $this->assertFalse($nobody->isDriver());
+
+        $response = $this->actingAs($nobody)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertDontSee('Torcode 2408', false);
+        $response->assertDontSee('Kein Salz auf dem Innenhofpflaster', false);
+        $response->assertDontSee('Hausverwaltung Rollenlos', false);
+        $response->assertDontSee('Wohnanlage Rollenlos', false);
+        $response->assertDontSee('Geheimgasse 17', false);
+
+        // Gegenprobe: dieselben Daten sind für einen echten Fahrer da.
+        $driverResponse = $this->actingAs($this->driver())->get(route('driver.home'));
+        $driverResponse->assertOk();
+        $driverResponse->assertSee('Torcode 2408', false);
+        $driverResponse->assertSee('Hausverwaltung Rollenlos', false);
+        $driverResponse->assertSee('Geheimgasse 17', false);
+    }
 }
