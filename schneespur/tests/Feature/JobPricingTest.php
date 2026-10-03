@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\CustomerObject;
 use App\Models\CustomerObjectPrice;
+use App\Models\Job;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\JobLifecycleService;
@@ -12,6 +13,7 @@ use App\Services\Pricing\JobPricing;
 use App\Services\Pricing\PriceRule;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Hash;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Support\CreatesFormatFixtures;
@@ -286,5 +288,52 @@ class JobPricingTest extends TestCase
             ->get(route('admin.settings.company'))
             ->assertOk()
             ->assertSee('name="billing_increment_minutes"', false);
+    }
+
+    // --- ein Fehler beim Festschreiben hält den Abschluß nicht auf ----------
+
+    private function bindFailingPricing(): void
+    {
+        $this->app->instance(JobPricing::class, new class extends JobPricing
+        {
+            public function freeze(Job $job): void
+            {
+                throw new \RuntimeException('Preis nicht festschreibbar');
+            }
+        });
+    }
+
+    public function test_ending_a_job_survives_a_failing_price_freeze(): void
+    {
+        Exceptions::fake();
+        $driver = $this->driver();
+        $object = $this->object(['price_amount_cents' => 8500, 'price_unit' => 'per_job']);
+
+        $service = app(JobLifecycleService::class);
+        $service->startShift($driver);
+        $service->startJob($driver, $object, 'raumen');
+        $this->bindFailingPricing();
+
+        $job = app(JobLifecycleService::class)->endJob($driver, 'fertig');
+
+        $fresh = Job::findOrFail($job->id);
+        $this->assertNotNull($fresh->ended_at);
+        $this->assertSame('fertig', $fresh->notes);
+        $this->assertNull($fresh->price_amount_cents);
+        Exceptions::assertReported(fn (\RuntimeException $e) => $e->getMessage() === 'Preis nicht festschreibbar');
+    }
+
+    public function test_creating_a_manual_job_survives_a_failing_price_freeze(): void
+    {
+        Exceptions::fake();
+        $object = $this->object(['price_amount_cents' => 8500, 'price_unit' => 'per_job']);
+        $this->bindFailingPricing();
+
+        $job = $this->manualJob($object, 60);
+
+        $this->assertNotNull(Job::find($job->id));
+        $this->assertNotNull($job->ended_at);
+        $this->assertNull($job->price_amount_cents);
+        Exceptions::assertReported(fn (\RuntimeException $e) => $e->getMessage() === 'Preis nicht festschreibbar');
     }
 }

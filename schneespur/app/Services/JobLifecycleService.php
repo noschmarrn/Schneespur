@@ -129,7 +129,7 @@ class JobLifecycleService
 
             $this->persistLifecycleFields(LifecyclePoint::JobEnd, $job, $extra, $user);
 
-            app(\App\Services\Pricing\JobPricing::class)->freeze($job);
+            $this->freezePrice($job);
         });
 
         $lat = null;
@@ -157,6 +157,24 @@ class JobLifecycleService
         }
 
         return $job->loadCount('gpsPoints');
+    }
+
+    /**
+     * Das Festschreiben des Preises darf einen Einsatzabschluß nie aufhalten:
+     * ein Überlauf des Betrags oder eine noch nicht migrierte Preistabelle
+     * (Shared-Hosting: Dateien sind schon da, die Migration läuft erst im
+     * Web-Request) ließe sonst den Fahrer nicht abschließen. Bei einem Fehler
+     * bleiben die vier Preisspalten leer, der Einsatz gilt als "ohne Betrag".
+     * Ein fehlgeschlagenes SELECT/UPDATE bricht weder in MySQL noch in SQLite
+     * die umgebende Transaktion ab.
+     */
+    private function freezePrice(Job $job): void
+    {
+        try {
+            app(\App\Services\Pricing\JobPricing::class)->freeze($job);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     public function createManualJob(
@@ -192,7 +210,7 @@ class JobLifecycleService
             'is_manual' => true,
         ]);
 
-        app(\App\Services\Pricing\JobPricing::class)->freeze($job);
+        $this->freezePrice($job);
 
         JobStarted::dispatch($job);
 
