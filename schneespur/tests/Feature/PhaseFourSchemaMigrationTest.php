@@ -53,6 +53,7 @@ class PhaseFourSchemaMigrationTest extends TestCase
 
         $m->up();
         $this->assertFullyUp();
+        $this->assertTrue(Schema::hasIndex('customer_object_prices', ['customer_object_id', 'job_type'], 'unique'));
     }
 
     /**
@@ -102,5 +103,33 @@ class PhaseFourSchemaMigrationTest extends TestCase
         \App\Models\CustomerObjectPrice::create([
             'customer_object_id' => $object->id, 'job_type' => 'raumen', 'amount_cents' => 9000, 'unit' => 'per_job',
         ]);
+    }
+
+    public function test_up_adds_the_unique_index_to_a_table_created_without_it(): void
+    {
+        $m = $this->migration();
+        $m->down();
+
+        Schema::create('customer_object_prices', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('customer_object_id')->constrained('customer_objects')->cascadeOnDelete();
+            $table->string('job_type', 32);
+            $table->unsignedInteger('amount_cents');
+            $table->string('unit', 32);
+            $table->timestamps();
+        });
+
+        $m->up();
+
+        $this->assertTrue(Schema::hasIndex('customer_object_prices', ['customer_object_id', 'job_type'], 'unique'));
+
+        $customer = \App\Models\Customer::create(['name' => 'Test Customer']);
+        $object = \App\Models\CustomerObject::create(['customer_id' => $customer->id, 'name' => 'Objekt']);
+        $row = ['customer_object_id' => $object->id, 'job_type' => 'raumen', 'amount_cents' => 8500, 'unit' => 'per_job'];
+
+        \App\Models\CustomerObjectPrice::create($row);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+        \App\Models\CustomerObjectPrice::create($row);
     }
 }

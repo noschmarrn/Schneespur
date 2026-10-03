@@ -20,6 +20,11 @@ use Illuminate\Support\Facades\Schema;
  * Blueprint mit zwei Spalten baut zwei ALTER-Statements. Auf Shared Hosting
  * läuft diese Migration in einem Web-Request und kann dazwischen enden; der
  * nächste Aufruf muß dort weitermachen können.
+ *
+ * Auf MySQL/MariaDB baut Laravel den Unique-Index und den Fremdschlüssel von
+ * customer_object_prices als eigene ALTER-Statements hinter dem CREATE TABLE.
+ * Endet der Request dazwischen, fände der nächste Lauf die Tabelle vor und
+ * übersprünge sie. Darum haben Index und Fremdschlüssel je einen eigenen Wächter.
  */
 return new class extends Migration
 {
@@ -46,6 +51,20 @@ return new class extends Migration
                 $table->timestamps();
                 $table->unique(['customer_object_id', 'job_type']);
             });
+        }
+
+        if (! Schema::hasIndex('customer_object_prices', ['customer_object_id', 'job_type'], 'unique')) {
+            Schema::table('customer_object_prices', fn (Blueprint $t) => $t->unique(['customer_object_id', 'job_type']));
+        }
+
+        // Auf SQLite entsteht der Fremdschlüssel inline mit der Tabelle; dieser
+        // Zweig läuft nur auf MySQL/MariaDB nach einem abgebrochenen Lauf und
+        // ist von der SQLite-Testsuite deshalb nicht erreichbar.
+        $hasForeignKey = collect(Schema::getForeignKeys('customer_object_prices'))
+            ->contains(fn (array $fk) => $fk['columns'] === ['customer_object_id']);
+
+        if (! $hasForeignKey) {
+            Schema::table('customer_object_prices', fn (Blueprint $t) => $t->foreign('customer_object_id')->references('id')->on('customer_objects')->cascadeOnDelete());
         }
     }
 
