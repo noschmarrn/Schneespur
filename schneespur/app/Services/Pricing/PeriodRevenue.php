@@ -30,6 +30,11 @@ class PeriodRevenue
         $from = $from->copy()->startOfDay();
         $to = $to->copy()->startOfDay();
 
+        // Ein umgekehrter Zeitraum ist kein Zeitraum: keine Einsätze, keine Pauschalen.
+        if ($from->greaterThan($to)) {
+            return new RevenueSummary(0, 0, 0, []);
+        }
+
         $jobs = Job::query()
             ->where('customer_id', $customer->id)
             ->when($object, fn ($q) => $q->where('customer_object_id', $object->id))
@@ -79,11 +84,11 @@ class PeriodRevenue
         $result = [];
 
         foreach ($lines as [$objectName, $jobTypeLabel, $unit, $rateCents]) {
-            if ($counts[$unit] === 0) {
+            if (($counts[$unit] ?? 0) === 0) {
                 continue; // der Zeitraum liegt außerhalb jeder Saison
             }
 
-            $result[] = new FlatRateLine($objectName, $jobTypeLabel, $unit, $rateCents, $counts[$unit]);
+            $result[] = new FlatRateLine($objectName, $jobTypeLabel, $unit, $rateCents, $counts[$unit] ?? 0);
         }
 
         return $result;

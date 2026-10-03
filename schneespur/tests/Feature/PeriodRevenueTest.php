@@ -224,4 +224,31 @@ class PeriodRevenueTest extends TestCase
 
         $this->assertFalse($this->revenue($mine, '2026-01-01', '2026-01-31')->hasAnything());
     }
+
+    public function test_an_inverted_period_yields_an_empty_summary(): void
+    {
+        $customer = Customer::create(['name' => 'Hausverwaltung']);
+        $object = $this->object($customer, ['price_amount_cents' => 24000, 'price_unit' => 'monthly']);
+        CustomerObjectPrice::create([
+            'customer_object_id' => $object->id, 'job_type' => 'streuen', 'amount_cents' => 145000, 'unit' => 'seasonal',
+        ]);
+        $this->job($this->object($customer, ['name' => 'B', 'price_amount_cents' => 8500, 'price_unit' => 'per_job']), '2026-01-10 06:00:00');
+
+        $summary = $this->revenue($customer, '2026-03-01', '2026-01-01');
+
+        $this->assertFalse($summary->hasAnything());
+        $this->assertSame(0, $summary->totalCents());
+        $this->assertSame([], $summary->flatRateLines);
+        $this->assertSame(0, $summary->jobsWithoutAmount);
+    }
+
+    public function test_a_monthly_flat_rate_counts_every_month_from_a_month_end_start(): void
+    {
+        $customer = Customer::create(['name' => 'Hausverwaltung']);
+        $this->object($customer, ['price_amount_cents' => 24000, 'price_unit' => 'monthly']);
+
+        $summary = $this->revenue($customer, '2026-01-31', '2026-03-01');
+
+        $this->assertSame(3, $summary->flatRateLines[0]->count);
+    }
 }
