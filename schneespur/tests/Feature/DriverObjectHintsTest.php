@@ -67,6 +67,13 @@ class DriverObjectHintsTest extends TestCase
     public function test_the_embedded_object_list_carries_the_four_hint_fields(): void
     {
         $this->object();
+        // Das Salz-Häkchen wird nur eingebettet, wenn der Betrieb es überhaupt
+        // benutzt: ein zweites Objekt mit true.
+        CustomerObject::create([
+            'customer_id' => Customer::first()->id,
+            'name' => 'Parkplatz',
+            'salt_enabled' => true,
+        ]);
 
         $response = $this->actingAs($this->driver())->get(route('driver.home'));
 
@@ -162,5 +169,42 @@ class DriverObjectHintsTest extends TestCase
         $driverResponse->assertSee('Torcode 2408', false);
         $driverResponse->assertSee('Hausverwaltung Rollenlos', false);
         $driverResponse->assertSee('Geheimgasse 17', false);
+    }
+
+    public function test_the_salt_flag_is_embedded_as_null_when_no_site_uses_it(): void
+    {
+        $this->object(['salt_enabled' => false]);
+
+        $this->actingAs($this->driver())->get(route('driver.home'))
+            ->assertOk()
+            ->assertSee('"salt_enabled":null', false)
+            ->assertDontSee('"salt_enabled":false', false)
+            ->assertDontSee('"salt_enabled":true', false);
+    }
+
+    public function test_the_salt_flag_is_embedded_as_is_when_at_least_one_site_uses_it(): void
+    {
+        $this->object(['salt_enabled' => false]);
+        CustomerObject::create([
+            'customer_id' => Customer::first()->id,
+            'name' => 'Parkplatz',
+            'salt_enabled' => true,
+        ]);
+
+        $this->actingAs($this->driver())->get(route('driver.home'))
+            ->assertOk()
+            ->assertSee('"salt_enabled":true', false)
+            ->assertSee('"salt_enabled":false', false)
+            ->assertDontSee('"salt_enabled":null', false);
+    }
+
+    public function test_the_hint_box_is_only_shown_when_there_is_something_to_show(): void
+    {
+        $this->object();
+
+        $this->actingAs($this->driver())->get(route('driver.home'))
+            ->assertSee('x-show="hasHints(selectedHints)"', false)
+            ->assertSee('x-show="hasHints(activeHints)"', false)
+            ->assertSee('hasHints(h)', false);
     }
 }

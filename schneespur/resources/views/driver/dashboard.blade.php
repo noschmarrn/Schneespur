@@ -349,14 +349,20 @@
     </div>
 
     @php
-        $allCustomerObjects = $customers->flatMap(fn ($c) => $c->objects->map(function ($o) use ($c) {
+        // Salz-Häkchen: Der Standard ist false und trug vor 1.2.1 keine Information
+        // (nur das Objektformular las es). Würde er jetzt gezeigt, stünde an jedem
+        // Altobjekt rot "Kein Salz verwenden". Also nur anzeigen, wenn der Betrieb
+        // das Häkchen überhaupt benutzt, d. h. mindestens ein Objekt es gesetzt hat.
+        $saltFlagInUse = $customers->contains(fn ($c) => $c->objects->contains(fn ($o) => (bool) $o->salt_enabled));
+
+        $allCustomerObjects = $customers->flatMap(fn ($c) => $c->objects->map(function ($o) use ($c, $saltFlagInUse) {
             $thresholdMm = $o->plowThresholdMm();
 
             return [
                 'id' => $o->id, 'customer_id' => $c->id, 'name' => $o->name, 'street' => $o->street, 'city' => $o->city,
                 'access_notes' => $o->access_notes,
                 'site_notes' => $o->site_notes,
-                'salt_enabled' => (bool) $o->salt_enabled,
+                'salt_enabled' => $saltFlagInUse ? (bool) $o->salt_enabled : null,
                 'plow_threshold' => $thresholdMm === null ? null : format_snow_depth($thresholdMm / 10),
             ];
         }));
@@ -398,6 +404,9 @@
 
                 hintsFor(id) {
                     return this.allCustomerObjects.find(o => o.id === id) || null;
+                },
+                hasHints(h) {
+                    return !!h && !!(h.access_notes || h.site_notes || h.plow_threshold || h.salt_enabled !== null);
                 },
                 get selectedHints() { return this.hintsFor(this.selectedObjectId); },
                 get activeHints() { return this.hintsFor(this.activeJob?.object_id); },

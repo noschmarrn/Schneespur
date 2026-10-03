@@ -5,7 +5,7 @@
     liest nur daraus — er braucht kein Netz.
 --}}
 <div
-    x-show="{{ $source }}"
+    x-show="hasHints({{ $source }})"
     x-data="{ open: {{ $open ? 'true' : 'false' }} }"
     data-object-hints="{{ $source }}"
     class="bg-gray-800 rounded-xl border border-amber-500/40"
