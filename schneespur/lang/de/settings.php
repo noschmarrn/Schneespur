@@ -35,6 +35,8 @@ return [
     'billing_increment'          => 'Abrechnungstakt beim Stundenpreis',
     'billing_increment_exact'    => 'Minutengenau',
     'billing_increment_step'     => 'Je angefangene :minutes Minuten',
+    'report_show_amounts'        => 'Beträge im Sammel-Nachweis zeigen',
+    'report_show_amounts_help'   => 'Der Sammel-Nachweis geht an den Kunden. Eingeschaltet steht dort die Summe der Einsätze und der Pauschalen im Zeitraum. Die Auswertung und der CSV-Export zeigen Beträge immer.',
     'billing_increment_help'     => 'Gilt für Objekte mit einem Preis pro Stunde. Der Takt wird mit dem Betrag am Einsatz festgehalten; eine Änderung wirkt nur auf künftige Einsätze.',
     'alert_title'                => 'Alert-Schwellenwerte',
     'alert_overdue_hours'        => 'Überfällig nach (Stunden)',

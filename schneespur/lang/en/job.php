@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'pdf_amounts_title' => 'Amounts in this period',
+    'pdf_amounts_note' => 'This summary is a record of services, not an invoice.',
     'type_raumen' => 'Clearing',
     'type_streuen' => 'Gritting',
     'type_kontrolle' => 'Inspection',

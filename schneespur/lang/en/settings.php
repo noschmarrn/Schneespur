@@ -35,6 +35,8 @@ return [
     'billing_increment'          => 'Billing increment for hourly prices',
     'billing_increment_exact'    => 'To the minute',
     'billing_increment_step'     => 'Per started :minutes minutes',
+    'report_show_amounts'        => 'Show amounts on the collective report',
+    'report_show_amounts_help'   => 'The collective report goes to the customer. When switched on, it carries the total of jobs and flat rates for the period. The internal report and the CSV export always show amounts.',
     'billing_increment_help'     => 'Applies to sites priced per hour. The increment is stored with the amount on each job; changing it affects future jobs only.',
     'alert_title'                => 'Alert Thresholds',
     'alert_overdue_hours'        => 'Overdue After (hours)',

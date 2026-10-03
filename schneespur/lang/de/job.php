@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'pdf_amounts_title' => 'Beträge im Zeitraum',
+    'pdf_amounts_note' => 'Diese Aufstellung ist ein Leistungsnachweis und keine Rechnung.',
     'type_raumen' => 'Räumen',
     'type_streuen' => 'Streuen',
     'type_kontrolle' => 'Kontrolle',

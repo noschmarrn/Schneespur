@@ -225,6 +225,16 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
+                <div>
+                    <input type="hidden" name="report_show_amounts_present" value="1">
+                    <label for="report_show_amounts" class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <input type="checkbox" name="report_show_amounts" id="report_show_amounts" value="1"
+                               class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                               @checked(old('report_show_amounts', $report_show_amounts))>
+                        {{ __('settings.report_show_amounts') }}
+                    </label>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('settings.report_show_amounts_help') }}</p>
+                </div>
             </div>
 
             {{-- Sprache & Format --}}
