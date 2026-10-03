@@ -33,6 +33,9 @@ class CsvExportService
             __('export.csv_col_duration'),
             __('export.csv_col_shift_id'),
             __('export.csv_col_source'),
+            __('export.csv_col_amount'),
+            __('export.csv_col_price_unit'),
+            __('export.csv_col_price_rate'),
         ]);
 
         $query = Job::query()
@@ -79,6 +82,12 @@ class CsvExportService
                 $duration,
                 $job->work_shift_id ?? '',
                 $job->is_manual ? __('export.csv_source_manual') : __('export.csv_source_automatic'),
+                // Ohne Währungszeichen und im Zahlenformat des Betriebs: eine
+                // Tabellenkalkulation soll damit rechnen können. Leer heißt
+                // "kein Betrag" — nicht 0.
+                $job->price_amount_cents === null ? '' : format_number($job->price_amount_cents / 100, 2),
+                $job->price_unit === null ? '' : __('customer_object.price_unit_'.$job->price_unit),
+                $job->price_rate_cents === null ? '' : format_number($job->price_rate_cents / 100, 2),
             ]);
         }
 

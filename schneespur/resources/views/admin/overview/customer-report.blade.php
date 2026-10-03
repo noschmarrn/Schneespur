@@ -163,6 +163,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('overview.report_col_start') }}</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('overview.report_col_end') }}</th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('overview.report_col_duration') }}</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('overview.report_col_amount') }}</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
@@ -186,14 +187,27 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                    @if ($job->price_amount_cents !== null)
+                                        {{ format_money($job->price_amount_cents) }}
+                                    @elseif ($job->price_unit !== null)
+                                        <span class="text-gray-500">{{ __('customer_object.price_unit_'.$job->price_unit) }}</span>
+                                    @else
+                                        <span class="text-gray-400">–</span>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
                 </table>
             </div>
         </div>
+
+        @include('admin.overview.partials.revenue')
     @else
         {{-- Customer selected but no jobs --}}
         <x-empty-state :heading="__('overview.customer_report_no_jobs')" />
+
+        @include('admin.overview.partials.revenue')
     @endif
 </x-admin-layout>
