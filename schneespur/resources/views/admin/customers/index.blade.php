@@ -31,14 +31,13 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $customer->name }}</td>
                                     <td class="px-6 py-4 text-sm text-gray-500">
-                                        @php $firstObject = $customer->objects->first(); @endphp
-                                        @if ($firstObject)
-                                            @foreach (format_address_lines($firstObject) as $line)
+                                        @php $addressSource = $customer->documentAddressSource(); @endphp
+                                        @if ($addressSource)
+                                            @foreach (format_address_lines($addressSource) as $line)
                                                 <span class="block">{{ $line }}</span>
                                             @endforeach
-                                            @if ($customer->objects->count() > 1)
-                                                <span class="text-xs text-gray-400">(+{{ $customer->objects->count() - 1 }})</span>
-                                            @endif
+                                        @elseif ($customer->objects->count() > 1)
+                                            <span class="text-xs text-gray-400">{{ __('customer.address_missing') }}</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $customer->contact_name }}</td>

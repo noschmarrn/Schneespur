@@ -50,6 +50,40 @@ class Customer extends Authenticatable
         ];
     }
 
+    private const ADDRESS_FIELDS = ['street', 'zip', 'city', 'state'];
+
+    public function hasOwnAddress(): bool
+    {
+        foreach (self::ADDRESS_FIELDS as $field) {
+            if (filled($this->{$field})) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Was ein Dokument als Adresse dieses Kunden druckt.
+     *
+     * Die eigene Adresse, wenn eine eingetragen ist. Sonst die des Objekts,
+     * aber nur, wenn es genau eines gibt — dann ist sie mit hoher
+     * Wahrscheinlichkeit auch die des Kunden. Bei mehreren Objekten lieber
+     * keine Adresse als die irgendeiner Wohnanlage.
+     */
+    public function documentAddressSource(): self|CustomerObject|null
+    {
+        if ($this->hasOwnAddress()) {
+            return $this;
+        }
+
+        $objects = $this->relationLoaded('objects')
+            ? $this->objects
+            : $this->objects()->limit(2)->get();
+
+        return $objects->count() === 1 ? $objects->first() : null;
+    }
+
     public function objects(): HasMany
     {
         return $this->hasMany(CustomerObject::class);

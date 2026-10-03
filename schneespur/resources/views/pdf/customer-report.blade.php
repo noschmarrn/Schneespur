@@ -109,7 +109,7 @@
                 <td class="label">{{ __('job.detail_customer') }}</td>
                 <td class="value">{{ $customer->name }}</td>
             </tr>
-            @php $primaryObject = $customerObject ?? $customer->objects->first(); @endphp
+            @php $primaryObject = $customerObject ?? $customer->documentAddressSource(); @endphp
             @if ($primaryObject && ($primaryObject->street || $primaryObject->zip || $primaryObject->city))
                 <tr>
                     <td class="label">{{ __('job.pdf_address') }}</td>

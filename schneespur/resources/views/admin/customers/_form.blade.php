@@ -33,6 +33,31 @@
                 <x-input-error :messages="$errors->get('phone')" class="mt-2" />
             </div>
 
+            <div class="sm:col-span-2">
+                <x-input-label for="street" :value="__('customer.field_street')" />
+                <x-text-input id="street" name="street" type="text" class="mt-1 block w-full" :value="old('street', $customer->street ?? '')" />
+                <p class="mt-1 text-sm text-gray-500">{{ __('customer.address_help') }}</p>
+                <x-input-error :messages="$errors->get('street')" class="mt-2" />
+            </div>
+
+            <div>
+                <x-input-label for="zip" :value="__('customer.field_zip')" />
+                <x-text-input id="zip" name="zip" type="text" class="mt-1 block w-full" :value="old('zip', $customer->zip ?? '')" />
+                <x-input-error :messages="$errors->get('zip')" class="mt-2" />
+            </div>
+
+            <div>
+                <x-input-label for="city" :value="__('customer.field_city')" />
+                <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $customer->city ?? '')" />
+                <x-input-error :messages="$errors->get('city')" class="mt-2" />
+            </div>
+
+            <div>
+                <x-input-label for="state" :value="__('customer.field_state')" />
+                <x-text-input id="state" name="state" type="text" class="mt-1 block w-full" :value="old('state', $customer->state ?? '')" />
+                <x-input-error :messages="$errors->get('state')" class="mt-2" />
+            </div>
+
             <div>
                 <x-input-label for="locale" :value="__('customer.field_locale')" />
                 <select id="locale" name="locale" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
