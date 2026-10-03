@@ -21,7 +21,7 @@
                 <dd class="mt-1 text-sm text-gray-900">
                     {{ $job->customerObject?->name ?? '–' }}
                     @if($job->customerObject?->street)
-                        <span class="text-gray-500">— {{ $job->customerObject->street }}, {{ $job->customerObject->zip }} {{ $job->customerObject->city }}</span>
+                        <span class="text-gray-500">— {{ format_address($job->customerObject) }}</span>
                     @endif
                 </dd>
             </div>

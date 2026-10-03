@@ -8,9 +8,28 @@ use Illuminate\Support\Facades\Http;
 
 class GeocodingService
 {
-    public function resolve(string $street, string $zip, string $city): ?array
+    /**
+     * @param  string|null  $state  Bundesstaat, Provinz oder Kanton. Am Ende
+     *   und optional, damit ein Modul, das diesen Dienst heute mit drei
+     *   Argumenten ruft, ohne Änderung weiterläuft.
+     */
+    public function resolve(string $street, string $zip, string $city, ?string $state = null): ?array
     {
         try {
+            $query = [
+                'street' => $street,
+                'city' => $city,
+                'postalcode' => $zip,
+                'format' => 'json',
+                'limit' => 1,
+            ];
+
+            // Ein leerer state-Parameter verschlechtert die Trefferqualität,
+            // statt sie zu verbessern — also gar nicht erst mitschicken.
+            if (is_string($state) && trim($state) !== '') {
+                $query['state'] = trim($state);
+            }
+
             $response = Http::withHeaders([
                 'User-Agent' => brand_slug().'/1.0 ('.config('app.url').')',
             ])
@@ -18,13 +37,7 @@ class GeocodingService
                 // No country filter: Wintertrace runs in the US, Canada, Norway
                 // and beyond, and even a German operator may keep a site across
                 // the border. Street, postcode and city are enough for Nominatim.
-                ->get('https://nominatim.openstreetmap.org/search', [
-                    'street' => $street,
-                    'city' => $city,
-                    'postalcode' => $zip,
-                    'format' => 'json',
-                    'limit' => 1,
-                ]);
+                ->get('https://nominatim.openstreetmap.org/search', $query);
 
             if ($response->successful()) {
                 $data = $response->json();

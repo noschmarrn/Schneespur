@@ -26,6 +26,12 @@
                 <x-text-input id="city" name="city" type="text" class="mt-1 block w-full" :value="old('city', $object->city ?? '')" />
                 <x-input-error :messages="$errors->get('city')" class="mt-2" />
             </div>
+
+            <div>
+                <x-input-label for="state" :value="__('customer_object.field_state')" />
+                <x-text-input id="state" name="state" type="text" class="mt-1 block w-full" :value="old('state', $object->state ?? '')" maxlength="64" />
+                <x-input-error :messages="$errors->get('state')" class="mt-2" />
+            </div>
         </div>
     </fieldset>
 
@@ -83,10 +89,32 @@
     <fieldset>
         <legend class="text-base font-semibold text-gray-900">{{ __('customer_object.fieldset_operations') }}</legend>
         <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            @php
+                // Der gespeicherte Wert steht in der Einheit, in der er
+                // eingegeben wurde ($object->plow_threshold_unit) — die
+                // Beschriftung aber nennt die aktuelle Einstellung
+                // (snowUnit()). Beide müssen dieselbe Zahl meinen: der
+                // millimetergenaue Zwischenwert wird deshalb neu in die
+                // aktuelle Einheit umgerechnet, statt den rohen Spaltenwert
+                // unter einer möglicherweise anderen Einheit anzuzeigen.
+                // plowThresholdMm() liefert null sowohl ohne Schwelle als
+                // auch bei unbekannter Einheit — in beiden Fällen bleibt das
+                // Feld leer.
+                $plowThresholdMm = $object->plowThresholdMm();
+                $plowThresholdDisplay = $plowThresholdMm === null
+                    ? ''
+                    : format_number(
+                        app(\App\Services\Format\Formatter::class)->snowUnit() === 'in'
+                            ? $plowThresholdMm / 25.4
+                            : $plowThresholdMm / 10,
+                        2
+                    );
+            @endphp
             <div>
-                <x-input-label for="plow_threshold_cm" :value="__('customer_object.field_plow_threshold')" />
-                <x-text-input id="plow_threshold_cm" name="plow_threshold_cm" type="number" min="0" max="255" step="1" class="mt-1 block w-full" :value="old('plow_threshold_cm', $object->plow_threshold_cm ?? '')" />
-                <x-input-error :messages="$errors->get('plow_threshold_cm')" class="mt-2" />
+                <x-input-label for="plow_threshold" :value="__('customer_object.field_plow_threshold', ['unit' => app(\App\Services\Format\Formatter::class)->snowUnitLabel()])" />
+                <x-text-input id="plow_threshold" name="plow_threshold" type="text" inputmode="decimal" class="mt-1 block w-full"
+                              :value="old('plow_threshold', $plowThresholdDisplay)" />
+                <x-input-error :messages="$errors->get('plow_threshold')" class="mt-2" />
             </div>
 
             <div class="flex items-center pt-6">
@@ -149,6 +177,7 @@
                     const street = document.getElementById('street')?.value?.trim();
                     const zip = document.getElementById('zip')?.value?.trim();
                     const city = document.getElementById('city')?.value?.trim();
+                    const state = document.getElementById('state')?.value?.trim();
                     if (!street || !zip || !city) {
                         this.success = false;
                         this.message = @json(__('customer_object.geocode_address_required'));
@@ -164,7 +193,7 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
                                 'Accept': 'application/json',
                             },
-                            body: JSON.stringify({ street, zip, city }),
+                            body: JSON.stringify({ street, zip, city, state }),
                         });
                         const data = await resp.json();
                         if (resp.ok) {

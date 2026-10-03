@@ -31,7 +31,9 @@
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
+                {{-- Vier Spalten erst ab sm: auf 375px blieben PLZ und Bundesland
+                     sonst rund 70px breit. --}}
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
                         <label for="company_zip" class="block text-sm font-medium text-gray-700">{{ __('settings.company_zip') }}</label>
                         <input type="text" name="company_zip" id="company_zip"
@@ -49,6 +51,16 @@
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                maxlength="255">
                         @error('company_city')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label for="company_state" class="block text-sm font-medium text-gray-700">{{ __('settings.company_state') }}</label>
+                        <input type="text" name="company_state" id="company_state"
+                               value="{{ old('company_state', $company_state) }}"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                               maxlength="64">
+                        @error('company_state')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

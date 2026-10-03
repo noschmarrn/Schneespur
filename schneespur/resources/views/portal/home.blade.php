@@ -46,7 +46,7 @@
                     <div class="p-4 flex items-center justify-between">
                         <div>
                             <div class="font-medium text-gray-900">{{ $object->name }}</div>
-                            <div class="text-sm text-gray-500">{{ $object->street }}, {{ $object->city }}</div>
+                            <div class="text-sm text-gray-500">{{ format_address($object) }}</div>
                         </div>
                         <div class="text-sm text-gray-500 text-right whitespace-nowrap">
                             @if ($object->last_job_at)

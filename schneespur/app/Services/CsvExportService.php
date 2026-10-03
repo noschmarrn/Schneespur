@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Job;
+use App\Services\Format\Formatter;
 use Illuminate\Support\Carbon;
 use League\Csv\ByteSequence;
 use League\Csv\Writer;
@@ -13,7 +14,9 @@ class CsvExportService
     {
         $csv = Writer::createFromString();
         $csv->setOutputBOM(ByteSequence::BOM_UTF8);
-        $csv->setDelimiter(';');
+        // Kein festes Semikolon: Excel im englischen Sprachraum erwartet ein
+        // Komma und legt sonst die ganze Zeile in eine Spalte.
+        $csv->setDelimiter(app(Formatter::class)->csvDelimiter());
 
         $csv->insertOne([
             __('export.csv_col_date'),
@@ -23,6 +26,7 @@ class CsvExportService
             __('export.csv_col_object_street'),
             __('export.csv_col_object_zip'),
             __('export.csv_col_object_city'),
+            __('export.csv_col_object_state'),
             __('export.csv_col_type'),
             __('export.csv_col_start'),
             __('export.csv_col_end'),
@@ -34,7 +38,7 @@ class CsvExportService
         $query = Job::query()
             ->with([
                 'customer:id,name',
-                'customerObject:id,customer_id,name,street,zip,city',
+                'customerObject:id,customer_id,name,street,zip,city,state',
                 'user' => fn ($q) => $q->withAnonymized(),
                 'workShift:id',
             ])
@@ -68,6 +72,7 @@ class CsvExportService
                 $job->customerObject?->street ?? '',
                 $job->customerObject?->zip ?? '',
                 $job->customerObject?->city ?? '',
+                $job->customerObject?->state ?? '',
                 $job->type->label(),
                 format_time($job->started_at),
                 format_time($job->ended_at),

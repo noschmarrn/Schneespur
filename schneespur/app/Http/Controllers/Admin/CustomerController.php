@@ -86,9 +86,10 @@ class CustomerController extends Controller
             'street' => ['required', 'string'],
             'zip' => ['required', 'string'],
             'city' => ['required', 'string'],
+            'state' => ['nullable', 'string', 'max:64'],
         ]);
 
-        $result = $geocoding->resolve($request->street, $request->zip, $request->city);
+        $result = $geocoding->resolve($request->street, $request->zip, $request->city, $request->state);
 
         if ($result) {
             return response()->json($result);

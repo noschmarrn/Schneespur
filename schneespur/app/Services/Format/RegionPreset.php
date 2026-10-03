@@ -20,6 +20,13 @@ final class RegionPreset
         public readonly string $unitDistance,
         public readonly string $unitTemperature,
         public readonly string $unitWeight,
+        // Ab 1.2.1. Am Ende und mit Vorgabewerten, damit ein Modul, das ein
+        // eigenes Preset registriert, ohne Änderung weiterläuft — siehe
+        // RegionRegistryTest::test_a_module_preset_without_the_new_fields…
+        public readonly string $addressFormat = 'street_zip_city',
+        public readonly string $csvDelimiter = ';',
+        /** 1 = Montag, 7 = Sonntag, wie Carbon::dayOfWeekIso. */
+        public readonly int $weekStartsOn = 1,
     ) {}
 
     /** @return array<string, string> setting key => value */
@@ -35,6 +42,11 @@ final class RegionPreset
             'unit_distance' => $this->unitDistance,
             'unit_temperature' => $this->unitTemperature,
             'unit_weight' => $this->unitWeight,
+            'address_format' => $this->addressFormat,
+            'csv_delimiter' => $this->csvDelimiter,
+            // Die Tabelle hält Text. Zurückgelesen wird der int genau einmal,
+            // in Formatter::weekStartsOn().
+            'week_starts_on' => (string) $this->weekStartsOn,
         ];
     }
 }

@@ -132,6 +132,66 @@ class RegionRegistryTest extends TestCase
             'unit_distance' => 'imperial',
             'unit_temperature' => 'fahrenheit',
             'unit_weight' => 'imperial',
+            'address_format' => 'street_city_state_zip',
+            'csv_delimiter' => ',',
+            'week_starts_on' => '7',
         ], $settings);
+    }
+
+    public function test_the_new_regional_fields_carry_the_agreed_values(): void
+    {
+        $registry = app(RegionRegistry::class);
+
+        $this->assertSame('street_zip_city', $registry->get('de')->addressFormat);
+        $this->assertSame(';', $registry->get('de')->csvDelimiter);
+        $this->assertSame(1, $registry->get('de')->weekStartsOn);
+
+        $this->assertSame('street_city_state_zip', $registry->get('us')->addressFormat);
+        $this->assertSame(',', $registry->get('us')->csvDelimiter);
+        $this->assertSame(7, $registry->get('us')->weekStartsOn);
+
+        $this->assertSame('street_city_state_zip', $registry->get('ca')->addressFormat);
+        $this->assertSame(7, $registry->get('ca')->weekStartsOn);
+
+        // Großbritannien schreibt "London SW1A 2AA" ohne Grafschaft, beginnt
+        // die Woche aber montags — es ist nicht einfach "wie die USA".
+        $this->assertSame('street_city_zip', $registry->get('gb')->addressFormat);
+        $this->assertSame(',', $registry->get('gb')->csvDelimiter);
+        $this->assertSame(1, $registry->get('gb')->weekStartsOn);
+    }
+
+    /**
+     * Der eigentliche Zweck der Vorgabewerte: ein Sprachpaket-Modul, das heute
+     * ein Preset mit den zehn alten Parametern registriert, muß nach dem Update
+     * weiterlaufen. Dieser Test ist der Vertrag, nicht bloß eine Prüfung.
+     */
+    public function test_a_module_preset_without_the_new_fields_still_constructs(): void
+    {
+        $preset = new RegionPreset(
+            code: 'cz',
+            label: 'Česko',
+            currencyCode: 'CZK',
+            currencyPosition: 'after',
+            numberFormat: 'dot_comma',
+            dateFormat: 'dmy_dot',
+            timeFormat: '24h',
+            unitDistance: 'metric',
+            unitTemperature: 'celsius',
+            unitWeight: 'metric',
+        );
+
+        $this->assertSame('street_zip_city', $preset->addressFormat);
+        $this->assertSame(';', $preset->csvDelimiter);
+        $this->assertSame(1, $preset->weekStartsOn);
+    }
+
+    public function test_to_settings_carries_the_three_new_keys(): void
+    {
+        $settings = app(RegionRegistry::class)->get('us')->toSettings();
+
+        $this->assertSame('street_city_state_zip', $settings['address_format']);
+        $this->assertSame(',', $settings['csv_delimiter']);
+        // Die Einstellungstabelle hält Text; der Cast gehört genau hierher.
+        $this->assertSame('7', $settings['week_starts_on']);
     }
 }

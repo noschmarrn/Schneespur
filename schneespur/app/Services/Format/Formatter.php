@@ -3,6 +3,7 @@
 namespace App\Services\Format;
 
 use App\Models\Setting;
+use Carbon\Carbon;
 use DateTimeInterface;
 use DateTimeZone;
 
@@ -30,6 +31,9 @@ class Formatter
         'unit_distance' => 'metric',
         'unit_temperature' => 'celsius',
         'unit_weight' => 'metric',
+        'address_format' => 'street_zip_city',
+        'csv_delimiter' => ';',
+        'week_starts_on' => '1',
     ];
 
     private const DATE_PATTERNS = [
@@ -130,6 +134,135 @@ class Formatter
             'numberFormat' => $this->setting('number_format'),
             'timeZone' => (string) config('app.display_timezone', 'UTC'),
         ];
+    }
+
+    /**
+     * Die drei regionalen Einstellungen, die keine Zahl formatieren, aber
+     * denselben Weg gehen: Preset füllt sie, der Betrieb darf sie ändern, und
+     * genau eine Klasse liest sie.
+     */
+    public function addressFormat(): string
+    {
+        return $this->setting('address_format');
+    }
+
+    /**
+     * Eine Adresse als Liste von Zeilen — die Wahrheit, aus der die einzeilige
+     * Form entsteht.
+     *
+     * Zehn Views setzten das vorher jede für sich zusammen, in vier
+     * verschiedenen Schreibweisen, und keine kannte den Bundesstaat.
+     *
+     * Rückgabe ist ein leeres Array, kein PLACEHOLDER: die Views entscheiden
+     * mit ihrem eigenen @if, ob sie etwas zeigen.
+     *
+     * @param  array<string, ?string>|object|null  $source  Ein Model, ein Array
+     *   mit street/zip/city/state, oder null.
+     * @return list<string>
+     */
+    public function addressLines(mixed $source): array
+    {
+        $parts = $this->addressParts($source);
+
+        $street = trim((string) ($parts['street'] ?? ''));
+        $zip = trim((string) ($parts['zip'] ?? ''));
+        $city = trim((string) ($parts['city'] ?? ''));
+        $state = trim((string) ($parts['state'] ?? ''));
+
+        $lines = [];
+
+        if ($street !== '') {
+            $lines[] = $street;
+        }
+
+        $locality = match ($this->addressFormat()) {
+            // "Minneapolis, MN 55401" — aber ohne Bundesstaat bliebe sonst ein
+            // hängendes Komma stehen: "Minneapolis, 55401".
+            'street_city_state_zip' => $state === ''
+                ? trim($city.' '.$zip)
+                : implode(', ', array_filter([$city, trim($state.' '.$zip)])),
+            // "London SW1A 2AA" — kein Komma vor der Postleitzahl.
+            'street_city_zip' => trim($city.' '.$zip),
+            // "94032 Passau"
+            default => trim($zip.' '.$city),
+        };
+
+        if ($locality !== '') {
+            $lines[] = $locality;
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Die einzeilige Form. Sie ist genau das Verbinden der Zeilen mit ", " —
+     * in jedem der drei Muster steht die Straße auf einer eigenen Zeile und
+     * der Rest gehört zusammen.
+     *
+     * @param  array<string, ?string>|object|null  $source
+     */
+    public function address(mixed $source): string
+    {
+        return implode(', ', $this->addressLines($source));
+    }
+
+    /**
+     * @param  array<string, ?string>|object|null  $source
+     * @return array<string, ?string>
+     */
+    private function addressParts(mixed $source): array
+    {
+        if (is_array($source)) {
+            return $source;
+        }
+
+        if ($source === null) {
+            return [];
+        }
+
+        // Duck-typed statt gegen CustomerObject getypt: dieselbe Methode
+        // formatiert die Betriebsadresse aus den Einstellungen und, ab Phase 4,
+        // die Kundenadresse.
+        return [
+            'street' => $source->street ?? null,
+            'zip' => $source->zip ?? null,
+            'city' => $source->city ?? null,
+            'state' => $source->state ?? null,
+        ];
+    }
+
+    /**
+     * Mit `?:` statt `??`, wie date() und time(): fromSettings() schreibt
+     * `(string) (Setting::get($key) ?? $fallback)`, und ein leer gespeicherter
+     * Wert überlebt diesen Rückfall als ''. League\Csv::setDelimiter('')
+     * wirft dann InvalidArgument und macht aus dem CSV-Export eine 500er-Seite.
+     * Über die Oberfläche ist das nicht erreichbar (Rule::in([';', ','])), über
+     * ein Modul mit eigenem RegionPreset schon.
+     */
+    public function csvDelimiter(): string
+    {
+        return $this->setting('csv_delimiter') ?: ';';
+    }
+
+    /** 1 = Montag, 7 = Sonntag. Der einzige Ort, an dem der Text zur Zahl wird. */
+    public function weekStartsOn(): int
+    {
+        return $this->setting('week_starts_on') === '7' ? 7 : 1;
+    }
+
+    /**
+     * Derselbe Wochenanfang in Carbons Zählung — die Zahl, die
+     * startOfWeek() erwartet.
+     *
+     * Carbon zählt NICHT nach ISO: Carbon::SUNDAY ist 0, nicht 7. Ein direkt
+     * durchgereichtes weekStartsOn() wäre für die Sonntagswoche stillschweigend
+     * falsch — startOfWeek(7) ist außerhalb des Bereichs 0–6, und „diese Woche"
+     * spränge auf einen falschen Tag, ohne daß irgendetwas bricht. Die
+     * Umrechnung steht deshalb hier einmal, statt an jeder Aufrufstelle neu.
+     */
+    public function weekStartsOnCarbon(): int
+    {
+        return $this->weekStartsOn() === 7 ? Carbon::SUNDAY : Carbon::MONDAY;
     }
 
     public function dateTime(?DateTimeInterface $moment, bool $withSeconds = false): string
@@ -265,6 +398,26 @@ class Formatter
     }
 
     /**
+     * Die Einheit für Schneehöhen und Räumschwellen: 'cm' oder 'in'.
+     *
+     * Sie folgt unit_distance und hat bewußt keine eigene Einstellung — siehe
+     * die Begründung an snowDepth(). Diese Methode ist der Ort, an dem diese
+     * Entscheidung einmal steht, statt an jeder Stelle neu getroffen zu werden.
+     */
+    public function snowUnit(): string
+    {
+        return $this->setting('unit_distance') === 'imperial' ? 'in' : 'cm';
+    }
+
+    /** Die übersetzte Abkürzung derselben Einheit, für Feldbeschriftungen. */
+    public function snowUnitLabel(): string
+    {
+        return $this->snowUnit() === 'in'
+            ? __('format.unit_inch')
+            : __('format.unit_centimetre');
+    }
+
+    /**
      * Snow depth, stored in centimetres.
      *
      * Follows unit_distance rather than carrying a setting of its own: nobody
@@ -278,7 +431,7 @@ class Formatter
             return self::PLACEHOLDER;
         }
 
-        return $this->setting('unit_distance') === 'imperial'
+        return $this->snowUnit() === 'in'
             ? $this->number($centimetres / 2.54, 1) . ' ' . __('format.unit_inch')
             : $this->number($centimetres, 1) . ' ' . __('format.unit_centimetre');
     }

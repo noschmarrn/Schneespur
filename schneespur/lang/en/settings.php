@@ -8,13 +8,14 @@ return [
     'company_street'             => 'Street & Number',
     'company_zip'                => 'Postal Code',
     'company_city'               => 'City',
+    'company_state'              => 'State / Province',
     'company_phone'              => 'Phone',
     'company_email'              => 'Email',
     'company_lat'                => 'Latitude',
     'company_lon'                => 'Longitude',
     'company_geocode_success'    => 'Address resolved successfully.',
-    'company_geocode_fail'       => 'Address could not be resolved. Please enter coordinates manually.',
-    'company_geocode_manual_hint' => 'Coordinates are determined automatically from the address. If resolution fails, you can enter latitude and longitude manually.',
+    'company_geocode_fail'       => 'Address could not be resolved. Please check street, postal code and city.',
+    'company_geocode_manual_hint' => 'Coordinates are determined automatically from the address.',
 
     // Data Protection Officer
     'dpo_title'                  => 'Data Protection Officer',

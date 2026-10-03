@@ -23,6 +23,9 @@ class FormatSettingsController extends Controller
         'unit_distance',
         'unit_temperature',
         'unit_weight',
+        'address_format',
+        'csv_delimiter',
+        'week_starts_on',
     ];
 
     public function edit(RegionRegistry $regions): View
@@ -66,6 +69,9 @@ class FormatSettingsController extends Controller
             'unit_distance' => ['required', Rule::in(['metric', 'imperial'])],
             'unit_temperature' => ['required', Rule::in(['celsius', 'fahrenheit'])],
             'unit_weight' => ['required', Rule::in(['metric', 'imperial'])],
+            'address_format' => ['required', Rule::in(['street_zip_city', 'street_city_state_zip', 'street_city_zip'])],
+            'csv_delimiter' => ['required', Rule::in([';', ','])],
+            'week_starts_on' => ['required', Rule::in(['1', '7'])],
         ]);
 
         foreach ($validated as $key => $value) {

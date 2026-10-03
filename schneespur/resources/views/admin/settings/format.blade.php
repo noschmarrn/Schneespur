@@ -48,6 +48,9 @@
                     'unit_distance' => ['metric', 'imperial'],
                     'unit_temperature' => ['celsius', 'fahrenheit'],
                     'unit_weight' => ['metric', 'imperial'],
+                    'address_format' => ['street_zip_city', 'street_city_state_zip', 'street_city_zip'],
+                    'csv_delimiter' => [';', ','],
+                    'week_starts_on' => ['1', '7'],
                 ] as $field => $options)
                     <div>
                         <label for="{{ $field }}" class="block text-sm font-medium text-gray-700">{{ __('format.field_' . $field) }}</label>

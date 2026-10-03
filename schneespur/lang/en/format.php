@@ -33,6 +33,9 @@ return [
     'field_unit_distance' => 'Distance',
     'field_unit_temperature' => 'Temperature',
     'field_unit_weight' => 'Weight',
+    'field_address_format' => 'Address format',
+    'field_csv_delimiter' => 'CSV delimiter',
+    'field_week_starts_on' => 'Week starts on',
     'preview' => 'Preview',
 
     'option_currency_position_before' => 'Before the amount ($10.00)',
@@ -58,4 +61,12 @@ return [
 
     'option_unit_weight_metric' => 'Metric (kg, t)',
     'option_unit_weight_imperial' => 'Imperial (lb, tn)',
+
+    'option_address_format_street_zip_city' => 'Street, postcode city (DE/AT/CH)',
+    'option_address_format_street_city_state_zip' => 'Street, city, state ZIP (US/CA)',
+    'option_address_format_street_city_zip' => 'Street, city postcode (GB)',
+    'option_csv_delimiter_;' => 'Semicolon (;) — for Excel in German-speaking regions',
+    'option_csv_delimiter_,' => 'Comma (,) — for Excel in English-speaking regions',
+    'option_week_starts_on_1' => 'Monday',
+    'option_week_starts_on_7' => 'Sunday',
 ];

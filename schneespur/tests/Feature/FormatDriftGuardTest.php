@@ -21,6 +21,45 @@ class FormatDriftGuardTest extends TestCase
         'lang/en/format.php',
     ];
 
+    /**
+     * Bekannte Adress-Teilzusammensetzungen außerhalb des Formatters — je mit
+     * dem genauen Text der betroffenen Zeile statt ihrer Nummer, denn die
+     * Nummer verschiebt sich mit jeder Änderung darüber, der Text nicht.
+     * Verschwindet ein gelisteter Text aus seiner Datei, meldet der Test die
+     * Ausnahme als Karteileiche — dann gehört sie entfernt, nicht
+     * stehengelassen. Eine ganze Datei freizuzeichnen wäre der falsche
+     * Hebel: dann würde eine spätere, echte Adressausgabe in derselben Datei
+     * lautlos durchrutschen.
+     *
+     * driver/dashboard.blade.php enthält daneben zwei weitere Stellen, die
+     * bewußt nur Teile einer Adresse anfassen, aber unten keinen Eintrag
+     * brauchen, weil kein Erkennungsmuster auf sie feuert: Zeile ~92 gibt in
+     * einer auf 120px beschnittenen Zeile nur die Straße aus (zip/city
+     * kommen dort gar nicht vor — eine vollständige Adresse wäre falsch,
+     * nicht richtiger), und Zeile ~337 trägt street/city in ein PHP-Array für
+     * ein JS-Array — Datentransport, keine Ausgabe. Sie stehen hier nur
+     * schriftlich, damit ihre Abwesenheit in der Liste nicht wie eine Lücke
+     * aussieht.
+     */
+    private const ADDRESS_ALLOWED = [
+        'resources/views/driver/dashboard.blade.php' => [
+            "x-text=\"[obj.street, obj.city].filter(Boolean).join(', ')\""
+                => 'street, city ist regionsneutral — der gemeinsame Anfang aller drei '
+                    .'Adressmuster, kein regionaler Unterschied wird hier sichtbar; die Zeile '
+                    .'ist auf 160px beschnitten, wo die volle Adresse den Ort aus dem '
+                    .'Sichtfeld drängen und die Objekt-Auswahl des Fahrers in jeder Region '
+                    .'verschlechtern würde.',
+        ],
+    ];
+
+    /**
+     * Eine Adreß-Zusammensetzung in reinem PHP: ein Zugriff auf zip oder city,
+     * an den auf derselben Zeile eine Zeichenketten-Verkettung grenzt — davor
+     * (`$line .= ', ' . trim(($o->zip …`) oder dahinter (`$o->city . ', '`).
+     * Der bloße Zugriff bleibt erlaubt; siehe die Begründung am Test.
+     */
+    private const PHP_ADDRESS_PATTERN = '/(?:\.\s*[^;]{0,40}->(?:zip|city)\b|->(?:zip|city)\b[^;]{0,40}\s\.\s)/';
+
     /** @return list<string> */
     private function sources(): array
     {
@@ -147,6 +186,160 @@ class FormatDriftGuardTest extends TestCase
     }
 
     /**
+     * Elf Stellen in neun Views setzten die Adresse vor 1.2.1 jede für sich
+     * zusammen, in vier verschiedenen Schreibweisen — keine kannte den
+     * Bundesstaat, keine ließ sich auf ein US-Format umstellen. Die nächste
+     * darf nicht wieder so anfangen.
+     *
+     * Drei Zusammensetzungsmuster zählen — die vier historischen Schreibweisen,
+     * die 331664c ersetzt hat, brauchen zwei Blade-Muster plus das
+     * JS/Alpine-Muster, um alle zu treffen:
+     * - ein Blade-Echo mit Pfeilzugriff auf zip/city, egal ob direkt
+     *   (`{{ $o->zip }}`), verschachtelt in implode()/array_filter() oder
+     *   sonst irgendwo innerhalb desselben `{{ … }}` (`{{[^}]*->(zip|city)`);
+     * - ein Blade-Echo einer bloßen $companyZip/$companyCity-Variable, wie
+     *   sie die PDF-Kopfzeile vor 331664c benutzte (`{{[^}]*\$\w*(Zip|City)`);
+     * - eine JS/Alpine-Zusammensetzung über Punktzugriff (`obj.city`), wie
+     *   sie ein x-text mit .join() zusammenklebt.
+     * Der Zugriff im @if ($object->zip) ist erlaubt — die Frage "gibt es
+     * hier eine Adresse?" ist keine Formatierung, und ohne `{{` feuert
+     * keines der beiden Blade-Muster.
+     *
+     * (trim("$street, $zip $city", ', ') in app/helpers.php und die
+     * Bildunterschrift in app/Services/PhotoAnnotationService.php bleiben
+     * hier bewußt außen vor: kein Blade-Echo, und dieser Test prüft nur
+     * resources/views/. Für PHP-Quelltext unter app/ gibt es den eigenen
+     * Test darunter.)
+     *
+     * Die Ausnahme wirkt zeilenweise über einen Fingerabdruck (den genauen
+     * Text des bekannten Ausschnitts), nicht dateiweit: der Fingerabdruck
+     * wird aus der Zeile herausgeschnitten, bevor die Zeile auf ein
+     * Erkennungsmuster geprüft wird — eine zweite, neue Zusammensetzung auf
+     * derselben Zeile wie eine bekannte Ausnahme fällt dadurch trotzdem auf.
+     * Verschwindet ein gelisteter Fingerabdruck aus seiner Datei — etwa weil
+     * die Zeile umgeschrieben wurde —, meldet dieser Test die Ausnahme als
+     * Karteileiche.
+     */
+    public function test_no_view_composes_an_address_by_hand(): void
+    {
+        $offenders = [];
+        $matchedFingerprints = [];
+
+        foreach ($this->sources() as $path) {
+            $relative = $this->relative($path);
+
+            if (! str_starts_with($relative, 'resources/views/')) {
+                continue;
+            }
+
+            $allowedHere = self::ADDRESS_ALLOWED[$relative] ?? [];
+            $lines = explode("\n", (string) file_get_contents($path));
+
+            foreach ($lines as $line) {
+                // Bekannte Fingerabdrücke aus der Zeile herausschneiden, bevor
+                // sie geprüft wird — sonst würde ein zweiter, neuer Verstoß
+                // auf derselben Zeile stillschweigend mit durchrutschen.
+                $remainder = $line;
+
+                foreach ($allowedHere as $fingerprint => $because) {
+                    if (str_contains($remainder, $fingerprint)) {
+                        $matchedFingerprints["{$relative}\0{$fingerprint}"] = true;
+                        $remainder = str_replace($fingerprint, '', $remainder);
+                    }
+                }
+
+                $isOffense = preg_match('/\{\{[^}]*->(zip|city)\b/', $remainder) === 1
+                    || preg_match('/\{\{[^}]*\$\w*(Zip|City)\b/', $remainder) === 1
+                    || preg_match('/\.(zip|city)\b/', $remainder) === 1;
+
+                if ($isOffense) {
+                    $offenders[] = "{$relative}: ".trim($line);
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            'Use format_address()/format_address_lines() instead of composing an address in the view. '
+                .'Known-safe partial compositions are listed in ADDRESS_ALLOWED with their reasons — '
+                .'if this line is one of them, add or update its fingerprint there instead of silencing the test.'
+        );
+
+        // Ein Eintrag in ADDRESS_ALLOWED, der auf nichts mehr paßt, ist eine
+        // Karteileiche — die Begründung ist dann für eine Zeile geschrieben,
+        // die es nicht mehr gibt.
+        $stale = [];
+
+        foreach (self::ADDRESS_ALLOWED as $relative => $fingerprints) {
+            foreach ($fingerprints as $fingerprint => $because) {
+                if (! isset($matchedFingerprints["{$relative}\0{$fingerprint}"])) {
+                    $stale[] = "{$relative}: '{$fingerprint}' no longer found — remove or update this exception (was: {$because})";
+                }
+            }
+        }
+
+        $this->assertSame([], $stale, 'A listed address exception has gone stale');
+    }
+
+    /**
+     * Das Muster für PHP-Quelltext unter app/ — die Lücke, durch die die
+     * zwölfte Zusammensetzung fiel.
+     *
+     * `PhotoAnnotationService::buildMetadataLines()` klebte die Adresse in
+     * fester deutscher Reihenfolge und ohne Bundesstaat zusammen und brannte
+     * sie in jedes hochgeladene Einsatzfoto. Der Test darüber sah sie aus
+     * zwei Gründen nicht: er steigt bei allem aus, was nicht unter
+     * resources/views/ liegt, und seine drei Muster verlangen alle ein `{{`
+     * oder einen Punktzugriff — `$object->zip` in reinem PHP trifft keines.
+     *
+     * Das Muster hier ist bewußt eng: es feuert nicht auf den bloßen Zugriff
+     * (`$job->customerObject?->zip ?? ''` als eigene CSV-Spalte ist richtig
+     * so, und `$geocoding->resolve($request->zip, …)` gibt die Teile bewußt
+     * einzeln weiter), sondern nur, wenn auf derselben Zeile eine
+     * Zeichenketten-Verkettung an den Zugriff grenzt — also genau dann, wenn
+     * aus Teilen eine Adresse zusammengesetzt statt weitergereicht wird.
+     *
+     * Straße allein steht nicht in der Alternation, aus demselben Grund wie
+     * oben: sie ist regionsneutral. Wer die Adresse wieder von Hand baut,
+     * braucht Ort oder Postleitzahl dazu, und spätestens die fallen auf.
+     *
+     * Eine Ausnahmeliste gibt es hier nicht, weil es im heutigen Baum keine
+     * einzige legitime Fundstelle gibt. Kommt eine dazu, gehört sie
+     * zeilengenau ausgenommen — wie ADDRESS_ALLOWED es vormacht —, nicht
+     * dateiweit.
+     */
+    public function test_no_php_source_composes_an_address_by_hand(): void
+    {
+        $offenders = [];
+
+        foreach ($this->sources() as $path) {
+            $relative = $this->relative($path);
+
+            if (! str_starts_with($relative, 'app/')) {
+                continue;
+            }
+
+            if ($relative === 'app/Services/Format/Formatter.php') {
+                continue;
+            }
+
+            foreach (explode("\n", (string) file_get_contents($path)) as $number => $line) {
+                if (preg_match(self::PHP_ADDRESS_PATTERN, $line) === 1) {
+                    $offenders[] = "{$relative}:".($number + 1).': '.trim($line);
+                }
+            }
+        }
+
+        $this->assertSame(
+            [],
+            $offenders,
+            'Use format_address()/format_address_lines() instead of concatenating an address in PHP. '
+                .'A photo caption composed this way was burned into every uploaded job photo.'
+        );
+    }
+
+    /**
      * The guard is only worth having if it actually fires. This proves the
      * pattern matches what it claims to match, so a future refactor cannot
      * quietly turn the assertions above into "no files, therefore green".
@@ -165,5 +358,52 @@ class FormatDriftGuardTest extends TestCase
         $this->assertSame(1, preg_match('/:\w+\s(mm|cm)\b/', 'Wetter: :precipitation mm Niederschlag'));
         $this->assertSame(0, preg_match('/\}\}\s*(mm|cm)\b/', '{{-- a comment --}}'));
         $this->assertSame(0, preg_match('/\'\s(mm|cm)\'/', '@page { margin: 15mm 15mm 18mm 15mm; }'));
+
+        // Das Pfeilzugriff-Muster muß auf dem direkten Echo feuern, auf der
+        // verschachtelten implode()/array_filter()-Schreibweise (die alte,
+        // schmalere Fassung hätte das übersehen), und beim @if schweigen, das
+        // nur fragt, ob überhaupt eine Adresse da ist — ohne `{{` feuert es
+        // gar nicht erst.
+        $this->assertSame(1, preg_match('/\{\{[^}]*->(zip|city)\b/', '{{ $object->zip }} {{ $object->city }}'));
+        $this->assertSame(1, preg_match('/\{\{[^}]*->(zip|city)\b/', '{{ $o->city }}</span>'));
+        $this->assertSame(1, preg_match('/\{\{[^}]*->(zip|city)\b/', "{{ implode(' ', array_filter([\$object->zip, \$object->city])) }}"));
+        $this->assertSame(0, preg_match('/\{\{[^}]*->(zip|city)\b/', '@if ($object->zip || $object->city)'));
+
+        // Die bloße-Variable-Schreibweise der PDF-Kopfzeile vor 331664c
+        // ($companyZip/$companyCity) hat keinen Pfeilzugriff und braucht ein
+        // eigenes Muster.
+        $this->assertSame(1, preg_match('/\{\{[^}]*\$\w*(Zip|City)\b/', '{{ $companyZip }} {{ $companyCity }}'));
+        $this->assertSame(0, preg_match('/\{\{[^}]*\$\w*(Zip|City)\b/', '{{ $customer->name }}'));
+
+        // Die JS/Alpine-Variante über Punktzugriff muß auf einer echten
+        // Zusammensetzung feuern und bei einem bloß ähnlich aussehenden
+        // Bezeichner ("...pacity") stillbleiben, der kein Punkt-Präfix hat.
+        $this->assertSame(1, preg_match('/\.(zip|city)\b/', "[obj.street, obj.city].filter(Boolean).join(', ')"));
+        $this->assertSame(0, preg_match('/\.(zip|city)\b/', '{{ $object->capacity }}'));
+
+        // Das PHP-Muster muß die Zeile treffen, die es künftig verhindern
+        // soll — wörtlich so, wie sie bis 1.2.1 in
+        // PhotoAnnotationService::buildMetadataLines() stand (git show
+        // 2560962:schneespur/app/Services/PhotoAnnotationService.php, Zeile
+        // 98). Ohne diese Zusicherung wäre der Test darüber nur deshalb grün,
+        // weil das Muster nie feuert.
+        $this->assertSame(1, preg_match(
+            self::PHP_ADDRESS_PATTERN,
+            "            \$customerLine .= ', ' . trim((\$object->zip ?? '') . ' ' . (\$object->city ?? ''));"
+        ));
+
+        // Und die einfachere Schreibweise, in die ein Rückfall eher kippt.
+        $this->assertSame(1, preg_match(self::PHP_ADDRESS_PATTERN, "\$line = \$o->zip . ' ' . \$o->city;"));
+        $this->assertSame(1, preg_match(self::PHP_ADDRESS_PATTERN, "\$line .= \$o->city . ', ' . \$o->state;"));
+
+        // Stillbleiben muß es bei den beiden echten Stellen im heutigen Baum,
+        // die zip/city bewußt einzeln weitergeben statt sie zu verkleben: die
+        // CSV-Spalten und der Geocoder-Aufruf.
+        $this->assertSame(0, preg_match(self::PHP_ADDRESS_PATTERN, "                \$job->customerObject?->zip ?? '',"));
+        $this->assertSame(0, preg_match(self::PHP_ADDRESS_PATTERN, "                \$job->customerObject?->city ?? '',"));
+        $this->assertSame(0, preg_match(
+            self::PHP_ADDRESS_PATTERN,
+            '        $result = $geocoding->resolve($request->street, $request->zip, $request->city, $request->state);'
+        ));
     }
 }
