@@ -34,6 +34,7 @@ class CustomerObjectController extends Controller
         Gate::authorize('customers.edit');
 
         $object = $customer->objects()->create($request->validated());
+        $object->syncPrices($request->priceRows());
 
         return redirect()
             ->route('admin.customers.objects.index', $customer)
@@ -52,6 +53,7 @@ class CustomerObjectController extends Controller
         Gate::authorize('customers.edit');
 
         $object->update($request->validated());
+        $object->syncPrices($request->priceRows());
 
         return redirect()
             ->route('admin.customers.objects.index', $customer)

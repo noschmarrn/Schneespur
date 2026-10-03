@@ -6,6 +6,7 @@ use App\Services\Format\Formatter;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCustomerObjectRequest extends FormRequest
 {
@@ -54,7 +55,32 @@ class StoreCustomerObjectRequest extends FormRequest
                     }
                 },
             ],
-            'price_unit' => ['nullable', 'string', 'in:per_job,monthly,seasonal'],
+            'price_unit' => ['nullable', 'string', Rule::in(\App\Services\Pricing\JobPricing::UNITS)],
+            'prices' => ['sometimes', 'array', function (string $attribute, mixed $value, Closure $fail): void {
+                $allowed = $this->allowedPriceJobTypes();
+
+                foreach (array_keys((array) $value) as $jobType) {
+                    if (! in_array((string) $jobType, $allowed, true)) {
+                        $fail(__('customer_object.validation_price_job_type_unknown', ['type' => (string) $jobType]));
+                    }
+                }
+            }],
+            'prices.*.amount' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    $parsed = app(Formatter::class)->parseDecimal((string) $value);
+
+                    if ($parsed === null || $parsed < 0) {
+                        $fail(__('customer_object.validation_price_amount_invalid'));
+                    }
+                },
+            ],
+            'prices.*.unit' => ['nullable', 'string', Rule::in(\App\Services\Pricing\JobPricing::UNITS)],
             'site_notes' => ['nullable', 'string'],
             // Textfeld, nicht 'numeric': parseDecimal liest "5,1" im deutschen
             // und "5.1" im englischen Zahlenformat. Genau wie price_amount
@@ -91,9 +117,74 @@ class StoreCustomerObjectRequest extends FormRequest
         ];
     }
 
+    /**
+     * Registrierte Einsatzarten, dazu die, für die dieses Objekt schon eine
+     * Zeile hat — eine verwaiste Zeile (Modul entfernt) muß speicherbar
+     * bleiben, sonst wäre sie über das Formular nicht einmal löschbar.
+     *
+     * @return string[]
+     */
+    private function allowedPriceJobTypes(): array
+    {
+        $registered = app(\App\Services\Extension\JobTypeRegistry::class)->values();
+        $object = $this->route('object');
+
+        $existing = $object instanceof \App\Models\CustomerObject
+            ? $object->prices()->pluck('job_type')->all()
+            : [];
+
+        return array_values(array_unique(array_merge($registered, $existing)));
+    }
+
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function (\Illuminate\Validation\Validator $validator): void {
+            foreach ((array) $this->input('prices', []) as $jobType => $row) {
+                $amount = trim((string) ($row['amount'] ?? ''));
+                $unit = trim((string) ($row['unit'] ?? ''));
+
+                if ($amount !== '' && $unit === '') {
+                    $validator->errors()->add(
+                        "prices.$jobType.unit",
+                        __('customer_object.validation_price_unit_required'),
+                    );
+                }
+            }
+        });
+    }
+
+    /**
+     * Die Preiszeilen, fertig für CustomerObject::syncPrices(). Ein leerer
+     * Betrag wird zu null ("Grundpreis gilt" → Zeile löschen).
+     *
+     * @return array<string, array{amount_cents:int, unit:string}|null>
+     */
+    public function priceRows(): array
+    {
+        $rows = [];
+
+        foreach ((array) $this->input('prices', []) as $jobType => $row) {
+            $amount = trim((string) ($row['amount'] ?? ''));
+
+            $rows[(string) $jobType] = $amount === ''
+                ? null
+                : [
+                    'amount_cents' => (int) app(Formatter::class)->parseMoneyToCents($amount),
+                    'unit' => (string) $row['unit'],
+                ];
+        }
+
+        return $rows;
+    }
+
     public function validated($key = null, $default = null): mixed
     {
         $data = parent::validated($key, $default);
+
+        if ($key === null) {
+            // Eigene Tabelle, nicht Spalten des Objekts — siehe priceRows().
+            unset($data['prices']);
+        }
 
         if ($key === null && array_key_exists('price_amount', $data)) {
             $data['price_amount_cents'] = app(Formatter::class)
