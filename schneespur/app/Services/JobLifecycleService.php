@@ -106,7 +106,7 @@ class JobLifecycleService
         return $job;
     }
 
-    public function endJob(User $user, ?string $notes = null, array $extra = []): Job
+    public function endJob(User $user, ?string $notes = null, array $extra = [], ?string $internalNotes = null): Job
     {
         $job = $this->findActiveJob($user);
 
@@ -114,11 +114,15 @@ class JobLifecycleService
             throw JobLifecycleException::noActiveJob();
         }
 
-        DB::transaction(function () use ($job, $notes, $extra, $user) {
+        DB::transaction(function () use ($job, $notes, $internalNotes, $extra, $user) {
             $job->ended_at = now();
 
             if ($notes !== null) {
                 $job->notes = $notes;
+            }
+
+            if ($internalNotes !== null) {
+                $job->internal_notes = $internalNotes;
             }
 
             $job->save();
@@ -161,6 +165,7 @@ class JobLifecycleService
         Carbon $endedAt,
         ?string $notes = null,
         ?Vehicle $vehicle = null,
+        ?string $internalNotes = null,
     ): Job {
         $shift = WorkShift::create([
             'user_id' => $driver->id,
@@ -181,6 +186,7 @@ class JobLifecycleService
             'started_at' => $startedAt,
             'ended_at' => $endedAt,
             'notes' => $notes,
+            'internal_notes' => $internalNotes,
             'is_manual' => true,
         ]);
 

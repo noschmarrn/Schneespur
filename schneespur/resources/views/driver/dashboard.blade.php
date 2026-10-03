@@ -314,6 +314,18 @@
                             placeholder="{{ __('driver.dash_notes_placeholder') }}"
                             class="w-full min-h-[56px] rounded-xl bg-gray-800 border border-gray-600 text-gray-100 placeholder-gray-500 px-4 py-3 text-base focus:ring-2 focus:ring-red-400 focus:border-transparent transition resize-none"
                         ></textarea>
+                        <p class="mt-1 text-xs text-amber-300">{{ __('driver.dash_notes_customer_hint') }}</p>
+                    </div>
+                    <div>
+                        <label for="job-internal-notes" class="block text-sm font-medium text-gray-300 mb-2">{{ __('driver.dash_internal_notes_label') }}</label>
+                        <textarea
+                            id="job-internal-notes"
+                            name="internal_notes"
+                            rows="2"
+                            maxlength="1000"
+                            placeholder="{{ __('driver.dash_internal_notes_placeholder') }}"
+                            class="w-full min-h-[56px] rounded-xl bg-gray-800 border border-gray-600 text-gray-100 placeholder-gray-500 px-4 py-3 text-base focus:ring-2 focus:ring-red-400 focus:border-transparent transition resize-none"
+                        ></textarea>
                     </div>
 
                     @lifecycleFields('job.end')

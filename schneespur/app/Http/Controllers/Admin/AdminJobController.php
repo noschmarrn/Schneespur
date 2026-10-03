@@ -84,11 +84,12 @@ class AdminJobController extends Controller
 
         $validated = $request->validate([
             'notes' => ['nullable', 'string', 'max:2000'],
+            'internal_notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $oldValues = ['notes' => $serviceJob->notes];
+        $oldValues = ['notes' => $serviceJob->notes, 'internal_notes' => $serviceJob->internal_notes];
         $serviceJob->update($validated);
-        $newValues = ['notes' => $serviceJob->notes];
+        $newValues = ['notes' => $serviceJob->notes, 'internal_notes' => $serviceJob->internal_notes];
 
         $auditService->logChange($serviceJob, 'updated', $oldValues, $newValues);
 

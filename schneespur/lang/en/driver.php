@@ -128,6 +128,9 @@ return [
     'dash_gps_points'                    => 'GPS points',
     'dash_notes_label'                   => 'Notes (optional)',
     'dash_notes_placeholder'             => 'Any issues, obstacles, …',
+    'dash_notes_customer_hint'           => 'The customer reads this note in the portal and on the service report.',
+    'dash_internal_notes_label'          => 'Internal note (optional)',
+    'dash_internal_notes_placeholder'    => 'Visible to your company only',
 
     'dash_photos'                        => 'Photos',
     'dash_photo_capture'                 => 'Take photo',

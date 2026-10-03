@@ -138,6 +138,13 @@
                             <textarea id="notes" name="notes" rows="3" maxlength="1000" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('notes') }}</textarea>
                             <x-input-error :messages="$errors->get('notes')" class="mt-2" />
                         </div>
+
+                        <div class="sm:col-span-2">
+                            <x-input-label for="internal_notes" :value="__('job.field_internal_notes')" />
+                            <textarea id="internal_notes" name="internal_notes" rows="3" maxlength="1000" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('internal_notes') }}</textarea>
+                            <p class="mt-1 text-sm text-gray-500">{{ __('job.internal_notes_help') }}</p>
+                            <x-input-error :messages="$errors->get('internal_notes')" class="mt-2" />
+                        </div>
                     </div>
                 </fieldset>
             </div>

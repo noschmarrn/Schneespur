@@ -107,6 +107,13 @@
                 <label for="notes" class="block text-sm font-medium text-gray-300">{{ __('job.field_notes') }}</label>
                 <textarea id="notes" name="notes" rows="3" maxlength="1000" class="mt-1 block w-full rounded-lg bg-gray-800 border-gray-600 text-gray-100 focus:border-indigo-500 focus:ring-indigo-500">{{ old('notes') }}</textarea>
                 <x-input-error :messages="$errors->get('notes')" class="mt-2" />
+                <p class="mt-1 text-xs text-amber-300">{{ __('driver.dash_notes_customer_hint') }}</p>
+            </div>
+
+            <div>
+                <label for="internal_notes" class="block text-sm font-medium text-gray-300">{{ __('job.field_internal_notes') }}</label>
+                <textarea id="internal_notes" name="internal_notes" rows="2" maxlength="1000" class="mt-1 block w-full rounded-lg bg-gray-800 border-gray-600 text-gray-100 focus:border-indigo-500 focus:ring-indigo-500">{{ old('internal_notes') }}</textarea>
+                <x-input-error :messages="$errors->get('internal_notes')" class="mt-2" />
             </div>
 
             <button type="submit" class="w-full flex justify-center py-3 px-4 rounded-lg text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-900 min-h-[48px]">

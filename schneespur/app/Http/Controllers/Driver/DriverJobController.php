@@ -53,6 +53,7 @@ class DriverJobController extends Controller
         $registry = app(LifecycleFieldRegistry::class);
         $validated = $request->validate(array_merge([
             'notes' => ['nullable', 'string', 'max:1000'],
+            'internal_notes' => ['nullable', 'string', 'max:1000'],
         ], $registry->rules(LifecyclePoint::JobEnd, $request->user())));
 
         $extra = Arr::only($validated, $registry->fieldKeys(LifecyclePoint::JobEnd));
@@ -62,6 +63,7 @@ class DriverJobController extends Controller
                 $request->user(),
                 $validated['notes'] ?? null,
                 $extra,
+                $validated['internal_notes'] ?? null,
             );
         } catch (JobLifecycleException $e) {
             return redirect()->back()->with('error', $e->getMessage());

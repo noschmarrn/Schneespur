@@ -57,6 +57,19 @@
                 <x-input-error :messages="$errors->get('notes')" class="mt-2" />
             </div>
 
+            <div class="mt-4">
+                <x-input-label for="internal_notes" :value="__('job.field_internal_notes')" />
+                <textarea
+                    id="internal_notes"
+                    name="internal_notes"
+                    rows="3"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    maxlength="2000"
+                >{{ old('internal_notes', $job->internal_notes) }}</textarea>
+                <p class="mt-1 text-sm text-gray-500">{{ __('job.internal_notes_help') }}</p>
+                <x-input-error :messages="$errors->get('internal_notes')" class="mt-2" />
+            </div>
+
             <div class="mt-6 flex items-center gap-4">
                 <x-primary-button>{{ __('job.edit_save') }}</x-primary-button>
                 <a href="{{ route('admin.jobs.show', $job) }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('job.edit_cancel') }}</a>

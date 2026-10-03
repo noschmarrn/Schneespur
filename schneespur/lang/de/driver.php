@@ -128,6 +128,9 @@ return [
     'dash_gps_points'                    => 'GPS-Punkte',
     'dash_notes_label'                   => 'Notizen (optional)',
     'dash_notes_placeholder'             => 'Besonderheiten, Hindernisse, …',
+    'dash_notes_customer_hint'           => 'Der Kunde liest diese Notiz im Portal und im Nachweis.',
+    'dash_internal_notes_label'          => 'Interne Notiz (optional)',
+    'dash_internal_notes_placeholder'    => 'Nur für den Betrieb sichtbar',
 
     'dash_photos'                        => 'Fotos',
     'dash_photo_capture'                 => 'Foto aufnehmen',
