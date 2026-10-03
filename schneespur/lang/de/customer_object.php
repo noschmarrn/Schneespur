@@ -46,6 +46,8 @@ return [
     'price_row_orphaned'       => 'Einsatzart nicht mehr vorhanden — Betrag leeren, um die Zeile zu löschen.',
     'validation_price_unit_required' => 'Bitte eine Einheit zum Betrag wählen.',
     'validation_price_job_type_unknown' => 'Unbekannte Einsatzart: :type',
+    'validation_price_amount_too_large' => 'Der Betrag ist zu groß.',
+    'validation_price_row_invalid' => 'Ungültige Preiszeile.',
     'price_unit_placeholder'   => '– Einheit wählen –',
     'fieldset_master_data'     => 'Stammdaten',
     'fieldset_contact'         => 'Kontakt',

@@ -99,8 +99,10 @@
                 @foreach ($priceJobTypes as $jobType)
                     @php
                         $stored = $storedPrices->get($jobType);
-                        $amountValue = old("prices.$jobType.amount", $stored ? format_number($stored->amount_cents / 100, 2) : '');
-                        $unitValue = old("prices.$jobType.unit", $stored->unit ?? '');
+                        $oldRow = old('prices', []);
+                        $oldRow = is_array($oldRow) && is_array($oldRow[$jobType] ?? null) ? $oldRow[$jobType] : null;
+                        $amountValue = $oldRow !== null ? ($oldRow['amount'] ?? '') : ($stored ? format_number($stored->amount_cents / 100, 2) : '');
+                        $unitValue = $oldRow !== null ? ($oldRow['unit'] ?? '') : ($stored->unit ?? '');
                         $orphaned = ! in_array($jobType, $registeredTypes, true);
                     @endphp
                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-start">

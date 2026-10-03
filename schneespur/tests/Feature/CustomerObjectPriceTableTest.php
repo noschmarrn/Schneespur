@@ -185,4 +185,103 @@ class CustomerObjectPriceTableTest extends TestCase
 
         $this->assertSame(1, $object->prices()->count());
     }
+
+    public function test_a_job_type_with_a_dot_is_validated_stored_and_rendered(): void
+    {
+        app(JobTypeRegistry::class)->registerType('foo.bar', 'job.type_raumen', 500, 'testmodul');
+
+        $customer = $this->customer();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->post("/admin/customers/{$customer->id}/objects", $this->payload([
+                'prices' => ['foo.bar' => ['amount' => 'vierzig', 'unit' => 'per_job']],
+            ]))
+            ->assertSessionHasErrors('prices.foo.bar.amount');
+        $this->assertSame(0, CustomerObjectPrice::count());
+
+        $this->actingAs($admin)
+            ->post("/admin/customers/{$customer->id}/objects", $this->payload([
+                'prices' => ['foo.bar' => ['amount' => '12,50', 'unit' => 'per_job']],
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $object = $customer->objects()->firstOrFail();
+        $this->assertSame(1250, $object->prices()->where('job_type', 'foo.bar')->value('amount_cents'));
+
+        $this->actingAs($admin)
+            ->get("/admin/customers/{$customer->id}/objects/{$object->id}/edit")
+            ->assertSee('name="prices[foo.bar][amount]"', false)
+            ->assertSee('12,50');
+
+        $this->actingAs($admin)
+            ->put("/admin/customers/{$customer->id}/objects/{$object->id}", $this->payload([
+                'prices' => ['foo.bar' => ['amount' => '13,00', 'unit' => 'per_job']],
+            ]))
+            ->assertSessionHasNoErrors();
+        $this->assertSame(1300, $object->prices()->where('job_type', 'foo.bar')->value('amount_cents'));
+    }
+
+    public function test_an_amount_beyond_the_column_is_rejected(): void
+    {
+        $customer = $this->customer();
+
+        $this->actingAs($this->admin())
+            ->post("/admin/customers/{$customer->id}/objects", $this->payload([
+                'prices' => ['streuen' => ['amount' => '99999999999', 'unit' => 'per_job']],
+            ]))
+            ->assertSessionHasErrors('prices.streuen.amount');
+    }
+
+    public function test_the_base_price_has_the_same_upper_bound(): void
+    {
+        $customer = $this->customer();
+
+        $this->actingAs($this->admin())
+            ->post("/admin/customers/{$customer->id}/objects", $this->payload([
+                'price_amount' => '99999999999', 'price_unit' => 'per_job',
+            ]))
+            ->assertSessionHasErrors('price_amount');
+    }
+
+    public function test_a_row_that_is_not_an_array_is_a_validation_error(): void
+    {
+        $customer = $this->customer();
+
+        $this->actingAs($this->admin())
+            ->post("/admin/customers/{$customer->id}/objects", $this->payload([
+                'prices' => ['streuen' => 'x'],
+            ]))
+            ->assertSessionHasErrors('prices.streuen');
+    }
+
+    public function test_a_failed_validation_rerenders_the_submitted_values(): void
+    {
+        $customer = $this->customer();
+        $admin = $this->admin();
+
+        $this->actingAs($admin)
+            ->from("/admin/customers/{$customer->id}/objects/create")
+            ->post("/admin/customers/{$customer->id}/objects", $this->payload([
+                'prices' => ['streuen' => ['amount' => '41,00', 'unit' => '']],
+            ]))
+            ->assertSessionHasErrors('prices.streuen.unit');
+
+        $this->actingAs($admin)
+            ->get("/admin/customers/{$customer->id}/objects/create")
+            ->assertSee('value="41,00"', false);
+    }
+
+    public function test_a_unit_without_an_amount_on_a_new_row_stores_nothing(): void
+    {
+        $customer = $this->customer();
+
+        $this->actingAs($this->admin())
+            ->post("/admin/customers/{$customer->id}/objects", $this->payload([
+                'prices' => ['streuen' => ['amount' => '', 'unit' => 'per_job']],
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(0, CustomerObjectPrice::count());
+    }
 }

@@ -46,6 +46,8 @@ return [
     'price_row_orphaned'       => 'This job type no longer exists — clear the amount to delete the row.',
     'validation_price_unit_required' => 'Please choose a unit for this amount.',
     'validation_price_job_type_unknown' => 'Unknown job type: :type',
+    'validation_price_amount_too_large' => 'The amount is too large.',
+    'validation_price_row_invalid' => 'Invalid price row.',
     'price_unit_placeholder'   => '– Select unit –',
     'fieldset_master_data'     => 'Master Data',
     'fieldset_contact'         => 'Contact',
