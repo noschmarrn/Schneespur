@@ -8,7 +8,10 @@ use App\Models\CustomerObject;
 use App\Models\Job;
 use App\Models\JobAudit;
 use App\Models\User;
+use App\Mail\JobCompletedMail;
 use App\Services\JobLifecycleService;
+use App\Services\PdfReportService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\Finder\Finder;
@@ -194,5 +197,79 @@ class InternalNotesTest extends TestCase
 
         $this->assertGreaterThan(5, $finder->count(), 'Der Wächter hat kaum Dateien gesehen — stimmen die Pfade noch?');
         $this->assertSame([], $offenders);
+    }
+
+    private function finishedJobWithBothNotes(): Job
+    {
+        $job = app(JobLifecycleService::class)->createManualJob(
+            driver: $this->driver(),
+            customerObject: $this->object(),
+            type: 'raumen',
+            startedAt: now()->subHours(2),
+            endedAt: now()->subHour(),
+            notes: 'Zufahrt war frei, Hof geraeumt',
+            internalNotes: self::SECRET,
+        );
+
+        return $job->fresh()->load(['customer', 'customerObject', 'user', 'vehicle', 'gpsPoints', 'weatherSnapshots', 'jobPhotos']);
+    }
+
+    /**
+     * Die Datei-Wächter oben greifen nur auf den Buchstaben "internal_notes".
+     * Ein @json($job) oder $job->toArray() in einem Kunden-View käme an ihnen
+     * vorbei — deshalb wird hier das gerenderte HTML geprüft.
+     */
+    public function test_the_rendered_single_job_proof_does_not_contain_the_internal_note(): void
+    {
+        $job = $this->finishedJobWithBothNotes();
+
+        $html = view('pdf.job-report', [
+            'job' => $job,
+            'svgTrack' => null,
+            'gpsTableData' => app(PdfReportService::class)->sampleGpsPointsForTable($job->gpsPoints),
+        ])->render();
+
+        $this->assertStringContainsString('Zufahrt war frei, Hof geraeumt', $html);
+        $this->assertStringNotContainsString(self::SECRET, $html);
+    }
+
+    public function test_the_rendered_collective_report_does_not_contain_the_internal_note(): void
+    {
+        $job = $this->finishedJobWithBothNotes();
+        $service = app(PdfReportService::class);
+
+        // buildCoverData() ist privat; der Test nutzt es trotzdem, statt die
+        // Deckblatt-Struktur von Hand nachzubauen.
+        $coverData = (new \ReflectionMethod($service, 'buildCoverData'))->invoke($service, collect([$job]));
+
+        $html = view('pdf.customer-report', [
+            'customer' => $job->customer->load('objects'),
+            'jobs' => collect([$job]),
+            'jobData' => [$job->id => [
+                'svgTrack' => null,
+                'gpsTableData' => $service->sampleGpsPointsForTable($job->gpsPoints),
+            ]],
+            'from' => Carbon::now()->subDay(),
+            'to' => Carbon::now(),
+            'coverData' => $coverData,
+            'revenue' => null,
+        ])->render();
+
+        $this->assertStringContainsString('Zufahrt war frei, Hof geraeumt', $html);
+        $this->assertStringNotContainsString(self::SECRET, $html);
+    }
+
+    /**
+     * Die Mail nennt die Fahrernotiz nicht; als Beweis, daß der Inhalt
+     * wirklich gerendert wurde, dient der Name des Fahrers im Text.
+     */
+    public function test_the_rendered_completion_mail_does_not_contain_the_internal_note(): void
+    {
+        $job = $this->finishedJobWithBothNotes();
+
+        $html = (new JobCompletedMail($job, false))->render();
+
+        $this->assertStringContainsString($job->user->name, $html);
+        $this->assertStringNotContainsString(self::SECRET, $html);
     }
 }
