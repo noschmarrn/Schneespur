@@ -85,6 +85,6 @@ return [
     'revenue_title'        => 'Beträge im Zeitraum',
     'revenue_jobs'         => '{1} :count Einsatz mit Betrag|[2,*] :count Einsätze mit Betrag|{0} Einsätze mit Betrag',
     'revenue_total'        => 'Gesamt',
-    'revenue_jobs_without_amount' => '{1} :count Einsatz ohne Betrag — für ihn war beim Abschluß kein Preis hinterlegt.|[2,*] :count Einsätze ohne Betrag — für sie war beim Abschluß kein Preis hinterlegt.',
+    'revenue_jobs_without_amount' => '{1} :count Einsatz ohne Betrag — beim Abschluß war kein Preis hinterlegt, oder er wurde vor Version 1.2.1 abgeschlossen.|[2,*] :count Einsätze ohne Betrag — beim Abschluß war kein Preis hinterlegt, oder sie wurden vor Version 1.2.1 abgeschlossen.',
     'revenue_flat_rate_note' => 'Pauschalen sind mit dem heute hinterlegten Satz gerechnet, je angefangenem Monat in der Saison bzw. je Saison.',
 ];
