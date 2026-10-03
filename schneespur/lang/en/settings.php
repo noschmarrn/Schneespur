@@ -31,6 +31,13 @@ return [
     'season_help'                => 'Defines the active winter service period (e.g. November–March).',
 
     // Alert thresholds
+    'billing_title'              => 'Billing',
+    'billing_increment'          => 'Billing increment for hourly prices',
+    'billing_increment_exact'    => 'To the minute',
+    'billing_increment_step'     => 'Per started :minutes minutes',
+    'report_show_amounts'        => 'Show amounts on the collective report',
+    'report_show_amounts_help'   => 'The collective report goes to the customer. When switched on, it carries the total of jobs and flat rates for the period — in every rendering of that report: the admin download, the per-site report, the PDF download in the customer portal and the PDF attached to the report mail. The internal report and the CSV export always show amounts.',
+    'billing_increment_help'     => 'Applies to sites priced per hour. The increment is stored with the amount on each job; changing it affects future jobs only.',
     'alert_title'                => 'Alert Thresholds',
     'alert_overdue_hours'        => 'Overdue After (hours)',
     'alert_overdue_hours_help'   => 'Jobs open longer than this number of hours are flagged as overdue.',

@@ -8,6 +8,7 @@ use App\Http\Requests\Admin\UpdateCustomerObjectRequest;
 use App\Models\Customer;
 use App\Models\CustomerObject;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
@@ -33,7 +34,12 @@ class CustomerObjectController extends Controller
     {
         Gate::authorize('customers.edit');
 
-        $object = $customer->objects()->create($request->validated());
+        $object = DB::transaction(function () use ($request, $customer) {
+            $object = $customer->objects()->create($request->validated());
+            $object->syncPrices($request->priceRows());
+
+            return $object;
+        });
 
         return redirect()
             ->route('admin.customers.objects.index', $customer)
@@ -51,7 +57,10 @@ class CustomerObjectController extends Controller
     {
         Gate::authorize('customers.edit');
 
-        $object->update($request->validated());
+        DB::transaction(function () use ($request, $object): void {
+            $object->update($request->validated());
+            $object->syncPrices($request->priceRows());
+        });
 
         return redirect()
             ->route('admin.customers.objects.index', $customer)

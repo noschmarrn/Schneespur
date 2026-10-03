@@ -152,13 +152,16 @@ Route::get('/dashboard', function () {
         return redirect()->route('driver.home');
     }
 
-    // Falls through for users with neither role, whose behaviour is unchanged.
+    // Falls through for users with neither role. They get the dashboard shell
+    // only: the view embeds every site's access and site notes (gate codes),
+    // so customers and vehicles are passed EMPTY. A user without a role, or
+    // with a custom role lacking customers.view, has no business with them.
     $user = Auth::user();
     $shiftActive = \App\Models\WorkShift::where('user_id', $user->id)
         ->whereNull('ended_at')
         ->exists();
-    $customers = \App\Models\Customer::with('objects')->orderBy('name')->get();
-    $vehicles = \App\Models\Vehicle::orderBy('name')->get();
+    $customers = collect();
+    $vehicles = collect();
     $defaultVehicleId = $user->default_vehicle_id;
 
     return view('driver.dashboard', [

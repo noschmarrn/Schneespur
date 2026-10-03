@@ -44,6 +44,7 @@ class ManualJobController extends Controller
             startedAt: Carbon::parse($validated['started_at']),
             endedAt: Carbon::parse($validated['ended_at']),
             notes: $validated['notes'] ?? null,
+            internalNotes: $validated['internal_notes'] ?? null,
             vehicle: $vehicle,
         );
 

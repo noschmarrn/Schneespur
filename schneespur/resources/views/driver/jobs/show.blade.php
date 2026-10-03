@@ -82,6 +82,13 @@
             <p class="text-sm text-gray-300">{{ $job->notes ?: __('driver.history_detail_no_notes') }}</p>
         </div>
 
+        @if (filled($job->internal_notes))
+            <div class="bg-gray-800 rounded-xl p-4 space-y-2">
+                <p class="text-xs text-gray-500">{{ __('job.field_internal_notes') }}</p>
+                <p class="text-sm text-gray-300 whitespace-pre-line">{{ $job->internal_notes }}</p>
+            </div>
+        @endif
+
         {{-- Weather --}}
         @if($job->weatherSnapshots->isNotEmpty())
             <div class="bg-gray-800 rounded-xl p-4 space-y-3">

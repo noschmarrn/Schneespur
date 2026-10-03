@@ -81,4 +81,10 @@ return [
     'report_col_start'     => 'Start',
     'report_col_end'       => 'End',
     'report_col_duration'  => 'Duration',
+    'report_col_amount'    => 'Amount',
+    'revenue_title'        => 'Amounts in this period',
+    'revenue_jobs'         => '{1} :count job with an amount|[2,*] :count jobs with an amount|{0} Jobs with an amount',
+    'revenue_total'        => 'Total',
+    'revenue_jobs_without_amount' => '{1} :count job without an amount — no price was on file when it was completed, or it was completed before version 1.2.1.|[2,*] :count jobs without an amount — no price was on file when they were completed, or they were completed before version 1.2.1.',
+    'revenue_flat_rate_note' => 'Flat rates use the rate on file today, counted per started month in season or per season.',
 ];

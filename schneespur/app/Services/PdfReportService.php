@@ -11,6 +11,23 @@ use Illuminate\Support\Collection;
 
 class PdfReportService
 {
+    /**
+     * Die Beträge für den Sammel-Nachweis — oder null, wenn der Betrieb sie
+     * dort nicht zeigen will (Vorgabe) oder es nichts zu zeigen gibt. Der
+     * Nachweis geht an den Kunden; ein Update darf ihm keine Preise ins
+     * Dokument schreiben, die bisher nicht darin standen.
+     */
+    public function revenueFor(Customer $customer, Carbon $from, Carbon $to, ?CustomerObject $object = null): ?\App\Services\Pricing\RevenueSummary
+    {
+        if (! (bool) \App\Models\Setting::get('report_show_amounts', false)) {
+            return null;
+        }
+
+        $summary = app(\App\Services\Pricing\PeriodRevenue::class)->forCustomer($customer, $from, $to, $object);
+
+        return $summary->hasAnything() ? $summary : null;
+    }
+
     public function __construct(
         private readonly PdfRendererRegistry $rendererRegistry,
         private GpsSmoothingService $gpsSmoother = new GpsSmoothingService,
@@ -202,6 +219,7 @@ class PdfReportService
             'from' => $from,
             'to' => $to,
             'coverData' => $coverData,
+            'revenue' => $this->revenueFor($customer, $from, $to),
         ], [
             'footer' => [
                 'left' => __('job.pdf_generated_at', ['date' => format_datetime(now())]),
@@ -300,6 +318,7 @@ class PdfReportService
             'from' => $from,
             'to' => $to,
             'coverData' => $coverData,
+            'revenue' => $this->revenueFor($object->customer, $from, $to, $object),
         ], [
             'footer' => [
                 'left' => __('job.pdf_generated_at', ['date' => format_datetime(now())]),

@@ -77,11 +77,60 @@
                 <select id="price_unit" name="price_unit" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                     <option value="">{{ __('customer_object.price_unit_placeholder') }}</option>
                     <option value="per_job" @selected(old('price_unit', $object->price_unit ?? '') === 'per_job')>{{ __('customer_object.price_unit_per_job') }}</option>
+                    <option value="per_hour" @selected(old('price_unit', $object->price_unit ?? '') === 'per_hour')>{{ __('customer_object.price_unit_per_hour') }}</option>
                     <option value="monthly" @selected(old('price_unit', $object->price_unit ?? '') === 'monthly')>{{ __('customer_object.price_unit_monthly') }}</option>
                     <option value="seasonal" @selected(old('price_unit', $object->price_unit ?? '') === 'seasonal')>{{ __('customer_object.price_unit_seasonal') }}</option>
                 </select>
                 <x-input-error :messages="$errors->get('price_unit')" class="mt-2" />
             </div>
+        </div>
+        @php
+            $registry = app(\App\Services\Extension\JobTypeRegistry::class);
+            $registeredTypes = $registry->values();
+            $storedPrices = isset($object) ? $object->prices->keyBy('job_type') : collect();
+            $priceJobTypes = array_values(array_unique(array_merge($registeredTypes, $storedPrices->keys()->all())));
+            $priceUnits = \App\Services\Pricing\JobPricing::UNITS;
+        @endphp
+        <div class="mt-6">
+            <h4 class="text-sm font-semibold text-gray-900">{{ __('customer_object.price_table_title') }}</h4>
+            <p class="mt-1 text-sm text-gray-500">{{ __('customer_object.price_table_help') }}</p>
+
+            <div class="mt-3 space-y-3">
+                @foreach ($priceJobTypes as $jobType)
+                    @php
+                        $stored = $storedPrices->get($jobType);
+                        $oldRow = old('prices', []);
+                        $oldRow = is_array($oldRow) && is_array($oldRow[$jobType] ?? null) ? $oldRow[$jobType] : null;
+                        $amountValue = $oldRow !== null ? ($oldRow['amount'] ?? '') : ($stored ? format_number($stored->amount_cents / 100, 2) : '');
+                        $unitValue = $oldRow !== null ? ($oldRow['unit'] ?? '') : ($stored->unit ?? '');
+                        $orphaned = ! in_array($jobType, $registeredTypes, true);
+                    @endphp
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:items-start">
+                        <div class="text-sm font-medium text-gray-700 sm:pt-2">
+                            {{ $registry->label($jobType) }}
+                            @if ($orphaned)
+                                <span class="block text-xs font-normal text-amber-700">{{ __('customer_object.price_row_orphaned') }}</span>
+                            @endif
+                        </div>
+                        <div>
+                            <label for="prices_{{ $jobType }}_amount" class="sr-only">{{ __('customer_object.field_price_amount') }}</label>
+                            <x-text-input id="prices_{{ $jobType }}_amount" name="prices[{{ $jobType }}][amount]" type="text" inputmode="decimal" class="block w-full" :value="$amountValue" placeholder="{{ __('customer_object.price_row_placeholder') }}" />
+                            <x-input-error :messages="$errors->get('prices.'.$jobType.'.amount')" class="mt-2" />
+                        </div>
+                        <div>
+                            <label for="prices_{{ $jobType }}_unit" class="sr-only">{{ __('customer_object.field_price_unit') }}</label>
+                            <select id="prices_{{ $jobType }}_unit" name="prices[{{ $jobType }}][unit]" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                                <option value="">{{ __('customer_object.price_unit_placeholder') }}</option>
+                                @foreach ($priceUnits as $unit)
+                                    <option value="{{ $unit }}" @selected($unitValue === $unit)>{{ __('customer_object.price_unit_'.$unit) }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('prices.'.$jobType.'.unit')" class="mt-2" />
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            <x-input-error :messages="$errors->get('prices')" class="mt-2" />
         </div>
     </fieldset>
 

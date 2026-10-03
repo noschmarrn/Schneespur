@@ -36,4 +36,7 @@ return [
     'pdf_btn_generate'       => 'PDF generieren',
     'pdf_warning_many_jobs'  => 'Der gewählte Zeitraum enthält :count Einsätze. Die PDF-Erstellung kann etwas dauern. Fortfahren?',
     'pdf_no_jobs'            => 'Keine Einsätze im gewählten Zeitraum gefunden.',
+    'csv_col_amount'       => 'Betrag',
+    'csv_col_price_unit'   => 'Preiseinheit',
+    'csv_col_price_rate'   => 'Satz',
 ];

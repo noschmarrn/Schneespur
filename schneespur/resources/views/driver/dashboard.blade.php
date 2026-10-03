@@ -119,6 +119,8 @@
                     </div>
                 </div>
 
+                @include('driver.partials.object-hints', ['source' => 'selectedHints', 'open' => false])
+
                 {{-- Job type picker --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('driver.dash_select_type') }}</label>
@@ -297,6 +299,8 @@
                     <p x-show="photos.length === 0" class="text-sm text-gray-500">{{ __('driver.dash_photos_empty') }}</p>
                 </div>
 
+                @include('driver.partials.object-hints', ['source' => 'activeHints', 'open' => true])
+
                 {{-- End job form --}}
                 <form method="POST" action="{{ route('driver.job.end') }}" class="space-y-4">
                     @csrf
@@ -308,6 +312,18 @@
                             rows="3"
                             maxlength="1000"
                             placeholder="{{ __('driver.dash_notes_placeholder') }}"
+                            class="w-full min-h-[56px] rounded-xl bg-gray-800 border border-gray-600 text-gray-100 placeholder-gray-500 px-4 py-3 text-base focus:ring-2 focus:ring-red-400 focus:border-transparent transition resize-none"
+                        ></textarea>
+                        <p class="mt-1 text-xs text-amber-300">{{ __('driver.dash_notes_customer_hint') }}</p>
+                    </div>
+                    <div>
+                        <label for="job-internal-notes" class="block text-sm font-medium text-gray-300 mb-2">{{ __('driver.dash_internal_notes_label') }}</label>
+                        <textarea
+                            id="job-internal-notes"
+                            name="internal_notes"
+                            rows="2"
+                            maxlength="1000"
+                            placeholder="{{ __('driver.dash_internal_notes_placeholder') }}"
                             class="w-full min-h-[56px] rounded-xl bg-gray-800 border border-gray-600 text-gray-100 placeholder-gray-500 px-4 py-3 text-base focus:ring-2 focus:ring-red-400 focus:border-transparent transition resize-none"
                         ></textarea>
                     </div>
@@ -333,9 +349,23 @@
     </div>
 
     @php
-        $allCustomerObjects = $customers->flatMap(fn ($c) => $c->objects->map(fn ($o) => [
-            'id' => $o->id, 'customer_id' => $c->id, 'name' => $o->name, 'street' => $o->street, 'city' => $o->city,
-        ]));
+        // Salz-Häkchen: Der Standard ist false und trug vor 1.2.1 keine Information
+        // (nur das Objektformular las es). Würde er jetzt gezeigt, stünde an jedem
+        // Altobjekt rot "Kein Salz verwenden". Also nur anzeigen, wenn der Betrieb
+        // das Häkchen überhaupt benutzt, d. h. mindestens ein Objekt es gesetzt hat.
+        $saltFlagInUse = $customers->contains(fn ($c) => $c->objects->contains(fn ($o) => (bool) $o->salt_enabled));
+
+        $allCustomerObjects = $customers->flatMap(fn ($c) => $c->objects->map(function ($o) use ($c, $saltFlagInUse) {
+            $thresholdMm = $o->plowThresholdMm();
+
+            return [
+                'id' => $o->id, 'customer_id' => $c->id, 'name' => $o->name, 'street' => $o->street, 'city' => $o->city,
+                'access_notes' => $o->access_notes,
+                'site_notes' => $o->site_notes,
+                'salt_enabled' => $saltFlagInUse ? (bool) $o->salt_enabled : null,
+                'plow_threshold' => $thresholdMm === null ? null : format_snow_depth($thresholdMm / 10),
+            ];
+        }));
     @endphp
     <script>
         function driverDashboard() {
@@ -371,6 +401,15 @@
                     if (this.photosRemaining <= 0) return @json(__('driver.dash_photo_limit_reached'));
                     return @json(__('driver.dash_photo_capture'));
                 },
+
+                hintsFor(id) {
+                    return this.allCustomerObjects.find(o => o.id === id) || null;
+                },
+                hasHints(h) {
+                    return !!h && !!(h.access_notes || h.site_notes || h.plow_threshold || h.salt_enabled !== null);
+                },
+                get selectedHints() { return this.hintsFor(this.selectedObjectId); },
+                get activeHints() { return this.hintsFor(this.activeJob?.object_id); },
 
                 selectCustomer(id, name) {
                     this.selectedCustomerId = id;

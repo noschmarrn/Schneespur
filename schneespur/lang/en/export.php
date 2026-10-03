@@ -36,4 +36,7 @@ return [
     'pdf_btn_generate'       => 'Generate PDF',
     'pdf_warning_many_jobs'  => 'The selected period contains :count jobs. PDF generation may take a moment. Continue?',
     'pdf_no_jobs'            => 'No jobs found in the selected period.',
+    'csv_col_amount'       => 'Amount',
+    'csv_col_price_unit'   => 'Price unit',
+    'csv_col_price_rate'   => 'Rate',
 ];

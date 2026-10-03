@@ -106,7 +106,7 @@ class JobLifecycleService
         return $job;
     }
 
-    public function endJob(User $user, ?string $notes = null, array $extra = []): Job
+    public function endJob(User $user, ?string $notes = null, array $extra = [], ?string $internalNotes = null): Job
     {
         $job = $this->findActiveJob($user);
 
@@ -114,16 +114,22 @@ class JobLifecycleService
             throw JobLifecycleException::noActiveJob();
         }
 
-        DB::transaction(function () use ($job, $notes, $extra, $user) {
+        DB::transaction(function () use ($job, $notes, $internalNotes, $extra, $user) {
             $job->ended_at = now();
 
             if ($notes !== null) {
                 $job->notes = $notes;
             }
 
+            if ($internalNotes !== null) {
+                $job->internal_notes = $internalNotes;
+            }
+
             $job->save();
 
             $this->persistLifecycleFields(LifecyclePoint::JobEnd, $job, $extra, $user);
+
+            $this->freezePrice($job);
         });
 
         $lat = null;
@@ -153,6 +159,24 @@ class JobLifecycleService
         return $job->loadCount('gpsPoints');
     }
 
+    /**
+     * Das Festschreiben des Preises darf einen Einsatzabschluß nie aufhalten:
+     * ein Überlauf des Betrags oder eine noch nicht migrierte Preistabelle
+     * (Shared-Hosting: Dateien sind schon da, die Migration läuft erst im
+     * Web-Request) ließe sonst den Fahrer nicht abschließen. Bei einem Fehler
+     * bleiben die vier Preisspalten leer, der Einsatz gilt als "ohne Betrag".
+     * Ein fehlgeschlagenes SELECT/UPDATE bricht weder in MySQL noch in SQLite
+     * die umgebende Transaktion ab.
+     */
+    private function freezePrice(Job $job): void
+    {
+        try {
+            app(\App\Services\Pricing\JobPricing::class)->freeze($job);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
     public function createManualJob(
         User $driver,
         CustomerObject $customerObject,
@@ -161,6 +185,7 @@ class JobLifecycleService
         Carbon $endedAt,
         ?string $notes = null,
         ?Vehicle $vehicle = null,
+        ?string $internalNotes = null,
     ): Job {
         $shift = WorkShift::create([
             'user_id' => $driver->id,
@@ -181,8 +206,11 @@ class JobLifecycleService
             'started_at' => $startedAt,
             'ended_at' => $endedAt,
             'notes' => $notes,
+            'internal_notes' => $internalNotes,
             'is_manual' => true,
         ]);
+
+        $this->freezePrice($job);
 
         JobStarted::dispatch($job);
 

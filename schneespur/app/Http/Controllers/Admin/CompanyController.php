@@ -33,6 +33,8 @@ class CompanyController extends Controller
             'season_from' => Setting::get('season_from', '11-01'),
             'season_to' => Setting::get('season_to', '03-31'),
             'alert_overdue_hours' => Setting::get('alert_overdue_hours', 4),
+            'report_show_amounts' => (bool) Setting::get('report_show_amounts', false),
+            'billing_increment_minutes' => app(\App\Services\Pricing\JobPricing::class)->incrementMinutes(),
             'default_locale' => Setting::get('default_locale', 'de'),
             'locales' => app(LocaleRegistry::class)->labels(),
             'display_timezone' => \App\Support\Timezones::resolve(),
@@ -59,6 +61,14 @@ class CompanyController extends Controller
             'season_from' => ['required', 'string', 'regex:/^\d{2}-\d{2}$/'],
             'season_to' => ['required', 'string', 'regex:/^\d{2}-\d{2}$/'],
             'alert_overdue_hours' => ['required', 'integer', 'min:1'],
+            // 'sometimes': ein älteres Formular oder ein API-Client, der das
+            // Feld nicht schickt, behält den gespeicherten Takt.
+            'report_show_amounts' => ['sometimes', 'boolean'],
+            // Markiert, daß das Formular den Schalter überhaupt enthielt: ein
+            // nicht angehaktes Kästchen schickt nichts, und ohne diese Marke
+            // wäre "ausgeschaltet" von "Feld fehlt" nicht zu unterscheiden.
+            'report_show_amounts_present' => ['sometimes', 'boolean'],
+            'billing_increment_minutes' => ['sometimes', 'integer', Rule::in(\App\Services\Pricing\JobPricing::INCREMENTS)],
             'default_locale' => ['required', 'string', Rule::in(app(LocaleRegistry::class)->codes())],
             // Not Rule::in() over 400-odd identifiers on every request — and a
             // rejected value matters: an invalid zone throws inside
@@ -85,6 +95,12 @@ class CompanyController extends Controller
         Setting::set('season_from', $validated['season_from']);
         Setting::set('season_to', $validated['season_to']);
         Setting::set('alert_overdue_hours', $validated['alert_overdue_hours'], 'int');
+        if (array_key_exists('billing_increment_minutes', $validated)) {
+            Setting::set('billing_increment_minutes', (int) $validated['billing_increment_minutes'], 'int');
+        }
+        if ($request->has('report_show_amounts') || $request->has('report_show_amounts_present')) {
+            Setting::set('report_show_amounts', $request->boolean('report_show_amounts'), 'bool');
+        }
         Setting::set('default_locale', $validated['default_locale']);
         Setting::set('display_timezone', $validated['display_timezone']);
 

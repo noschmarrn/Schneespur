@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'pdf_amounts_title' => 'Beträge im Zeitraum',
+    'pdf_amounts_note' => 'Diese Aufstellung ist ein Leistungsnachweis und keine Rechnung.',
     'type_raumen' => 'Räumen',
     'type_streuen' => 'Streuen',
     'type_kontrolle' => 'Kontrolle',
@@ -16,6 +18,8 @@ return [
     'field_started_at' => 'Beginn',
     'field_ended_at' => 'Ende',
     'field_notes' => 'Notizen',
+    'field_internal_notes' => 'Interne Notiz',
+    'internal_notes_help' => 'Erscheint weder im Kundenportal noch im Nachweis.',
     'field_type' => 'Einsatzart',
     'field_customer' => 'Kunde',
     'field_object' => 'Objekt',
@@ -127,6 +131,7 @@ return [
     'audit_action_deleted' => 'Gelöscht',
     'audit_action_created' => 'Erstellt',
     'audit_field_notes' => 'Notizen',
+    'audit_field_internal_notes' => 'Interne Notiz',
     'audit_by' => 'Benutzer',
     'audit_at' => 'Zeitpunkt',
     'audit_old_value' => 'Alter Wert',

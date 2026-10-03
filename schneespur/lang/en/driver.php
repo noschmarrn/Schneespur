@@ -98,6 +98,12 @@ return [
     'shift_active'                       => 'Shift active',
     'shift_inactive'                     => 'No shift',
 
+    'hints_title'                        => 'Site notes',
+    'hints_no_salt'                      => 'Do not use salt',
+    'hints_salt_ok'                      => 'Salt allowed',
+    'hints_access'                       => 'Access',
+    'hints_site'                         => 'Job notes',
+    'hints_threshold'                    => 'Plow from',
     'dash_no_shift'                      => 'No active shift',
     'dash_no_shift_hint'                 => 'Start a shift to begin logging jobs.',
     'dash_shift_start'                   => 'Start shift',
@@ -122,6 +128,9 @@ return [
     'dash_gps_points'                    => 'GPS points',
     'dash_notes_label'                   => 'Notes (optional)',
     'dash_notes_placeholder'             => 'Any issues, obstacles, …',
+    'dash_notes_customer_hint'           => 'The customer reads this note in the portal and on the service report.',
+    'dash_internal_notes_label'          => 'Internal note (optional)',
+    'dash_internal_notes_placeholder'    => 'Visible to your company only',
 
     'dash_photos'                        => 'Photos',
     'dash_photo_capture'                 => 'Take photo',

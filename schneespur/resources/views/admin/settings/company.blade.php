@@ -206,6 +206,37 @@
                 </div>
             </div>
 
+            {{-- Abrechnung --}}
+            <div class="bg-white shadow-sm rounded-lg p-6 space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">{{ __('settings.billing_title') }}</h3>
+
+                <div>
+                    <label for="billing_increment_minutes" class="block text-sm font-medium text-gray-700">{{ __('settings.billing_increment') }}</label>
+                    <select name="billing_increment_minutes" id="billing_increment_minutes"
+                            class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        @foreach (\App\Services\Pricing\JobPricing::INCREMENTS as $minutes)
+                            <option value="{{ $minutes }}" @selected((int) old('billing_increment_minutes', $billing_increment_minutes) === $minutes)>
+                                {{ $minutes === 1 ? __('settings.billing_increment_exact') : __('settings.billing_increment_step', ['minutes' => $minutes]) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('settings.billing_increment_help') }}</p>
+                    @error('billing_increment_minutes')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
+                    <input type="hidden" name="report_show_amounts_present" value="1">
+                    <label for="report_show_amounts" class="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <input type="checkbox" name="report_show_amounts" id="report_show_amounts" value="1"
+                               class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                               @checked(old('report_show_amounts', $report_show_amounts))>
+                        {{ __('settings.report_show_amounts') }}
+                    </label>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('settings.report_show_amounts_help') }}</p>
+                </div>
+            </div>
+
             {{-- Sprache & Format --}}
             <div class="bg-white shadow-sm rounded-lg p-6 space-y-4">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('settings.locale_title') }}</h3>

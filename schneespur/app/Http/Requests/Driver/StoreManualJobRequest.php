@@ -62,6 +62,7 @@ class StoreManualJobRequest extends FormRequest
             'started_at' => ['required', 'date', 'before_or_equal:now'],
             'ended_at' => ['required', 'date', 'after:started_at', 'before_or_equal:now'],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'internal_notes' => ['nullable', 'string', 'max:1000'],
             'vehicle_id' => ['nullable', 'exists:vehicles,id'],
         ];
     }
@@ -77,6 +78,7 @@ class StoreManualJobRequest extends FormRequest
             'started_at' => __('job.field_started_at'),
             'ended_at' => __('job.field_ended_at'),
             'notes' => __('job.field_notes'),
+            'internal_notes' => __('job.field_internal_notes'),
             'vehicle_id' => __('job.field_vehicle'),
         ];
     }

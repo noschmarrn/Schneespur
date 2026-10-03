@@ -27,6 +27,7 @@ class Job extends Model
         'started_at',
         'ended_at',
         'notes',
+        'internal_notes',
         'is_manual',
     ];
 
@@ -37,6 +38,9 @@ class Job extends Model
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
             'is_manual' => 'boolean',
+            'price_amount_cents' => 'integer',
+            'price_rate_cents' => 'integer',
+            'price_increment_min' => 'integer',
         ];
     }
 

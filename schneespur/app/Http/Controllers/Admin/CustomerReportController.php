@@ -31,6 +31,7 @@ class CustomerReportController extends Controller
         $avgDurationMinutes = 0;
         $frequencyPerWeek = null;
         $sammelPdfUrl = null;
+        $revenue = null;
 
         $customerId = $request->input('customer');
 
@@ -63,6 +64,9 @@ class CustomerReportController extends Controller
                     'from' => $from->format('Y-m-d'),
                     'to' => $to->format('Y-m-d'),
                 ]);
+
+                $revenue = app(\App\Services\Pricing\PeriodRevenue::class)
+                    ->forCustomer($selectedCustomer, $from, $to);
             }
         }
 
@@ -80,6 +84,7 @@ class CustomerReportController extends Controller
             'avgDurationMinutes' => $avgDurationMinutes,
             'frequencyPerWeek' => $frequencyPerWeek,
             'sammelPdfUrl' => $sammelPdfUrl,
+            'revenue' => $revenue,
         ]);
     }
 

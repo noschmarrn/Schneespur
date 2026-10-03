@@ -124,6 +124,12 @@
                 <dt class="text-sm font-medium text-gray-500">{{ __('job.detail_notes') }}</dt>
                 <dd class="mt-1 text-sm text-gray-900">{{ $job->notes ?? __('job.detail_notes_empty') }}</dd>
             </div>
+            @if (filled($job->internal_notes))
+                <div class="sm:col-span-2">
+                    <dt class="text-sm font-medium text-gray-500">{{ __('job.field_internal_notes') }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900 whitespace-pre-line">{{ $job->internal_notes }}</dd>
+                </div>
+            @endif
         </dl>
     </div>
 

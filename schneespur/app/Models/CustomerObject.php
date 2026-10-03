@@ -88,4 +88,32 @@ class CustomerObject extends Model
     {
         return $this->hasMany(Job::class);
     }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(CustomerObjectPrice::class);
+    }
+
+    /**
+     * Preise je Einsatzart setzen. Schlüssel ist die Einsatzart; ein Wert
+     * null löscht die Zeile ("Grundpreis gilt"). Einsatzarten, die im Array
+     * nicht vorkommen, bleiben unberührt.
+     *
+     * @param array<string, array{amount_cents:int, unit:string}|null> $rows
+     */
+    public function syncPrices(array $rows): void
+    {
+        foreach ($rows as $jobType => $row) {
+            if ($row === null) {
+                $this->prices()->where('job_type', $jobType)->delete();
+
+                continue;
+            }
+
+            $this->prices()->updateOrCreate(
+                ['job_type' => $jobType],
+                ['amount_cents' => $row['amount_cents'], 'unit' => $row['unit']],
+            );
+        }
+    }
 }

@@ -109,7 +109,7 @@
                 <td class="label">{{ __('job.detail_customer') }}</td>
                 <td class="value">{{ $customer->name }}</td>
             </tr>
-            @php $primaryObject = $customerObject ?? $customer->objects->first(); @endphp
+            @php $primaryObject = $customerObject ?? $customer->documentAddressSource(); @endphp
             @if ($primaryObject && ($primaryObject->street || $primaryObject->zip || $primaryObject->city))
                 <tr>
                     <td class="label">{{ __('job.pdf_address') }}</td>
@@ -140,6 +140,35 @@
             @endif
         </table>
     </div>
+
+    @if (! empty($revenue))
+        <div class="section">
+            <div class="section-title">{{ __('job.pdf_amounts_title') }}</div>
+            <table class="info-grid">
+                @if ($revenue->pricedJobCount > 0)
+                    <tr>
+                        <td class="label">{{ trans_choice('overview.revenue_jobs', $revenue->pricedJobCount, ['count' => $revenue->pricedJobCount]) }}</td>
+                        <td class="value">{{ format_money($revenue->jobTotalCents) }}</td>
+                    </tr>
+                @endif
+                @foreach ($revenue->flatRateLines as $line)
+                    <tr>
+                        <td class="label">
+                            {{ $line->objectName }}@if ($line->jobTypeLabel), {{ $line->jobTypeLabel }}@endif
+                            — {{ __('customer_object.price_unit_'.$line->unit) }}
+                            ({{ $line->count }} × {{ format_money($line->rateCents) }})
+                        </td>
+                        <td class="value">{{ format_money($line->totalCents()) }}</td>
+                    </tr>
+                @endforeach
+                <tr>
+                    <td class="label"><strong>{{ __('overview.revenue_total') }}</strong></td>
+                    <td class="value"><strong>{{ format_money($revenue->totalCents()) }}</strong></td>
+                </tr>
+            </table>
+            <p style="font-size: 9pt; color: #64748b; margin-top: 4px;">{{ __('job.pdf_amounts_note') }}</p>
+        </div>
+    @endif
 
     @if ($jobs->isEmpty())
         <div class="section">

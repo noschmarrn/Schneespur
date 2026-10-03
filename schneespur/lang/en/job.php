@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'pdf_amounts_title' => 'Amounts in this period',
+    'pdf_amounts_note' => 'This summary is a record of services, not an invoice.',
     'type_raumen' => 'Clearing',
     'type_streuen' => 'Gritting',
     'type_kontrolle' => 'Inspection',
@@ -16,6 +18,8 @@ return [
     'field_started_at' => 'Start',
     'field_ended_at' => 'End',
     'field_notes' => 'Notes',
+    'field_internal_notes' => 'Internal note',
+    'internal_notes_help' => 'Never shown in the customer portal or on the service report.',
     'field_type' => 'Job type',
     'field_customer' => 'Customer',
     'field_object' => 'Site',
@@ -127,6 +131,7 @@ return [
     'audit_action_deleted' => 'Deleted',
     'audit_action_created' => 'Created',
     'audit_field_notes' => 'Notes',
+    'audit_field_internal_notes' => 'Internal note',
     'audit_by' => 'User',
     'audit_at' => 'Timestamp',
     'audit_old_value' => 'Old Value',
