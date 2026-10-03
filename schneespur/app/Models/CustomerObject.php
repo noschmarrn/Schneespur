@@ -88,4 +88,9 @@ class CustomerObject extends Model
     {
         return $this->hasMany(Job::class);
     }
+
+    public function prices(): HasMany
+    {
+        return $this->hasMany(CustomerObjectPrice::class);
+    }
 }
