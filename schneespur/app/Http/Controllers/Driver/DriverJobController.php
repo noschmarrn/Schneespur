@@ -89,6 +89,7 @@ class DriverJobController extends Controller
             ] : null,
             'job' => $job ? [
                 'id' => $job->id,
+                'object_id' => $job->customer_object_id,
                 'customer_name' => $job->customerObject?->customer?->name ?? '–',
                 'object_name' => $job->customerObject?->name,
                 'type_label' => $job->type->label(),

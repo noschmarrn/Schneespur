@@ -119,6 +119,8 @@
                     </div>
                 </div>
 
+                @include('driver.partials.object-hints', ['source' => 'selectedHints', 'open' => false])
+
                 {{-- Job type picker --}}
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">{{ __('driver.dash_select_type') }}</label>
@@ -297,6 +299,8 @@
                     <p x-show="photos.length === 0" class="text-sm text-gray-500">{{ __('driver.dash_photos_empty') }}</p>
                 </div>
 
+                @include('driver.partials.object-hints', ['source' => 'activeHints', 'open' => true])
+
                 {{-- End job form --}}
                 <form method="POST" action="{{ route('driver.job.end') }}" class="space-y-4">
                     @csrf
@@ -333,9 +337,17 @@
     </div>
 
     @php
-        $allCustomerObjects = $customers->flatMap(fn ($c) => $c->objects->map(fn ($o) => [
-            'id' => $o->id, 'customer_id' => $c->id, 'name' => $o->name, 'street' => $o->street, 'city' => $o->city,
-        ]));
+        $allCustomerObjects = $customers->flatMap(fn ($c) => $c->objects->map(function ($o) use ($c) {
+            $thresholdMm = $o->plowThresholdMm();
+
+            return [
+                'id' => $o->id, 'customer_id' => $c->id, 'name' => $o->name, 'street' => $o->street, 'city' => $o->city,
+                'access_notes' => $o->access_notes,
+                'site_notes' => $o->site_notes,
+                'salt_enabled' => (bool) $o->salt_enabled,
+                'plow_threshold' => $thresholdMm === null ? null : format_snow_depth($thresholdMm / 10),
+            ];
+        }));
     @endphp
     <script>
         function driverDashboard() {
@@ -371,6 +383,12 @@
                     if (this.photosRemaining <= 0) return @json(__('driver.dash_photo_limit_reached'));
                     return @json(__('driver.dash_photo_capture'));
                 },
+
+                hintsFor(id) {
+                    return this.allCustomerObjects.find(o => o.id === id) || null;
+                },
+                get selectedHints() { return this.hintsFor(this.selectedObjectId); },
+                get activeHints() { return this.hintsFor(this.activeJob?.object_id); },
 
                 selectCustomer(id, name) {
                     this.selectedCustomerId = id;

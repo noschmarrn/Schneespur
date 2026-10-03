@@ -98,6 +98,12 @@ return [
     'shift_active'                       => 'Schicht aktiv',
     'shift_inactive'                     => 'Keine Schicht',
 
+    'hints_title'                        => 'Hinweise zum Objekt',
+    'hints_no_salt'                      => 'Kein Salz verwenden',
+    'hints_salt_ok'                      => 'Salz erlaubt',
+    'hints_access'                       => 'Zufahrt / Zugang',
+    'hints_site'                         => 'Einsatz-Notizen',
+    'hints_threshold'                    => 'Räumen ab',
     'dash_no_shift'                      => 'Keine aktive Schicht',
     'dash_no_shift_hint'                 => 'Starten Sie eine Schicht, um Einsätze zu erfassen.',
     'dash_shift_start'                   => 'Schicht starten',
