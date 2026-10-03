@@ -128,6 +128,8 @@ class JobLifecycleService
             $job->save();
 
             $this->persistLifecycleFields(LifecyclePoint::JobEnd, $job, $extra, $user);
+
+            app(\App\Services\Pricing\JobPricing::class)->freeze($job);
         });
 
         $lat = null;
@@ -189,6 +191,8 @@ class JobLifecycleService
             'internal_notes' => $internalNotes,
             'is_manual' => true,
         ]);
+
+        app(\App\Services\Pricing\JobPricing::class)->freeze($job);
 
         JobStarted::dispatch($job);
 

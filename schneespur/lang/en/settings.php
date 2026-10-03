@@ -31,6 +31,11 @@ return [
     'season_help'                => 'Defines the active winter service period (e.g. November–March).',
 
     // Alert thresholds
+    'billing_title'              => 'Billing',
+    'billing_increment'          => 'Billing increment for hourly prices',
+    'billing_increment_exact'    => 'To the minute',
+    'billing_increment_step'     => 'Per started :minutes minutes',
+    'billing_increment_help'     => 'Applies to sites priced per hour. The increment is stored with the amount on each job; changing it affects future jobs only.',
     'alert_title'                => 'Alert Thresholds',
     'alert_overdue_hours'        => 'Overdue After (hours)',
     'alert_overdue_hours_help'   => 'Jobs open longer than this number of hours are flagged as overdue.',

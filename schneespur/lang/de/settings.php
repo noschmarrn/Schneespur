@@ -31,6 +31,11 @@ return [
     'season_help'                => 'Definiert den aktiven Winterdienst-Zeitraum (z. B. November–März).',
 
     // Alert-Schwellenwerte
+    'billing_title'              => 'Abrechnung',
+    'billing_increment'          => 'Abrechnungstakt beim Stundenpreis',
+    'billing_increment_exact'    => 'Minutengenau',
+    'billing_increment_step'     => 'Je angefangene :minutes Minuten',
+    'billing_increment_help'     => 'Gilt für Objekte mit einem Preis pro Stunde. Der Takt wird mit dem Betrag am Einsatz festgehalten; eine Änderung wirkt nur auf künftige Einsätze.',
     'alert_title'                => 'Alert-Schwellenwerte',
     'alert_overdue_hours'        => 'Überfällig nach (Stunden)',
     'alert_overdue_hours_help'   => 'Einsätze, die länger als diese Stundenzahl offen sind, werden als überfällig markiert.',
