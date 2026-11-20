@@ -30,8 +30,18 @@
         <h3 class="text-lg font-semibold text-gray-800">{{ __('help.owntracks_config_title') }}</h3>
         <p>{{ __('help.owntracks_config_text', ['app_name' => brand()]) }}</p>
 
+        <h3 class="text-lg font-semibold text-gray-800">{{ __('help.owntracks_remote_title') }}</h3>
+        <p>{{ __('help.owntracks_remote_text') }}</p>
+        <ul class="list-disc pl-5 space-y-1">
+            <li>{{ __('help.owntracks_remote_ios') }}</li>
+            <li>{{ __('help.owntracks_remote_android') }}</li>
+        </ul>
+
         <h3 class="text-lg font-semibold text-gray-800">{{ __('help.owntracks_qr_title') }}</h3>
         <p>{{ __('help.owntracks_qr_text') }}</p>
+
+        <h3 class="text-lg font-semibold text-gray-800">{{ __('help.owntracks_mode_title') }}</h3>
+        <p>{{ __('help.owntracks_mode_text') }}</p>
 
         <h3 class="text-lg font-semibold text-gray-800">{{ __('help.owntracks_troubleshoot_title') }}</h3>
         <p>{{ __('help.owntracks_troubleshoot_text') }}</p>

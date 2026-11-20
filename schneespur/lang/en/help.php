@@ -99,10 +99,16 @@ return [
     'owntracks_install_text'       => 'Download OwnTracks from the App Store (iOS) or Play Store (Android). The app is free and ad-free.',
     'owntracks_config_title'       => 'Configure Connection',
     'owntracks_config_text'        => 'Set the mode to "HTTP". Enter the OwnTracks endpoint URL of your :app_name installation as the URL (e.g. https://your-domain.com/api/owntracks). Username and password can be found on the driver detail page in the admin area.',
+    'owntracks_remote_title'       => 'Before Scanning: Allow Remote Configuration',
+    'owntracks_remote_text'        => 'OwnTracks only applies a configuration from a QR code if the app explicitly allows it. Without this setting, scanning does nothing. Turn on “Allow external configuration” in the OwnTracks app once, before scanning:',
+    'owntracks_remote_ios'         => 'iPhone: Settings → Remote Control → “Allow external configuration”.',
+    'owntracks_remote_android'     => 'Android: Settings → Remote Control → “Allow external configuration”. The “Remote commands” and “Remote configuration” switches below it concern commands sent by the server and are not needed for the QR code.',
     'owntracks_qr_title'           => 'Quick Setup via QR Code',
     'owntracks_qr_text'            => 'On the driver detail page you will find a QR code containing the complete OwnTracks configuration. Scan this QR code in the OwnTracks app — all settings are applied automatically.',
+    'owntracks_mode_title'         => '“Move” Mode During Jobs',
+    'owntracks_mode_text'          => 'Set the mode in the OwnTracks app (icon at the top left) to “Move”. In the other modes the app only reports larger changes of location and delivers hardly any points for the job track. On an iPhone, even “Move” only reports while the phone is actually moving: if you test sitting still at your desk, no new points arrive. Tap “Send” (icon at the top right) in the app instead. Positions are only stored while the driver has a shift and a job open.',
     'owntracks_troubleshoot_title' => 'Troubleshooting',
-    'owntracks_troubleshoot_text'  => 'If no GPS data is arriving: Check that the app has "Always" location permission. Make sure the URL is correct and the server is reachable (HTTPS). Verify username and password. If necessary, disable the phone\'s battery saver mode as it can suppress background GPS updates.',
+    'owntracks_troubleshoot_text'  => 'If no GPS data is arriving: Check that the app has "Always" location permission. Make sure the URL is correct and the server is reachable (HTTPS). Verify username and password. On an iPhone, "Authentication" must also be turned on in the OwnTracks settings, otherwise the app does not send the username and password and receives error 401 — the QR code turns this on automatically since version 1.2.1; with older QR codes, turn it on by hand. If necessary, disable the phone\'s battery saver mode as it can suppress background GPS updates.',
 
     // Jobs
     'jobs_workflow_title' => 'Job Workflow',

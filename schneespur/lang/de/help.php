@@ -99,10 +99,16 @@ return [
     'owntracks_install_text'       => 'Laden Sie OwnTracks aus dem App Store (iOS) oder Play Store (Android) herunter. Die App ist kostenlos und werbefrei.',
     'owntracks_config_title'       => 'Verbindung konfigurieren',
     'owntracks_config_text'        => 'Stellen Sie den Modus auf „HTTP" um. Tragen Sie als URL die OwnTracks-Endpoint-Adresse Ihrer :app_name-Installation ein (z. B. https://ihre-domain.de/api/owntracks). Benutzername und Passwort finden Sie auf der Fahrer-Detailseite im Admin-Bereich.',
+    'owntracks_remote_title'       => 'Vor dem Scannen: Fernkonfiguration erlauben',
+    'owntracks_remote_text'        => 'OwnTracks übernimmt eine Konfiguration aus einem QR-Code nur, wenn die App das ausdrücklich erlaubt. Ohne diese Einstellung passiert beim Scannen nichts. Schalten Sie deshalb einmalig vor dem Scannen in der OwnTracks-App den Schalter „Allow external configuration“ ein — er heißt auch auf deutschsprachigen Telefonen so:',
+    'owntracks_remote_ios'         => 'iPhone: Einstellungen → Remote Control → „Allow external configuration“.',
+    'owntracks_remote_android'     => 'Android: Einstellungen → Remote Control → „Allow external configuration“. Die Schalter „Fernkommandos“ und „Fernkonfiguration“ darunter betreffen Befehle vom Server und werden für den QR-Code nicht gebraucht.',
     'owntracks_qr_title'           => 'Schnelleinrichtung per QR-Code',
     'owntracks_qr_text'            => 'Auf der Fahrer-Detailseite finden Sie einen QR-Code, der die komplette OwnTracks-Konfiguration enthält. Scannen Sie diesen QR-Code in der OwnTracks-App — alle Einstellungen werden automatisch übernommen.',
+    'owntracks_mode_title'         => 'Modus „Bewegen“ während des Einsatzes',
+    'owntracks_mode_text'          => 'Stellen Sie den Modus in der OwnTracks-App (Symbol oben links) auf „Bewegen“. In den anderen Modi sendet die App nur bei größeren Ortswechseln und liefert kaum Punkte für die Einsatzspur. Auf dem iPhone sendet auch „Bewegen“ nur, solange sich das Telefon tatsächlich bewegt: Wer zum Testen still am Schreibtisch sitzt, sieht keine neuen Punkte. Dann in der App auf „Senden“ (Symbol oben rechts) tippen. Positionen werden nur gespeichert, während der Fahrer eine Schicht und einen Einsatz offen hat.',
     'owntracks_troubleshoot_title' => 'Fehlerbehebung',
-    'owntracks_troubleshoot_text'  => 'Falls keine GPS-Daten ankommen: Prüfen Sie, ob die App Standortberechtigung „Immer" hat. Stellen Sie sicher, dass die URL korrekt ist und der Server erreichbar (HTTPS). Kontrollieren Sie Benutzername und Passwort. Deaktivieren Sie ggf. den Energiesparmodus des Telefons, da dieser GPS-Updates im Hintergrund unterdrücken kann.',
+    'owntracks_troubleshoot_text'  => 'Falls keine GPS-Daten ankommen: Prüfen Sie, ob die App Standortberechtigung „Immer" hat. Stellen Sie sicher, dass die URL korrekt ist und der Server erreichbar (HTTPS). Kontrollieren Sie Benutzername und Passwort. Auf dem iPhone muss in den OwnTracks-Einstellungen zusätzlich „Authentifizierung“ eingeschaltet sein, sonst sendet die App Benutzername und Passwort nicht mit und erhält den Fehler 401 — der QR-Code schaltet das seit Version 1.2.1 automatisch ein, bei älteren QR-Codes bitte von Hand. Deaktivieren Sie ggf. den Energiesparmodus des Telefons, da dieser GPS-Updates im Hintergrund unterdrücken kann.',
 
     // Jobs
     'jobs_workflow_title' => 'Einsatz-Workflow',

@@ -79,7 +79,7 @@ return [
     'credentials_print'                  => 'Print Credentials',
     'credentials_back'                   => 'Back to Driver List',
     'credentials_qr_heading'             => 'Configure OwnTracks App',
-    'credentials_qr_instruction'         => '1. Open OwnTracks app 2. Scan QR code 3. Done — the app is configured',
+    'credentials_qr_instruction'         => '1. Open OwnTracks app 2. Settings → Remote Control → turn on “Allow external configuration” 3. Scan QR code 4. Done — the app is configured',
     'credentials_qr_copy_url'            => 'Copy configuration URL',
     'credentials_qr_url_copied'          => 'URL copied',
     'credentials_https_warning'          => 'Warning: Your server does not use HTTPS. OwnTracks may refuse to connect.',
