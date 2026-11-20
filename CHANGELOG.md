@@ -6,7 +6,17 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
-## [Unreleased]
+## [1.2.1] — 2026-11-20 — Field-test fixes, regional addresses & prices
+
+Two independent field tests of 1.2.0 — one German operation, one American — put the release into daily use. This release is what they found.
+
+**The blockers first.** The time-zone setting had no effect, the season period lost October to December, and the address lookup only knew German addresses. All three are fixed, together with the other defects from the same reports and four weather defects found while tracing one of them.
+
+**Addresses and prices.** Addresses carry a state, province or canton and print in the region's format. A site can price each job type separately and per hour, and the customer report, the CSV export and — if you switch it on — the collective report show the amounts.
+
+**For the driver.** Site notes reach the driver app, jobs get an internal note the customer never sees, and setting up OwnTracks on an iPhone no longer ends in "401".
+
+**Before updating, review the salt setting of your sites** (see *Added*), and note the known limitation for per-hour prices below.
 
 ### Added
 - **Addresses now carry a state, province or canton**, and are printed in the format of the operator's region — `Innstraße 12, 94032 Passau` in Germany, `400 S 4th St, Minneapolis, MN 55401` in the United States. Company & Location and each customer object gained a state field to go with it. Thirteen places that used to compose the address by hand — the customer and object lists, job details, both PDF reports, the customer portal, the caption burned into every job photo, and the placeholder text in the privacy notice — now share one source, so all of them gained the state at once instead of one at a time. The photo caption is the one that could not have been corrected afterwards: it is drawn into the image itself when the photo is uploaded.
