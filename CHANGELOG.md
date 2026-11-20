@@ -65,6 +65,7 @@ Five more, found while giving customer objects a state field and their address o
 - **A plow threshold could only be whole centimetres, so 2″ (5.08 cm) could not be entered at all.** It is now stored the way the operator entered it, in their own unit, and read back without a rounding loss — the field itself is now labelled with the unit, "Plow threshold (in)" or "Plow threshold (cm)".
 - **On Company & Location, a failed address lookup asked the operator to enter coordinates by hand.** There is no field for that, and the block that would show the coordinates is not rendered at all when the lookup failed. The message now asks to check the street, postal code and city instead.
 - **The customer portal's object list showed the street and city, but never the postal code.**
+- **An iPhone set up from the OwnTracks QR code was rejected with "401" on every location.** The QR code carried the username and password but not the switch that tells OwnTracks to send them, and a freshly installed iPhone app has that switch off. Every location therefore reached the server without credentials, and generating new ones changed nothing. The QR code now turns the switch on. **A driver who already scanned an older QR code on an iPhone and gets 401:** turn on *Authentication* in the OwnTracks settings, or generate new credentials and scan the new code. Android sends the credentials as soon as they are entered and was not affected.
 
 ## [1.2.0] — 2026-08-09 — Security hardening, regional formats & offline reliability
 
