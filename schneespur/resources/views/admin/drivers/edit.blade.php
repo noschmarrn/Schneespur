@@ -54,6 +54,16 @@
             </x-confirm-dialog>
         @else
             <p class="mt-4 text-sm text-gray-500">{{ __('driver.owntracks_no_credentials') }}</p>
+
+            {{-- No confirmation dialog: with no credentials yet, nothing on a
+                 phone can be invalidated. The rotate route creates the username
+                 when none exists. --}}
+            @can('drivers.edit')
+                <form method="POST" action="{{ route('admin.drivers.rotate-credentials', $driver) }}" class="pt-4">
+                    @csrf
+                    <x-primary-button>{{ __('driver.btn_generate_credentials') }}</x-primary-button>
+                </form>
+            @endcan
         @endif
     </div>
 

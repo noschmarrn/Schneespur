@@ -32,12 +32,16 @@ class DriverCredentialController extends Controller
     {
         Gate::authorize('drivers.edit');
 
+        // Also the way to create first credentials for a driver who got the
+        // role through user management, where nothing generates them.
+        $isFirst = $driver->owntracks_username === null;
+
         $credentials = $credentialService->generateCredentials($driver, $request->user());
 
         session()->flash('owntracks_credentials', $credentials);
 
         return redirect()
             ->route('admin.drivers.credentials', $driver)
-            ->with('success', __('driver.flash_rotated'));
+            ->with('success', __($isFirst ? 'driver.flash_credentials_generated' : 'driver.flash_rotated'));
     }
 }
