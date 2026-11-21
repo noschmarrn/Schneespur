@@ -6,6 +6,18 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [1.2.3] — 2026-11-21 — Updates that finish, on real web hosting
+
+**1.2.2 was withdrawn on the day it was released.** It installed cleanly, but on most web hosting some pages then showed "500 Server Error". If you installed 1.2.2 and see that, delete the two files `bootstrap/cache/config.php` and `bootstrap/cache/routes-v7.php` via FTP, then install 1.2.3 under **Settings → Update**. If you are still on 1.2.0 or 1.2.1, install 1.2.3 directly; it includes everything from 1.2.2.
+
+### Fixed
+- **After updating from 1.2.0 or 1.2.1, pages could fail with "500 Server Error".** The previous version's updater rebuilt Laravel's configuration and route caches in the same request that copied the new files. On hosts with PHP's opcode cache, which is nearly all of them, that request still saw the old PHP files, so the caches were built from the old code. Pages that use something new then failed, the update page among them. The application now notices on the first request when its caches were built by older code and discards them. It does not matter which version's updater installed it.
+
+### Internal
+- The update smoke test now runs the previous version's updater with the opcode cache enabled, as on web hosting, and opens pages as a logged-in admin. Before, it only checked the login page, which does not use any route that a stale cache could miss. `build.sh` also checks that the version number agrees in all three places and runs the smoke test from 1.2.2 as well.
+
+---
+
 ## [1.2.2] — 2026-11-21 — Updates that finish
 
 **If you updated from 1.2.0 to 1.2.1 with the update button, your site is probably showing "503 Service Unavailable" on every page.** The update stopped halfway and left the site in maintenance mode. Your data is intact. To recover, delete `storage/framework/down` and `storage/framework/maintenance.php` via FTP (or run `php artisan migrate --force && php artisan up` via SSH), log in, and install 1.2.2. See *If every page shows "503"* in the installation guide.

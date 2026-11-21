@@ -14,6 +14,17 @@ echo "════════════════════════�
 
 cd "$PROJECT_DIR"
 
+# ── 0a. Versions-Gate ──
+# VERSION im Quellbaum, das Literal app.build in config/app.php und das
+# Argument müssen gleich sein. Weicht app.build ab, hält jede Installation
+# ihre Laravel-Caches für veraltet und verwirft sie (StaleCompiledCache).
+SRC_VERSION="$(tr -d '[:space:]' < "$SOURCE_DIR/VERSION")"
+BUILD_LITERAL="$(grep -oE "'build' => '[^']+'" "$SOURCE_DIR/config/app.php" | sed -E "s/.*=> '([^']+)'/\1/")"
+if [ "$SRC_VERSION" != "$VERSION" ] || [ "$BUILD_LITERAL" != "$VERSION" ]; then
+    echo "  ✗ Versionen uneinig: Argument ${VERSION}, VERSION ${SRC_VERSION}, app.build ${BUILD_LITERAL}"
+    exit 1
+fi
+
 # ── 0. Sicherheits-Gate ──
 # 1.2.0 und 1.2.1 gingen mit 19 bekannten Advisories hinaus, weil seit August
 # keine CI lief. Das Audit gehört deshalb VOR den Build, nicht danach.
@@ -243,7 +254,7 @@ echo "▸ Restoring dev composer dependencies..."
 # und endete bei jedem Nutzer, der von 1.2.0 aktualisierte, in 503.
 echo ""
 echo "▸ Update smoke tests..."
-for FROM in ${SMOKE_FROM:-1.2.0 1.2.1}; do
+for FROM in ${SMOKE_FROM:-1.2.0 1.2.1 1.2.2}; do
     FROM_ZIP="${PROJECT_DIR}/release/${PRODUCT}-${FROM}.zip"
     if [ ! -f "$FROM_ZIP" ]; then
         echo "  ⚠ ${FROM_ZIP} fehlt — Smoke ${FROM} → ${VERSION} übersprungen"

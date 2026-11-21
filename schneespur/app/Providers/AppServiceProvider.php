@@ -88,6 +88,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Zuerst: Caches, die der alte Updater aus altem Code gebaut hat,
+        // verwerfen, bevor die Routen geladen werden.
+        \App\Support\StaleCompiledCache::discardIfBuiltByOlderCode($this->app);
+
         $this->app->singleton(AlertService::class);
         $this->app->singleton(ModuleApiRegistrar::class);
         $this->app->singleton(ModuleAssetRegistry::class);

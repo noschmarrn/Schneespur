@@ -220,6 +220,7 @@ This mainly affects the update from 1.2.0 to 1.2.1. It left almost every install
 
 - **With SSH:** `php artisan migrate --force && php artisan up`
 - **FTP only:** delete the two files `down` and `maintenance.php` in `storage/framework/`. Log in and install version 1.2.2 under **Settings → Update**. Until then the interface works, but the new 1.2.1 features (prices, internal notes, state) do not yet.
+- **"500 Server Error" after updating to 1.2.2:** delete `bootstrap/cache/config.php` and `bootstrap/cache/routes-v7.php` via FTP, then install 1.2.3. From 1.2.3 onwards, the application detects such stale caches itself.
 - **If an update from 1.2.2 onwards gets stuck:** the file `storage/app/schneespur_update_recovery.json` contains an address under `bypass_path`. Open it in your browser to reach the update page despite maintenance mode, then press **"Finish update"**. With SSH, `php artisan schneespur:update-recover` is enough.
 
 ### Manual update via FTP

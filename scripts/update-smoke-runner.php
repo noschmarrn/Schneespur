@@ -6,6 +6,7 @@
  *   php update-smoke-runner.php update   <basis> <zip> <version>
  *   php update-smoke-runner.php finalize <basis>
  *   php update-smoke-runner.php http     <basis> <pfad>
+ *   php update-smoke-runner.php http-admin <basis> <pfad>   (als Admin angemeldet)
  *
  * "update" bootet die installierte (alte) Version und ruft ihren eigenen
  * Updater auf — genau so, wie der Update-Knopf es tut: alte Klassen im
@@ -16,7 +17,7 @@
 
 [$self, $mode, $base] = array_pad($argv, 3, null);
 
-if (! in_array($mode, ['update', 'finalize', 'http'], true) || ! is_dir((string) $base)) {
+if (! in_array($mode, ['update', 'finalize', 'http', 'http-admin'], true) || ! is_dir((string) $base)) {
     fwrite(STDERR, "usage: update|finalize|http <basis> …\n");
     exit(2);
 }
@@ -24,11 +25,21 @@ if (! in_array($mode, ['update', 'finalize', 'http'], true) || ! is_dir((string)
 require $base.'/vendor/autoload.php';
 $app = require $base.'/bootstrap/app.php';
 
-if ($mode === 'http') {
+if ($mode === 'http' || $mode === 'http-admin') {
     $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+    if ($mode === 'http-admin') {
+        $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+        $admin = App\Models\User::where('email', 'smoke-admin@example.test')->first()
+            ?? App\Models\User::forceCreate(['name' => 'Smoke', 'email' => 'smoke-admin@example.test', 'password' => bcrypt(bin2hex(random_bytes(8)))]);
+        $admin->assignRole('admin');
+        Illuminate\Support\Facades\Auth::guard('web')->setUser($admin->fresh());
+    }
     $request = Illuminate\Http\Request::create($argv[3] ?? '/login', 'GET');
     $response = $kernel->handle($request);
     echo $response->getStatusCode(), "\n";
+    if ($response->getStatusCode() >= 500 && isset($response->exception)) {
+        fwrite(STDERR, '  '.get_class($response->exception).': '.substr($response->exception->getMessage(), 0, 200)."\n");
+    }
     $kernel->terminate($request, $response);
     exit(0);
 }

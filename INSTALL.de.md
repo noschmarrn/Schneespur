@@ -220,6 +220,7 @@ Das betrifft vor allem das Update von 1.2.0 auf 1.2.1. Es blieb bei fast jeder I
 
 - **Mit SSH:** `php artisan migrate --force && php artisan up`
 - **Nur mit FTP:** Löschen Sie im Ordner `storage/framework/` die beiden Dateien `down` und `maintenance.php`. Melden Sie sich an und installieren Sie unter **Einstellungen → Update** die Version 1.2.2. Bis dahin funktioniert die Oberfläche, Neues aus 1.2.1 (Preise, interne Notizen, Bundesland) aber noch nicht.
+- **„500 Server Error“ nach dem Update auf 1.2.2:** Löschen Sie per FTP `bootstrap/cache/config.php` und `bootstrap/cache/routes-v7.php` und installieren Sie danach 1.2.3. Ab 1.2.3 erkennt Schneespur solche veralteten Caches selbst.
 - **Hängt ein Update ab 1.2.2:** Die Datei `storage/app/schneespur_update_recovery.json` nennt unter `bypass_path` eine Adresse. Öffnen Sie sie im Browser, dann kommen Sie trotz Wartungsmodus zur Update-Seite und können **„Update abschließen“** drücken. Mit SSH genügt `php artisan schneespur:update-recover`.
 
 ### Manuelles Update per FTP

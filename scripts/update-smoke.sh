@@ -48,11 +48,16 @@ EOF
 touch "$APP/storage/app/installed.lock"
 
 # ── Update über den alten Updater ──
-OUT="$(php "$RUNNER" update "$APP" "$TO_ZIP" "$TO_VERSION" 2>&1 || true)"
+# OPcache an wie bei einem Webhoster: Die Kommandozeile hat es sonst aus, und
+# genau das verbarg den 500er nach 1.2.0 → 1.2.2 — der alte Updater baute
+# config:cache/route:cache im selben Prozeß aus den alten, gecachten
+# PHP-Dateien. revalidate_freq hält die Dateien für die Laufzeit des Prozesses fest.
+PHP_HOSTING=(php -d opcache.enable_cli=1 -d opcache.validate_timestamps=1 -d opcache.revalidate_freq=60)
+OUT="$("${PHP_HOSTING[@]}" "$RUNNER" update "$APP" "$TO_ZIP" "$TO_VERSION" 2>&1 || true)"
 echo "  $(echo "$OUT" | tail -1)"
 case "$OUT" in
     *STAGED*)
-        OUT2="$(php "$RUNNER" finalize "$APP" 2>&1 || true)"
+        OUT2="$("${PHP_HOSTING[@]}" "$RUNNER" finalize "$APP" 2>&1 || true)"
         echo "  $(echo "$OUT2" | tail -1)"
         [[ "$OUT2" == *"FINALIZE OK"* ]] || fail "Stufe 2 gescheitert"
         ;;
@@ -73,4 +78,11 @@ grep -q "\"current_version\": *\"$TO_VERSION\"" "$APP/storage/app/schneespur_upd
 STATUS="$(php "$RUNNER" http "$APP" /login 2>&1 | tail -1)"
 [[ "$STATUS" == "200" ]] || fail "GET /login liefert $STATUS"
 
-echo "  ✓ ${FROM_VERSION} → ${TO_VERSION} sauber (kein down, 0 offene Migrationen, /login 200)"
+# Eine angemeldete Seite, deren View Routen der NEUEN Version benutzt — ein
+# veralteter Route-Cache fällt nur dort auf, /login ist dafür blind.
+for ADMIN_PATH in /admin/settings/update /admin/dashboard /admin/customers /admin/jobs /driver; do
+    STATUS="$(php "$RUNNER" http-admin "$APP" "$ADMIN_PATH" 2>&1 | tail -2 | tr '\n' ' ')"
+    [[ "$STATUS" == 200* || "$STATUS" == 302* ]] || fail "GET $ADMIN_PATH (Admin) liefert $STATUS"
+done
+
+echo "  ✓ ${FROM_VERSION} → ${TO_VERSION} sauber (kein down, 0 offene Migrationen, /login 200, Admin-Seiten ok)"

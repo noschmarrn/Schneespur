@@ -17,6 +17,13 @@ return [
 
     'version' => trim((string) @file_get_contents(dirname(__DIR__).'/VERSION')) ?: '1.0.0',
 
+    // Bewußt ein Literal, gleich VERSION: Es kommt mit dieser Datei durch
+    // OPcache, VERSION dagegen nicht. Weichen beide in einem gecachten Config
+    // voneinander ab, hat älterer Code den Cache gebaut — siehe
+    // App\Support\StaleCompiledCache. Bei jedem Release mitheben
+    // (StaleCompiledCacheTest und build.sh prüfen das).
+    'build' => '1.2.3',
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment
