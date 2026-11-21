@@ -31,6 +31,10 @@ return [
     'installing'                 => 'Update wird installiert…',
     'install_success'            => 'Update auf Version :version erfolgreich installiert.',
     'install_failed'             => 'Update fehlgeschlagen: :error',
+    'install_finalizing'         => 'Dateien kopiert. Update wird abgeschlossen …',
+    'finalize_button'            => 'Update abschließen',
+    'finalize_nothing_pending'   => 'Es steht kein unvollständiges Update an.',
+    'pending_notice'             => 'Das Update auf Version :version ist noch nicht abgeschlossen. Die Seite ist bis dahin im Wartungsmodus.',
 
     // Backup
     'backup_title'               => 'Backup-Empfehlung',
@@ -75,6 +79,7 @@ return [
     'preflight_disk_space'       => 'Ausreichend Speicherplatz',
 
     // Recovery
+    'recovery_pending'           => 'Ein Update auf Version :version ist kopiert, aber nicht abgeschlossen.',
     'recovery_no_info'           => 'Keine Recovery-Informationen vorhanden.',
     'recovery_still_maintenance' => 'Achtung: Die Anwendung ist noch im Wartungsmodus.',
     'recovery_confirm_up'        => 'Wartungsmodus beenden?',

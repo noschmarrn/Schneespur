@@ -16,6 +16,9 @@ class SchneespurUpdater
     private string $slug;
     private string $statePath;
     private string $stagingDir;
+    private string $installDir;
+    private string $pendingPath;
+    private string $recoveryPath;
 
     public function __construct()
     {
@@ -34,6 +37,9 @@ class SchneespurUpdater
         $this->slug       = config('schneespur_update.slug');
         $this->statePath  = config('schneespur_update.state_path');
         $this->stagingDir = config('schneespur_update.staging_dir');
+        $this->installDir   = rtrim(config('schneespur_update.install_dir') ?: base_path(), '/');
+        $this->pendingPath  = config('schneespur_update.pending_path') ?: storage_path('app/schneespur_update_pending.json');
+        $this->recoveryPath = config('schneespur_update.recovery_path') ?: storage_path('app/schneespur_update_recovery.json');
     }
 
     // ── Trust & Manifest (unchanged logic) ──────────────
@@ -248,7 +254,7 @@ class SchneespurUpdater
         $checks['sodium'] = function_exists('sodium_crypto_sign_verify_detached');
         $checks['zip'] = class_exists(ZipArchive::class);
 
-        $baseDir = base_path();
+        $baseDir = $this->installDir;
         $checks['writable'] = is_writable($baseDir);
 
         $stagingParent = dirname($this->stagingDir);
@@ -418,7 +424,28 @@ class SchneespurUpdater
 
     // ── Install (atomic, with backup + rollback) ────────
 
+    /**
+     * Beide Stufen hintereinander, in EINEM Prozeß — nur für die Kommandozeile
+     * und als Rückfall. Der Update-Knopf ruft stage() und finalize() in zwei
+     * Requests auf; nur so migriert der neue Code mit seinen eigenen Klassen.
+     */
     public function install(string $zipPath, array $manifest): void
+    {
+        $this->stage($zipPath, $manifest);
+        $this->finalize();
+    }
+
+    /**
+     * Stufe 1, läuft im Code der INSTALLIERTEN Version: sichern, Wartungsmodus,
+     * Dateien kopieren, Caches und OPcache leeren. Migriert wird hier bewußt
+     * nicht — in diesem Prozeß sind die alten Klassen geladen, und eine neue
+     * Migration, die eine geänderte Klasse benutzt, scheitert daran (1.2.1:
+     * „Undefined array key address_format“, jede Installation blieb bei 503).
+     *
+     * Gibt das Secret für das Wartungs-Bypass-Cookie zurück; mit ihm erreicht
+     * der Browser des Admins Stufe 2.
+     */
+    public function stage(string $zipPath, array $manifest): string
     {
         $this->logPhase('install', 'start', ['version' => $manifest['version']]);
 
@@ -431,49 +458,43 @@ class SchneespurUpdater
         $backupDir = $this->createPreUpdateBackup();
         $this->logPhase('backup', 'complete', ['path' => $backupDir]);
 
+        // Zuerst festhalten, dann abschalten: so ist das Secret auch dann
+        // auffindbar, wenn der Prozeß direkt nach `down` stirbt.
         $secret = bin2hex(random_bytes(16));
+        $this->atomicJsonWrite($this->pendingPath, [
+            'version'    => $manifest['version'],
+            'counter'    => (int) $manifest['counter'],
+            'secret'     => $secret,
+            'backup_dir' => $backupDir,
+            'started_at' => now()->toIso8601String(),
+        ]);
         Artisan::call('down', ['--secret' => $secret]);
         $this->logPhase('maintenance', 'enabled');
+
+        $copyStarted = false;
 
         try {
             $this->extractAndStage($zipPath);
 
             $this->logPhase('copy', 'start');
+            $copyStarted = true;
             $this->copyFiles();
             $this->logPhase('copy', 'complete');
 
-            $this->logPhase('migrate', 'start');
-            Artisan::call('migrate', ['--force' => true]);
-            $this->logPhase('migrate', 'complete');
-
-            Artisan::call('config:cache');
-            Artisan::call('route:cache');
-            Artisan::call('view:cache');
-            $this->logPhase('cache', 'complete');
-
-            $this->commitState($manifest);
-            $this->logPhase('state', 'committed', ['version' => $manifest['version']]);
-
+            $this->clearCompiledCaches();
         } catch (\Throwable $e) {
-            try {
-                app(DiagnosticManager::class)->report('update_install_failed', [
-                    'error' => $e->getMessage(),
-                    'exception_class' => get_class($e),
-                ], [
-                    'source' => 'SchneespurUpdater',
-                    'target_version' => $manifest['version'] ?? null,
-                    'backup_dir' => $backupDir,
-                ]);
-            } catch (\Throwable) {
-                // Never let diagnostic reporting break the original flow
+            $this->reportFailure($e, $manifest, $backupDir);
+
+            if (! $copyStarted) {
+                // Es wurde nichts verändert — die alte Version läuft weiter.
+                $this->safeUnlink($this->pendingPath);
+                Artisan::call('up');
+                $this->logPhase('maintenance', 'disabled', ['reason' => 'nothing_copied']);
+
+                throw new RuntimeException(__('update.install_failed', ['error' => $e->getMessage()]));
             }
 
-            $this->logPhase('install', 'failed', [
-                'error'      => $e->getMessage(),
-                'backup_dir' => $backupDir,
-            ]);
-
-            $this->writeRecoveryInfo($manifest, $backupDir, $e->getMessage());
+            $this->writeRecoveryInfo($manifest, $backupDir, $e->getMessage(), $secret);
 
             throw new RuntimeException(
                 __('update.install_failed', ['error' => $e->getMessage()])
@@ -483,11 +504,118 @@ class SchneespurUpdater
             $this->cleanStaging();
         }
 
+        $this->logPhase('install', 'staged', ['version' => $manifest['version']]);
+
+        return $secret;
+    }
+
+    /**
+     * Stufe 2, läuft in einem FRISCHEN Prozeß und damit im Code der neuen
+     * Version: migrieren, Caches bauen, State festschreiben, Wartungsmodus aus.
+     * Darf beliebig oft aufgerufen werden; scheitert sie, bleibt der
+     * Wartungsmodus, und der nächste Aufruf macht dort weiter.
+     *
+     * @return array{version: string}|null  null, wenn kein Update ansteht
+     */
+    public function finalize(): ?array
+    {
+        $pending = $this->pendingUpdate();
+        if ($pending === null) {
+            return null;
+        }
+
+        $manifest = ['version' => $pending['version'], 'counter' => $pending['counter']];
+        $this->logPhase('finalize', 'start', ['version' => $pending['version']]);
+
+        try {
+            $this->logPhase('migrate', 'start');
+            if (Artisan::call('migrate', ['--force' => true]) !== 0) {
+                throw new RuntimeException('migrate: ' . trim(Artisan::output()));
+            }
+            $this->logPhase('migrate', 'complete');
+
+            if (config('schneespur_update.build_caches', true)) {
+                Artisan::call('config:cache');
+                Artisan::call('route:cache');
+                Artisan::call('view:cache');
+                $this->logPhase('cache', 'complete');
+            }
+
+            $this->commitState($manifest);
+            $this->logPhase('state', 'committed', ['version' => $pending['version']]);
+        } catch (\Throwable $e) {
+            $this->reportFailure($e, $manifest, (string) ($pending['backup_dir'] ?? ''));
+            $this->writeRecoveryInfo($manifest, (string) ($pending['backup_dir'] ?? ''), $e->getMessage(), (string) $pending['secret']);
+
+            throw new RuntimeException(__('update.install_failed', ['error' => $e->getMessage()]));
+        }
+
+        $this->safeUnlink($this->pendingPath);
+        $this->clearRecoveryInfo();
+
         Artisan::call('up');
         $this->logPhase('maintenance', 'disabled');
-        $this->logPhase('install', 'complete', ['version' => $manifest['version']]);
+        $this->logPhase('install', 'complete', ['version' => $pending['version']]);
 
         $this->cleanOldBackups(2);
+
+        return ['version' => $pending['version']];
+    }
+
+    /** Das von Stufe 1 hinterlassene, noch nicht abgeschlossene Update. */
+    public function pendingUpdate(): ?array
+    {
+        if (! is_file($this->pendingPath)) {
+            return null;
+        }
+
+        $data = json_decode((string) file_get_contents($this->pendingPath), true);
+
+        return is_array($data) && isset($data['version'], $data['counter'], $data['secret']) ? $data : null;
+    }
+
+    /**
+     * Die nächste Anfrage soll die neuen Dateien sehen, nicht die alten:
+     * gecachte Konfiguration, Routen, Provider- und Paketlisten liegen in
+     * bootstrap/cache (copyFiles() überspringt das Verzeichnis), und OPcache
+     * prüft Zeitstempel je nach Host erst nach Sekunden oder nie.
+     */
+    private function clearCompiledCaches(): void
+    {
+        foreach (glob($this->installDir . '/bootstrap/cache/*.php') ?: [] as $file) {
+            $this->safeUnlink($file);
+        }
+
+        if (function_exists('opcache_reset') && filter_var(ini_get('opcache.enable'), FILTER_VALIDATE_BOOL)) {
+            try {
+                opcache_reset();
+            } catch (\Throwable $e) {
+                $this->logPhase('cache', 'opcache_reset_failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        $this->logPhase('cache', 'cleared');
+    }
+
+    private function reportFailure(\Throwable $e, array $manifest, string $backupDir): void
+    {
+        try {
+            app(DiagnosticManager::class)->report('update_install_failed', [
+                'error' => $e->getMessage(),
+                'exception_class' => get_class($e),
+            ], [
+                'source' => 'SchneespurUpdater',
+                'target_version' => $manifest['version'] ?? null,
+                'backup_dir' => $backupDir,
+            ]);
+        } catch (\Throwable) {
+            // Never let diagnostic reporting break the original flow
+        }
+
+        $this->logPhase('install', 'failed', [
+            'error'      => $e->getMessage(),
+            'backup_dir' => $backupDir,
+        ]);
     }
 
     // ── File Copy (no silent errors) ────────────────────
@@ -495,7 +623,7 @@ class SchneespurUpdater
     private function copyFiles(): void
     {
         $source = $this->stagingDir;
-        $target = base_path();
+        $target = $this->installDir;
 
         $skip = ['.env', 'storage', 'bootstrap/cache'];
 
@@ -556,7 +684,7 @@ class SchneespurUpdater
             'config/app.php',
         ];
 
-        $basePath = base_path();
+        $basePath = $this->installDir;
         foreach ($criticalFiles as $file) {
             $src = $basePath . '/' . $file;
             if (! is_file($src)) {
@@ -605,7 +733,7 @@ class SchneespurUpdater
 
     // ── Recovery ────────────────────────────────────────
 
-    private function writeRecoveryInfo(array $manifest, string $backupDir, string $error): void
+    private function writeRecoveryInfo(array $manifest, string $backupDir, string $error, ?string $secret = null): void
     {
         $info = [
             'failed_at'        => now()->toIso8601String(),
@@ -613,20 +741,23 @@ class SchneespurUpdater
             'error'            => $error,
             'backup_dir'       => $backupDir,
             'maintenance_mode' => true,
+            // Wer das Bypass-Cookie nicht (mehr) hat — anderer Browser, Cookie
+            // gelöscht —, öffnet diese Adresse und kommt trotz Wartungsmodus
+            // auf die Update-Seite. Ersetzt keine Anmeldung.
+            'bypass_path'      => $secret !== null ? '/' . $secret : null,
             'recovery_steps'   => [
-                '1. php artisan schneespur:update-recover',
-                '2. Or manually: php artisan up',
-                '3. Check logs: storage/logs/schneespur-update.log',
+                '1. Im Browser <Adresse der Installation>' . ($secret !== null ? '/' . $secret : '') . ' öffnen, anmelden, Einstellungen → Update → „Update abschließen“',
+                '2. Oder auf der Kommandozeile: php artisan schneespur:update-recover',
+                '3. Protokoll: storage/logs/laravel.log (schneespur-update)',
             ],
         ];
 
-        $path = storage_path('app/schneespur_update_recovery.json');
-        $this->atomicJsonWrite($path, $info);
+        $this->atomicJsonWrite($this->recoveryPath, $info);
     }
 
     public function getRecoveryInfo(): ?array
     {
-        $path = storage_path('app/schneespur_update_recovery.json');
+        $path = $this->recoveryPath;
         if (! is_file($path)) {
             return null;
         }
@@ -643,7 +774,7 @@ class SchneespurUpdater
 
     public function clearRecoveryInfo(): void
     {
-        $path = storage_path('app/schneespur_update_recovery.json');
+        $path = $this->recoveryPath;
         if (is_file($path)) {
             $this->safeUnlink($path);
         }
@@ -658,7 +789,7 @@ class SchneespurUpdater
         }
 
         $this->logPhase('recovery', 'start', ['backup' => $backupDir]);
-        $basePath = base_path();
+        $basePath = $this->installDir;
 
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($backupDir, \FilesystemIterator::SKIP_DOTS),
@@ -716,7 +847,7 @@ class SchneespurUpdater
         ];
 
         foreach ($criticalPaths as $path) {
-            $full = base_path($path);
+            $full = $this->installDir . '/' . ltrim($path, '/');
             if (! is_file($full)) {
                 $result['ok'] = false;
                 $result['checks'][$path] = 'missing';

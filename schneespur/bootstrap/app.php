@@ -39,6 +39,15 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Das Wartungs-Bypass-Cookie setzt Stufe 1 des Updaters aus einem
+        // Controller, also durch EncryptCookies hindurch. Gelesen wird es aber
+        // von PreventRequestsDuringMaintenance, das VOR EncryptCookies läuft
+        // und den Rohwert erwartet — verschlüsselt käme der Admin nicht durch
+        // den Wartungsmodus zu Stufe 2. Das Cookie ist mit dem Secret per HMAC
+        // signiert; Laravels eigene /{secret}-Route setzt es ebenso roh.
+        // Gehört zum versionsübergreifenden Update-Vertrag: nie entfernen.
+        $middleware->encryptCookies(except: ['laravel_maintenance']);
+
         // Trust proxies only when an operator explicitly opts in via
         // TRUSTED_PROXIES. Distributed installs on stock web hosting have no
         // known proxy in front, so the default trusts none: a client-supplied

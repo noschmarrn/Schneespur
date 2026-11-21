@@ -278,6 +278,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/settings/update', [UpdateSettingsController::class, 'update'])->name('settings.update.update');
     Route::post('/settings/update/check', [UpdateSettingsController::class, 'checkNow'])->name('settings.update.check');
     Route::post('/settings/update/install', [UpdateSettingsController::class, 'install'])->name('settings.update.install');
+    // Vertrag über Versionen hinweg — Pfad nie ändern, siehe UpdateSettingsController::finalize().
+    Route::post('/settings/update/finalize', [UpdateSettingsController::class, 'finalize'])->name('settings.update.finalize');
 
     Route::get('/crontasks', [AdminCronTaskController::class, 'index'])->name('crontasks.index');
     Route::post('/crontasks/{slug}/toggle', [AdminCronTaskController::class, 'toggle'])->name('crontasks.toggle');

@@ -40,6 +40,11 @@
                     },
                 });
                 this.installResult = await resp.json();
+                if (this.installResult.ok && this.installResult.next) {
+                    // Stufe 2 als eigener Request: erst dort läuft der neue Code.
+                    await this.finalizeUpdate(this.installResult.next);
+                    return;
+                }
                 if (this.installResult.ok) {
                     setTimeout(() => window.location.reload(), 2000);
                 }
@@ -47,8 +52,41 @@
                 this.installResult = { ok: false, message: e.message };
             }
             this.installing = false;
+        },
+        async finalizeUpdate(url) {
+            this.installing = true;
+            try {
+                const resp = await fetch(url || '{{ route('admin.settings.update.finalize') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=&quot;csrf-token&quot;]').content,
+                        'Accept': 'application/json',
+                    },
+                });
+                this.installResult = await resp.json();
+                if (this.installResult.ok) {
+                    setTimeout(() => window.location.reload(), 2000);
+                }
+            } catch (e) {
+                // Kein JSON (z. B. 503 ohne Bypass-Cookie) — erneut versuchbar.
+                this.installResult = { ok: false, retry: true, message: e.message };
+            }
+            this.installing = false;
         }
     }">
+
+        @if($pending)
+            <div class="mb-4 rounded-md bg-amber-50 border border-amber-200 p-4 space-y-3">
+                <p class="text-sm font-medium text-amber-800">{{ __('update.pending_notice', ['version' => $pending['version']]) }}</p>
+                <button type="button" @click="finalizeUpdate()" :disabled="installing"
+                        class="inline-flex items-center px-4 py-2 bg-amber-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-50 transition ease-in-out duration-150">
+                    {{ __('update.finalize_button') }}
+                </button>
+                <p x-show="installResult" x-cloak class="text-sm"
+                   :class="installResult?.ok ? 'text-green-800' : 'text-red-800'" x-text="installResult?.message"></p>
+            </div>
+        @endif
 
         @if(session('success'))
             <div class="mb-4 rounded-md bg-green-50 p-4">
@@ -198,8 +236,12 @@
                             </div>
                         </template>
                         <template x-if="installResult && !installResult.ok">
-                            <div class="rounded-md bg-red-50 p-4">
+                            <div class="rounded-md bg-red-50 p-4 space-y-3">
                                 <p class="text-sm text-red-800" x-text="installResult.message"></p>
+                                <button type="button" x-show="installResult.retry" @click="finalizeUpdate()" :disabled="installing"
+                                        class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 disabled:opacity-50">
+                                    {{ __('update.finalize_button') }}
+                                </button>
                             </div>
                         </template>
                     </div>

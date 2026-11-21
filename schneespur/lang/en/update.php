@@ -31,6 +31,10 @@ return [
     'installing'                 => 'Installing update…',
     'install_success'            => 'Update to version :version installed successfully.',
     'install_failed'             => 'Update failed: :error',
+    'install_finalizing'         => 'Files copied. Finishing the update …',
+    'finalize_button'            => 'Finish update',
+    'finalize_nothing_pending'   => 'There is no unfinished update.',
+    'pending_notice'             => 'The update to version :version has not been finished yet. The site stays in maintenance mode until then.',
 
     // Backup
     'backup_title'               => 'Backup Recommendation',
@@ -75,6 +79,7 @@ return [
     'preflight_disk_space'       => 'Sufficient disk space',
 
     // Recovery
+    'recovery_pending'           => 'An update to version :version was copied but not finished.',
     'recovery_no_info'           => 'No recovery information available.',
     'recovery_still_maintenance' => 'Warning: Application is still in maintenance mode.',
     'recovery_confirm_up'        => 'Disable maintenance mode?',

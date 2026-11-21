@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Services\Diagnostic\DiagnosticManager;
 use App\Services\SchneespurUpdater;
+use Illuminate\Foundation\Http\MaintenanceModeBypassCookie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,9 +31,12 @@ class UpdateSettingsController extends Controller
         }
 
         $preflight = null;
+        $pending   = null;
         if ($hasSodium) {
             try {
-                $preflight = (new SchneespurUpdater)->canInstall();
+                $updater   = new SchneespurUpdater;
+                $preflight = $updater->canInstall();
+                $pending   = $updater->pendingUpdate();
             } catch (\Throwable) {
             }
         }
@@ -43,6 +47,7 @@ class UpdateSettingsController extends Controller
             'currentVersion' => config('app.version', '1.0.0'),
             'state'          => $state,
             'preflight'      => $preflight,
+            'pending'        => $pending,
         ]);
     }
 
@@ -162,7 +167,7 @@ class UpdateSettingsController extends Controller
 
         try {
             $zipPath = $updater->downloadAndVerifyZip($manifest);
-            $updater->install($zipPath, $manifest);
+            $secret  = $updater->stage($zipPath, $manifest);
         } catch (\Throwable $e) {
             try {
                 app(DiagnosticManager::class)->report('update_install_failed', [
@@ -186,9 +191,45 @@ class UpdateSettingsController extends Controller
             }
         }
 
+        // Stufe 2 muß ein FRISCHER Request sein: erst dort läuft der neue Code.
+        // Das Cookie läßt den Browser des Admins durch den Wartungsmodus.
         return response()->json([
             'ok'      => true,
-            'message' => __('update.install_success', ['version' => $manifest['version']]),
+            'next'    => route('admin.settings.update.finalize'),
+            'message' => __('update.install_finalizing'),
+        ])->withCookie(MaintenanceModeBypassCookie::create($secret));
+    }
+
+    /**
+     * Stufe 2 des Updates. VERSIONSÜBERGREIFENDER VERTRAG: Stufe 1 der alten
+     * Version schickt den Browser hierher, beantwortet wird von der neuen.
+     * Pfad (POST /admin/settings/update/finalize) und Antwortform
+     * {ok, message, retry?} dürfen sich deshalb nie ändern.
+     */
+    public function finalize(): JsonResponse
+    {
+        Gate::authorize('settings.edit');
+
+        try {
+            $result = (new SchneespurUpdater)->finalize();
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok'      => false,
+                'retry'   => true,
+                'message' => $e->getMessage(),
+            ]);
+        }
+
+        if ($result === null) {
+            return response()->json([
+                'ok'      => true,
+                'message' => __('update.finalize_nothing_pending'),
+            ]);
+        }
+
+        return response()->json([
+            'ok'      => true,
+            'message' => __('update.install_success', ['version' => $result['version']]),
         ]);
     }
 }

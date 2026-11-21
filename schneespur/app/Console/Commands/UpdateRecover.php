@@ -15,6 +15,29 @@ class UpdateRecover extends Command
     public function handle(): int
     {
         $updater  = new SchneespurUpdater;
+
+        // Ein angefangenes zweistufiges Update: Die Dateien sind schon neu,
+        // es fehlt nur Stufe 2. Die Kommandozeile ist ein frischer Prozeß mit
+        // dem neuen Code — genau das, was Stufe 2 braucht. Ein Backup
+        // zurückzuspielen wäre hier falsch (alte Kerndateien über neuem Code).
+        if ($pending = $updater->pendingUpdate()) {
+            $this->warn(__('update.recovery_pending', ['version' => $pending['version']]));
+
+            if ($this->option('force') || $this->confirm(__('update.finalize_button') . '?', true)) {
+                try {
+                    $result = $updater->finalize();
+                } catch (\Throwable $e) {
+                    $this->error($e->getMessage());
+
+                    return 1;
+                }
+
+                $this->info(__('update.install_success', ['version' => $result['version']]));
+
+                return 0;
+            }
+        }
+
         $recovery = $updater->getRecoveryInfo();
 
         if ($recovery === null) {
