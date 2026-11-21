@@ -14,6 +14,16 @@ echo "════════════════════════�
 
 cd "$PROJECT_DIR"
 
+# ── 0. Sicherheits-Gate ──
+# 1.2.0 und 1.2.1 gingen mit 19 bekannten Advisories hinaus, weil seit August
+# keine CI lief. Das Audit gehört deshalb VOR den Build, nicht danach.
+echo ""
+echo "▸ Auditing composer dependencies..."
+(cd "$SOURCE_DIR" && composer audit --locked --no-dev) || {
+    echo "  ✗ composer audit meldet Sicherheitslücken — erst beheben, dann bauen."
+    exit 1
+}
+
 # ── Clean previous build ──
 rm -rf "$BUILD_DIR" "$ZIP_FILE"
 mkdir -p "$BUILD_DIR"
@@ -226,3 +236,23 @@ echo "  Users: unzip → FTP upload → open in browser → installer starts"
 echo ""
 echo "▸ Restoring dev composer dependencies..."
 (cd "$SOURCE_DIR" && composer install --no-interaction --quiet)
+
+# ── 12. Update-Gate ──
+# Das neue ZIP wird über den ECHTEN Updater jeder Vorversion eingespielt. Eine
+# frische Installation und die Testsuite reichen nicht: 1.2.1 bestand beides
+# und endete bei jedem Nutzer, der von 1.2.0 aktualisierte, in 503.
+echo ""
+echo "▸ Update smoke tests..."
+for FROM in ${SMOKE_FROM:-1.2.0 1.2.1}; do
+    FROM_ZIP="${PROJECT_DIR}/release/${PRODUCT}-${FROM}.zip"
+    if [ ! -f "$FROM_ZIP" ]; then
+        echo "  ⚠ ${FROM_ZIP} fehlt — Smoke ${FROM} → ${VERSION} übersprungen"
+        continue
+    fi
+    "${PROJECT_DIR}/scripts/update-smoke.sh" "$FROM_ZIP" "$ZIP_FILE" || {
+        echo "  ✗ Update ${FROM} → ${VERSION} scheitert — NICHT veröffentlichen."
+        exit 1
+    }
+done
+
+echo "  ✓ Alle Update-Gates bestanden."
