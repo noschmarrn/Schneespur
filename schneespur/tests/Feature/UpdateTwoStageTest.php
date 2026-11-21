@@ -261,4 +261,14 @@ class UpdateTwoStageTest extends TestCase
             ->assertSee(__('update.pending_notice', ['version' => '1.2.2']))
             ->assertSee(__('update.finalize_button'));
     }
+
+    /** Ein Admin im Wartungsmodus findet den Rettungsweg nur hier oder in der Anleitung. */
+    public function test_the_help_explains_a_stuck_update(): void
+    {
+        $this->actingAs($this->admin())
+            ->get(route('admin.help.show', 'updates'))
+            ->assertOk()
+            ->assertSee(__('help.updates_stuck_title'))
+            ->assertSee('schneespur:update-recover');
+    }
 }

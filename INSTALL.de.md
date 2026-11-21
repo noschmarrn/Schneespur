@@ -210,6 +210,20 @@ OwnTracks ist die GPS-Tracking-App, mit der Ihre Fahrer die Einsätze aufzeichne
 
 ## 8. Update-Anleitung
 
+### Update über den Knopf (empfohlen)
+
+Unter **Einstellungen → Update** prüft Schneespur auf neue Versionen und installiert sie mit einem Klick. Seit 1.2.2 läuft das in zwei Schritten: Erst werden die Dateien kopiert, dann schließt ein zweiter Aufruf das Update ab (Datenbank, Caches). Dazwischen ist die Seite für alle außer Ihnen kurz im Wartungsmodus. Bricht der zweite Schritt ab, erscheint auf der Update-Seite der Knopf **„Update abschließen“**. Er kann gefahrlos mehrmals gedrückt werden.
+
+### Wenn nach einem Update jede Seite „503 Service Unavailable“ zeigt
+
+Das betrifft vor allem das Update von 1.2.0 auf 1.2.1. Es blieb bei fast jeder Installation im Wartungsmodus stehen und ist mit 1.2.2 behoben. So kommen Sie wieder hinein:
+
+- **Mit SSH:** `php artisan migrate --force && php artisan up`
+- **Nur mit FTP:** Löschen Sie im Ordner `storage/framework/` die beiden Dateien `down` und `maintenance.php`. Melden Sie sich an und installieren Sie unter **Einstellungen → Update** die Version 1.2.2. Bis dahin funktioniert die Oberfläche, Neues aus 1.2.1 (Preise, interne Notizen, Bundesland) aber noch nicht.
+- **Hängt ein Update ab 1.2.2:** Die Datei `storage/app/schneespur_update_recovery.json` nennt unter `bypass_path` eine Adresse. Öffnen Sie sie im Browser, dann kommen Sie trotz Wartungsmodus zur Update-Seite und können **„Update abschließen“** drücken. Mit SSH genügt `php artisan schneespur:update-recover`.
+
+### Manuelles Update per FTP
+
 ### Vor dem Update
 
 1. Erstellen Sie ein Backup (siehe [Backup](#9-backup)).

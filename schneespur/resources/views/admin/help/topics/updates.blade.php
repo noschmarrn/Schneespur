@@ -14,6 +14,9 @@
         <h3 class="text-lg font-semibold text-gray-800">{{ __('help.updates_install_title') }}</h3>
         <p>{{ __('help.updates_install_text') }}</p>
 
+        <h3 class="text-lg font-semibold text-gray-800">{{ __('help.updates_stuck_title') }}</h3>
+        <p>{{ __('help.updates_stuck_text') }}</p>
+
         <h3 class="text-lg font-semibold text-gray-800">{{ __('help.updates_security_title') }}</h3>
         <p>{{ __('help.updates_security_text') }}</p>
     </div>

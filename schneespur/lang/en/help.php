@@ -189,6 +189,8 @@ return [
     'updates_backup_text'      => 'Create a backup of your database (via phpMyAdmin SQL export) and your files (via FTP download) before each update. If an error occurs during the update, you can restore the original state.',
     'updates_install_title'    => 'Installing an update',
     'updates_install_text'     => 'Click "Check Now" to run a version check. If an update is available, the changelog and an install button will be shown. Confirm the backup and click "Install Update". During installation, the application is briefly put into maintenance mode.',
+    'updates_stuck_title'      => 'If an update gets stuck',
+    'updates_stuck_text'       => 'Updates run in two steps: first the files are copied, then the update is finished (database, caches). If the second step fails, the site stays in maintenance mode for others and this page shows a "Finish update" button. It is safe to press it more than once. If you only see "503" everywhere, the file storage/app/schneespur_update_recovery.json contains an address under bypass_path that gets you here despite maintenance mode. With SSH, php artisan schneespur:update-recover is enough.',
     'updates_security_title'   => 'Security',
     'updates_security_text'    => 'Each update is verified in multiple steps before installation: The trust list is checked against the built-in root key, the manifest is verified with the signing key from the trust list, and the downloaded ZIP is checked via SHA-256 checksum against the signed manifest. Additionally, rollback protection is ensured through a monotonically increasing counter.',
 ];

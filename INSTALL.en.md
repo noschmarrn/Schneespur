@@ -210,6 +210,20 @@ OwnTracks is the GPS tracking app your drivers use to record their operations. E
 
 ## 8. Update Instructions
 
+### Updating with the button (recommended)
+
+Under **Settings → Update**, the application checks for new versions and installs them with one click. Since 1.2.2 this happens in two steps: first the files are copied, then a second request finishes the update (database, caches). In between, the site is briefly in maintenance mode for everyone but you. If the second step fails, the update page shows a **"Finish update"** button. It is safe to press it more than once.
+
+### If every page shows "503 Service Unavailable" after an update
+
+This mainly affects the update from 1.2.0 to 1.2.1. It left almost every installation stuck in maintenance mode and is fixed in 1.2.2. To get back in:
+
+- **With SSH:** `php artisan migrate --force && php artisan up`
+- **FTP only:** delete the two files `down` and `maintenance.php` in `storage/framework/`. Log in and install version 1.2.2 under **Settings → Update**. Until then the interface works, but the new 1.2.1 features (prices, internal notes, state) do not yet.
+- **If an update from 1.2.2 onwards gets stuck:** the file `storage/app/schneespur_update_recovery.json` contains an address under `bypass_path`. Open it in your browser to reach the update page despite maintenance mode, then press **"Finish update"**. With SSH, `php artisan schneespur:update-recover` is enough.
+
+### Manual update via FTP
+
 ### Before Updating
 
 1. Create a backup (see [Backup](#9-backup)).

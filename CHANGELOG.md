@@ -6,6 +6,23 @@ This project follows [Semantic Versioning](https://semver.org/). Unless noted, r
 
 ---
 
+## [1.2.2] — 2026-11-21 — Updates that finish
+
+**If you updated from 1.2.0 to 1.2.1 with the update button, your site is probably showing "503 Service Unavailable" on every page.** The update stopped halfway and left the site in maintenance mode. Your data is intact. To recover, delete `storage/framework/down` and `storage/framework/maintenance.php` via FTP (or run `php artisan migrate --force && php artisan up` via SSH), log in, and install 1.2.2. See *If every page shows "503"* in the installation guide.
+
+### Fixed
+- **Updating from 1.2.0 to 1.2.1 left almost every installation in maintenance mode.** The updater copied the new files and then migrated the database in the same request, where the previous version's code was still loaded. One of the 1.2.1 migrations read a setting from a class that the old code did not have yet, so the update failed and the site stayed down. That migration no longer depends on application code, and 1.2.2 installs cleanly from 1.2.0, from 1.2.1, and from the half-finished 1.2.1 state.
+- **The updater now works in two steps, so this cannot happen again.** The first request copies the files and clears the compiled caches and the PHP opcode cache. A second, fresh request runs the new version's own code to migrate the database, rebuild the caches and end maintenance mode. If the second step fails, the update page offers **Finish update** instead of a dead "503", and `php artisan schneespur:update-recover` finishes it from the command line. If the update fails before any file is copied, the site goes straight back online instead of staying in maintenance mode. This takes effect from the next update onwards: 1.2.2 itself is still installed by your current version's updater.
+- **A stuck update can be reached without SSH.** The recovery file `storage/app/schneespur_update_recovery.json` now contains a maintenance bypass address. Before, the secret was generated and immediately lost.
+
+### Security
+- Updated laravel/framework (12.62 → 12.73), league/commonmark (2.9 → 2.10.7), league/flysystem and the Symfony components (7.4.14 → 7.4.23). This resolves 19 published advisories. None was reachable in a default installation as far as we could determine (the critical TokenGuard bypass needs a token guard; every guard here is session-based), but several were only partly mitigated.
+
+### Internal
+- `scripts/update-smoke.sh` installs a previous release and applies the new ZIP through that release's own updater, the way the update button does. `build.sh` runs it against 1.2.0 and 1.2.1 and runs `composer audit` before building. Neither the test suite nor a fresh installation could have caught the 1.2.1 failure.
+
+---
+
 ## [1.2.1] — 2026-11-20 — Field-test fixes, regional addresses & prices
 
 Two independent field tests of 1.2.0 — one German operation, one American — put the release into daily use. This release is what they found.
